@@ -16,18 +16,23 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator"
+APP_TITLE = "DICOM Creator v0.1\n"
 
 class DicomCreatorApp(tk.Tk):
+    # Main application window for DICOM creation and editing.
+    # Provides tabs for Patient/Study/Series metadata, image loading, DICOM loading, and saving.
     def __init__(self):
         super().__init__()
         self.title(APP_TITLE)
         self.geometry("800x600")
         self.resizable(True, True)
 
+        # Image-related state
         self.image_path = None
         self.pixel_array = None
         self._tk_img = None
+
+        # DICOM loading state
         self.grouped_dicom = {}
         self.selected_study_uid = None
         self.selected_series_uid = None
@@ -35,6 +40,7 @@ class DicomCreatorApp(tk.Tk):
         self._build_ui()
 
     def _build_ui(self):
+        # Build the overall UI: menu bar and a tabbed notebook with multiple sections.
         # Menu bar
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=False)
@@ -50,6 +56,7 @@ class DicomCreatorApp(tk.Tk):
         self.config(menu=menubar)
         self.bind_all("<Control-n>", lambda e: self.new_file())
 
+        # Tabbed container for different sections
         container = ttk.Notebook(self)
         container.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
@@ -68,6 +75,7 @@ class DicomCreatorApp(tk.Tk):
         container.add(self.save_frame, text="Save")
 
         # Patient fields
+        # Metadata variables are bound to form entries for easy retrieval and population.
         self.patient_vars = {
             "PatientName": tk.StringVar(),
             "PatientID": tk.StringVar(),
@@ -122,6 +130,7 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.series_frame, "Protocol Name", self.series_vars["ProtocolName"], 5)
 
         # Image tab
+        # Controls to load an external image and preview it.
         img_controls = ttk.Frame(self.image_frame)
         img_controls.pack(fill=tk.X, pady=10)
         ttk.Button(img_controls, text="Load Image", command=self.load_image).pack(side=tk.LEFT)
@@ -132,9 +141,11 @@ class DicomCreatorApp(tk.Tk):
         self.preview_label.pack(fill=tk.BOTH, expand=True)
 
         # Save tab
+        # Save the currently entered metadata and image as a DICOM file.
         ttk.Button(self.save_frame, text="Save DICOM", command=self.save_dicom).pack(pady=20)
 
         # Load DICOM tab
+        # Load DICOM files or folders, then visualize Study/Series/Instances in a tree.
         dcm_controls = ttk.Frame(self.load_dcm_frame)
         dcm_controls.pack(fill=tk.X, pady=10)
         ttk.Button(dcm_controls, text="Load DICOM File(s)", command=self.load_dicom_file).pack(side=tk.LEFT)
@@ -143,6 +154,7 @@ class DicomCreatorApp(tk.Tk):
         self.dcm_info_label.pack(fill=tk.X, pady=10)
 
         # Studies/Series tree with scrollbars
+        # Tree hierarchy: Study -> Series -> Instance (text only for instances).
         tree_container = ttk.Frame(self.load_dcm_frame)
         tree_container.pack(fill=tk.BOTH, expand=True)
         tree_container.rowconfigure(0, weight=1)
@@ -162,6 +174,7 @@ class DicomCreatorApp(tk.Tk):
         self.series_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
 
     def new_file(self):
+        # Clear only the metadata form fields. Do not clear loaded pixels or DICOM tree.
         # Clear form fields (Patient, Study, Series)
         for d in (self.patient_vars, self.study_vars, self.series_vars):
             for v in d.values():
@@ -171,9 +184,11 @@ class DicomCreatorApp(tk.Tk):
         self.selected_series_uid = None
 
     def show_about(self):
-        messagebox.showinfo(APP_TITLE, f"{APP_TITLE}\nSimple tool to create and edit DICOM metadata and images.")
+        # Basic About dialog
+        messagebox.showinfo(APP_TITLE, f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\nSimple tool to create and edit DICOM metadata and images.")
 
     def _add_labeled_entry(self, parent, label, var, row):
+        # Helper: create a label + entry bound to a StringVar, aligned in a grid row.
         frame = ttk.Frame(parent)
         frame.grid(row=row, column=0, sticky="ew", padx=10, pady=5)
         parent.columnconfigure(0, weight=1)
@@ -181,6 +196,7 @@ class DicomCreatorApp(tk.Tk):
         ttk.Entry(frame, textvariable=var).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
     def load_image(self):
+        # Load an image from disk and convert to grayscale pixel array for preview and DICOM.
         path = filedialog.askopenfilename(title="Select image", filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp"), ("All Files", "*.*")])
         if not path:
             return
@@ -197,6 +213,7 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, f"Failed to load image: {e}")
 
     def _update_image_preview(self, arr):
+        # Convert the array to a displayable image and update the Tkinter label.
         if arr is None or Image is None:
             return
         try:
@@ -232,6 +249,7 @@ class DicomCreatorApp(tk.Tk):
             pass
 
     def _to_uint8(self, arr):
+        # Normalize arbitrary numeric array to uint8 [0,255] range for display.
         if arr.dtype == np.uint8:
             return arr
         a = arr.astype(np.float32)
@@ -244,6 +262,7 @@ class DicomCreatorApp(tk.Tk):
         return a.astype(np.uint8)
 
     def save_dicom(self):
+        # Save the current metadata and pixel data into a DICOM file using helper function.
         if pydicom is None:
             messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
             return
@@ -303,6 +322,7 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, f"Failed to save DICOM: {e}")
 
     def load_dicom_file(self):
+        # Load one or more DICOM files. Supports picking a DICOMDIR file to expand dataset references.
         if pydicom is None:
             messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
             return
@@ -319,6 +339,7 @@ class DicomCreatorApp(tk.Tk):
             grouped = {}
 
             def merge_grouped(target, source):
+                # Merge source grouped dict (study->series->instances) into target.
                 for study_uid, series_map in source.items():
                     t_series_map = target.setdefault(study_uid, {})
                     for series_uid, instances in series_map.items():
@@ -364,6 +385,7 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM: {e}")
 
     def load_dicom_folder(self):
+        # Load all DICOM files under a selected folder and group them for display.
         if pydicom is None:
             messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
             return
@@ -398,6 +420,7 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
 
     def on_tree_select(self, event):
+        # Handle selection in the series tree. When a series is selected, populate forms and preview first image.
         sel = self.series_tree.selection()
         if not sel:
             return
@@ -446,6 +469,7 @@ class DicomCreatorApp(tk.Tk):
 
 
 def main():
+    # Entrypoint for the GUI application.
     app = DicomCreatorApp()
     app.mainloop()
 

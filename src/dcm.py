@@ -17,23 +17,35 @@ except Exception:
 
 
 def create_dicom(save_path, patient, study, series, pixel_array=None):
+    """
+    Create a minimal but valid DICOM `FileDataset` using provided metadata and optional pixel data.
+
+    - Uses Secondary Capture as SOP Class (generic image container).
+    - Fills required attributes and some optional ones.
+    - If `pixel_array` is None, creates a 1x1 black image as placeholder.
+    - Returns an in-memory dataset; caller is responsible for `save_as`.
+    """
     if pydicom is None:
         raise RuntimeError("pydicom is required to create DICOM files")
 
     # Create file meta
+    # File Meta Information contains UIDs for the storage class and instance, plus transfer syntax.
     file_meta = Dataset()
     file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
     file_meta.MediaStorageSOPInstanceUID = generate_uid()
     file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
 
     # Create dataset
+    # The `FileDataset` uses a 128-byte preamble and the file meta above.
     ds = FileDataset(save_path, {}, file_meta=file_meta, preamble=b"\0" * 128)
 
     now = datetime.datetime.now()
+    # Explicit VR Little Endian to match the file meta transfer syntax
     ds.is_little_endian = True
     ds.is_implicit_VR = False
 
     # Patient fields
+    # Use `PersonName` for proper VR formatting; allow empty strings for optional values.
     pn = (patient.get("PatientName") or "").strip()
     ds.PatientName = PersonName(pn) if pn else ""
     ds.PatientID = (patient.get("PatientID") or "").strip()
@@ -54,6 +66,7 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.PatientComments = pcom
 
     # Study fields
+    # Default to generated UID/date/time if missing.
     ds.StudyInstanceUID = (study.get("StudyInstanceUID") or generate_uid()).strip()
     ds.StudyDate = (study.get("StudyDate") or now.strftime("%Y%m%d")).strip()
     ds.StudyTime = (study.get("StudyTime") or now.strftime("%H%M%S")).strip()
@@ -70,6 +83,7 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.ReferringPhysicianName = rpn
 
     # Series fields
+    # Generate SeriesInstanceUID if not provided; coerce SeriesNumber to int with default of 1.
     ds.SeriesInstanceUID = (series.get("SeriesInstanceUID") or generate_uid()).strip()
     series_number = series.get("SeriesNumber")
     ds.SeriesNumber = int(series_number.strip() or 1) if isinstance(series_number, str) else int(series_number or 1)
@@ -86,10 +100,12 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.ProtocolName = proto
 
     # SOP Instance UID
+    # Each dataset must have a unique SOP Instance UID and the matching Class UID.
     ds.SOPInstanceUID = generate_uid()
     ds.SOPClassUID = SecondaryCaptureImageStorage
 
     # Required general DICOM attributes
+    # Populate minimal common attributes expected for image-like instances.
     ds.PatientOrientation = ""
     ds.ContentDate = now.strftime("%Y%m%d")
     ds.ContentTime = now.strftime("%H%M%S")
@@ -97,6 +113,8 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     ds.Manufacturer = "DICOM Creator"
 
     # Pixel data
+    # If a pixel array is given (assumed 2D uint8), set monochrome attributes and embed raw bytes.
+    # Otherwise include a 1x1 zeroed image to keep the file valid.
     if pixel_array is not None:
         arr = pixel_array
         ds.Rows, ds.Columns = arr.shape
@@ -124,6 +142,13 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
 
 
 def load_dicom(path):
+    """
+    Read a DICOM file and return the dataset plus a best-effort pixel array.
+
+    - Prefers `dataset.pixel_array` (handles decompression and photometric interpretation).
+    - Falls back to manual parsing of `PixelData` for simple monochrome 8/16-bit images.
+    - Returns `(ds, pixel_array)` where pixel_array may be None if unavailable.
+    """
     if pydicom is None:
         raise RuntimeError("pydicom is required to load DICOM files")
 
@@ -135,6 +160,7 @@ def load_dicom(path):
         if hasattr(ds, "pixel_array"):
             pixel_array = ds.pixel_array
         elif hasattr(ds, "PixelData") and hasattr(ds, "Rows") and hasattr(ds, "Columns"):
+            # Manual fallback for simple cases
             import numpy as _np
             dtype = _np.uint8 if getattr(ds, "BitsAllocated", 8) == 8 else _np.uint16
             pixel_array = _np.frombuffer(ds.PixelData, dtype=dtype)
@@ -151,6 +177,12 @@ def load_dicom(path):
 
 
 def _iter_dicom_files(paths_or_dir):
+    """
+    Yield file paths from a list, tuple, directory, or single file path.
+
+    - For directories, walks recursively and yields all files (heuristic: accepts any file, giving precedence to common DICOM extensions).
+    - For lists/tuples, yields existing files only.
+    """
     import os
     if isinstance(paths_or_dir, (list, tuple)):
         for p in paths_or_dir:
@@ -181,11 +213,13 @@ def load_dicom_grouped(paths_or_dir):
         try:
             ds, arr = load_dicom(path)
         except Exception:
+            # Skip unreadable files silently to keep batch import robust.
             continue
 
         study_uid = getattr(ds, "StudyInstanceUID", None) or ""
         series_uid = getattr(ds, "SeriesInstanceUID", None) or ""
 
+        # Append instance under its Study/Series buckets.
         study_bucket = grouped.setdefault(study_uid, {})
         series_bucket = study_bucket.setdefault(series_uid, [])
         series_bucket.append((ds, arr))
@@ -194,6 +228,13 @@ def load_dicom_grouped(paths_or_dir):
 
 
 def is_dicomdir(path):
+    """
+    Heuristically detect if a path points to a DICOMDIR file.
+
+    - Checks SOP Class UID and File Meta for Media Storage Directory.
+    - Also checks for presence of `DirectoryRecordSequence`.
+    - Finally, falls back to filename equality to 'DICOMDIR'.
+    """
     if pydicom is None:
         return False
     try:
@@ -214,6 +255,7 @@ def is_dicomdir(path):
 def load_dicomdir_grouped(dicomdir_path):
     """
     Load a DICOMDIR file and group referenced instances by Study and Series UIDs.
+    Follows references in `DirectoryRecordSequence`; if none found, scans the directory.
     """
     if pydicom is None:
         raise RuntimeError("pydicom is required to load DICOMDIR files")
@@ -223,6 +265,7 @@ def load_dicomdir_grouped(dicomdir_path):
     try:
         ddir = pydicom.dcmread(dicomdir_path)
     except Exception as e:
+        # Propagate the error to the caller for user-friendly messaging upstream.
         raise
 
     referenced_files = []
