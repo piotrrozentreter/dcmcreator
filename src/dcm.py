@@ -54,7 +54,17 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     # Patient fields
     # Use `PersonName` for proper VR formatting; allow empty strings for optional values.
     pn = (patient.get("PatientName") or "").strip()
-    ds.PatientName = PersonName(pn) if pn else ""
+    fam = (patient.get("PatientFamilyNameComplex") or "").strip()
+    giv = (patient.get("PatientGivenName") or "").strip()
+    mid = (patient.get("PatientMiddleName") or "").strip()
+    pref = (patient.get("PatientPrefix") or "").strip()
+    suf = (patient.get("PatientSuffix") or "").strip()
+    if pn:
+        ds.PatientName = PersonName(pn)
+    elif any([fam, giv, mid, pref, suf]):
+        ds.PatientName = PersonName(f"{fam}^{giv}^{mid}^{pref}^{suf}")
+    else:
+        ds.PatientName = ""
     ds.PatientID = (patient.get("PatientID") or "").strip()
     ds.PatientBirthDate = (patient.get("PatientBirthDate") or "").strip()
     ds.PatientSex = (patient.get("PatientSex") or "").strip()
@@ -71,6 +81,12 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     pcom = (patient.get("PatientComments") or "").strip()
     if pcom:
         ds.PatientComments = pcom
+    pmn = (patient.get("PatientMotherBirthName") or "").strip()
+    if pmn:
+        ds.PatientMotherBirthName = pmn
+    pddt = (patient.get("PatientDeathDateTime") or "").strip()
+    if pddt:
+        ds.PatientDeathDateTime = pddt
 
     # Study fields
     # Default to generated UID/date/time if missing.
@@ -88,6 +104,18 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     rpn = (study.get("ReferringPhysicianName") or "").strip()
     if rpn:
         ds.ReferringPhysicianName = rpn
+    rps = (study.get("ReadingPhysicianName") or "").strip()
+    if rps:
+        ds.NameOfPhysiciansReadingStudy = rps
+    reason = (study.get("ReasonForStudy") or "").strip()
+    if reason:
+        ds.ReasonForStudy = reason
+    admit = (study.get("AdmittingDiagnosesDescription") or "").strip()
+    if admit:
+        ds.AdmittingDiagnosesDescription = admit
+    spl = (study.get("StudyPatientLocation") or "").strip()
+    if spl:
+        ds.StudyPatientLocation = spl
 
     # Series fields
     # Generate SeriesInstanceUID if not provided; coerce SeriesNumber to int with default of 1.
@@ -105,6 +133,21 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     proto = (series.get("ProtocolName") or "").strip()
     if proto:
         ds.ProtocolName = proto
+    sdate = (series.get("SeriesDate") or "").strip()
+    if sdate:
+        ds.SeriesDate = sdate
+    stime = (series.get("SeriesTime") or "").strip()
+    if stime:
+        ds.SeriesTime = stime
+    perf = (series.get("PerformingPhysicianName") or "").strip()
+    if perf:
+        ds.PerformingPhysicianName = perf
+    ops = (series.get("OperatorsName") or "").strip()
+    if ops:
+        ds.OperatorsName = ops
+    lat = (series.get("Laterality") or "").strip()
+    if lat:
+        ds.Laterality = lat
 
     # SOP Instance UID
     # Each dataset must have a unique SOP Instance UID and the matching Class UID.
