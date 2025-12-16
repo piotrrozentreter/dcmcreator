@@ -1,4 +1,10 @@
 import datetime
+import logging
+try:
+    from .dcmlogger import LOGGER_NAME
+except Exception:
+    # Fallback if relative import not available (e.g., run as script)
+    LOGGER_NAME = "dcmcreator"
 
 try:
     import pydicom
@@ -26,6 +32,7 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     - Returns an in-memory dataset; caller is responsible for `save_as`.
     """
     if pydicom is None:
+        _logger.warning("pydicom not available; cannot create DICOM")
         raise RuntimeError("pydicom is required to create DICOM files")
 
     # Create file meta
@@ -150,6 +157,7 @@ def load_dicom(path):
     - Returns `(ds, pixel_array)` where pixel_array may be None if unavailable.
     """
     if pydicom is None:
+        _logger.warning("pydicom not available; cannot load DICOM: %s", path)
         raise RuntimeError("pydicom is required to load DICOM files")
 
     ds = pydicom.dcmread(path)
@@ -171,6 +179,7 @@ def load_dicom(path):
             else:
                 pixel_array = None
     except Exception:
+        _logger.warning("Failed to extract pixel data from %s", path, exc_info=True)
         pixel_array = None
 
     return ds, pixel_array
@@ -206,6 +215,7 @@ def load_dicom_grouped(paths_or_dir):
     Returns a nested dict: {StudyInstanceUID: {SeriesInstanceUID: [ (dataset, pixel_array) ] }}
     """
     if pydicom is None:
+        _logger.warning("pydicom not available; cannot load DICOM group")
         raise RuntimeError("pydicom is required to load DICOM files")
 
     grouped = {}
@@ -214,6 +224,7 @@ def load_dicom_grouped(paths_or_dir):
             ds, arr = load_dicom(path)
         except Exception:
             # Skip unreadable files silently to keep batch import robust.
+            _logger.warning("Skipping unreadable DICOM file: %s", path, exc_info=True)
             continue
 
         study_uid = getattr(ds, "StudyInstanceUID", None) or ""
@@ -247,6 +258,7 @@ def is_dicomdir(path):
         if hasattr(ds, 'DirectoryRecordSequence'):
             return True
     except Exception:
+        _logger.warning("Failed to probe DICOMDIR file: %s", path, exc_info=True)
         pass
     import os as _os
     return _os.path.basename(path).upper() == 'DICOMDIR'
@@ -258,6 +270,7 @@ def load_dicomdir_grouped(dicomdir_path):
     Follows references in `DirectoryRecordSequence`; if none found, scans the directory.
     """
     if pydicom is None:
+        _logger.warning("pydicom not available; cannot load DICOMDIR: %s", dicomdir_path)
         raise RuntimeError("pydicom is required to load DICOMDIR files")
 
     import os as _os
@@ -266,6 +279,7 @@ def load_dicomdir_grouped(dicomdir_path):
         ddir = pydicom.dcmread(dicomdir_path)
     except Exception as e:
         # Propagate the error to the caller for user-friendly messaging upstream.
+        _logger.warning("Failed to read DICOMDIR: %s", dicomdir_path, exc_info=True)
         raise
 
     referenced_files = []

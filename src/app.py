@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import os
 import datetime
+import logging
+import sys
 
 try:
     import pydicom
@@ -16,7 +18,12 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.1\n"
+APP_TITLE = "DICOM Creator v0.2\n"
+try:
+    from .dcmlogger import setup_logging, LOGGER_NAME
+except Exception:
+    # Fallback when running as a script (no package context)
+    from dcmlogger import setup_logging, LOGGER_NAME
 
 class DicomCreatorApp(tk.Tk):
     # Main application window for DICOM creation and editing.
@@ -26,6 +33,9 @@ class DicomCreatorApp(tk.Tk):
         self.title(APP_TITLE)
         self.geometry("800x600")
         self.resizable(True, True)
+
+        # Logger
+        self.logger = setup_logging()
 
         # Image-related state
         self.image_path = None
@@ -45,6 +55,9 @@ class DicomCreatorApp(tk.Tk):
         menubar = tk.Menu(self)
         file_menu = tk.Menu(menubar, tearoff=False)
         file_menu.add_command(label="New", command=self.new_file, accelerator="Ctrl+N")
+        file_menu.add_command(label="Load", command=self.load_dicom_file, accelerator="Ctrl+O")
+        file_menu.add_command(label="Load Folder", command=self.load_dicom_folder, accelerator="Ctrl+Shift+O")
+        file_menu.add_command(label="Save", command=self.save_dicom, accelerator="Ctrl+S")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=file_menu)
@@ -55,6 +68,9 @@ class DicomCreatorApp(tk.Tk):
 
         self.config(menu=menubar)
         self.bind_all("<Control-n>", lambda e: self.new_file())
+        self.bind_all("<Control-o>", lambda e: self.load_dicom_file())
+        self.bind_all("<Control-Shift-o>", lambda e: self.load_dicom_folder())
+        self.bind_all("<Control-s>", lambda e: self.save_dicom())
 
         # Tabbed container for different sections
         container = ttk.Notebook(self)
@@ -174,12 +190,34 @@ class DicomCreatorApp(tk.Tk):
         self.series_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
 
     def new_file(self):
-        # Clear only the metadata form fields. Do not clear loaded pixels or DICOM tree.
+        # Confirm with user before clearing everything
+        if not messagebox.askyesno(APP_TITLE, "This will clear all metadata, loaded images, and loaded DICOM. Continue?"):
+            return
+        # Clear all controls and internal state (forms, images, DICOM lists).
         # Clear form fields (Patient, Study, Series)
         for d in (self.patient_vars, self.study_vars, self.series_vars):
             for v in d.values():
                 v.set("")
-        # Keep pixel data and loaded tree as-is; requirement is to clear forms only
+
+        # Reset image-related state and preview
+        self.image_path = None
+        self.pixel_array = None
+        self._tk_img = None
+        self.image_label.config(text="No image loaded")
+        try:
+            self.preview_label.configure(image="")
+        except Exception:
+            pass
+
+        # Reset DICOM-loaded structures and tree view
+        self.grouped_dicom = {}
+        try:
+            self.series_tree.delete(*self.series_tree.get_children())
+        except Exception:
+            pass
+        self.dcm_info_label.config(text="No DICOM loaded")
+
+        # Reset selected identifiers
         self.selected_study_uid = None
         self.selected_series_uid = None
 
@@ -201,6 +239,8 @@ class DicomCreatorApp(tk.Tk):
         if not path:
             return
         if Image is None or np is None:
+            if hasattr(self, 'logger'):
+                self.logger.warning("Pillow/numpy not available; cannot load image")
             messagebox.showerror(APP_TITLE, "Pillow and numpy are required to load images.")
             return
         try:
@@ -210,6 +250,7 @@ class DicomCreatorApp(tk.Tk):
             self.image_label.config(text=f"Loaded: {os.path.basename(path)} | {img.size[0]}x{img.size[1]}")
             self._update_image_preview(self.pixel_array)
         except Exception as e:
+            self.logger.exception("Failed to load image '%s'", path)
             messagebox.showerror(APP_TITLE, f"Failed to load image: {e}")
 
     def _update_image_preview(self, arr):
@@ -246,7 +287,7 @@ class DicomCreatorApp(tk.Tk):
             self.preview_label.configure(image=self._tk_img)
         except Exception:
             # Ignore preview errors
-            pass
+            self.logger.warning("Failed to update image preview", exc_info=True)
 
     def _to_uint8(self, arr):
         # Normalize arbitrary numeric array to uint8 [0,255] range for display.
@@ -264,6 +305,8 @@ class DicomCreatorApp(tk.Tk):
     def save_dicom(self):
         # Save the current metadata and pixel data into a DICOM file using helper function.
         if pydicom is None:
+            if hasattr(self, 'logger'):
+                self.logger.warning("pydicom not available; cannot save DICOM")
             messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
             return
 
@@ -276,6 +319,8 @@ class DicomCreatorApp(tk.Tk):
             try:
                 from dcm import create_dicom
             except Exception as e:
+                if hasattr(self, 'logger'):
+                    self.logger.exception("Failed to import DICOM module")
                 messagebox.showerror(APP_TITLE, f"Failed to import DICOM module: {e}")
                 return
 
@@ -312,6 +357,7 @@ class DicomCreatorApp(tk.Tk):
                 pixel_array=self.pixel_array,
             )
         except Exception as e:
+            self.logger.exception("Failed to create DICOM dataset")
             messagebox.showerror(APP_TITLE, f"Failed to create DICOM: {e}")
             return
 
@@ -319,11 +365,14 @@ class DicomCreatorApp(tk.Tk):
             ds.save_as(save_path)
             messagebox.showinfo(APP_TITLE, f"DICOM saved to: {save_path}")
         except Exception as e:
+            self.logger.exception("Failed to save DICOM to '%s'", save_path)
             messagebox.showerror(APP_TITLE, f"Failed to save DICOM: {e}")
 
     def load_dicom_file(self):
         # Load one or more DICOM files. Supports picking a DICOMDIR file to expand dataset references.
         if pydicom is None:
+            if hasattr(self, 'logger'):
+                self.logger.warning("pydicom not available; cannot load DICOM files")
             messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
             return
         # Allow multi-select files to load many instances
@@ -382,11 +431,14 @@ class DicomCreatorApp(tk.Tk):
                 self.series_tree.selection_set(first_series_id)
                 self.on_tree_select(None)
         except Exception as e:
+            self.logger.exception("Failed to load DICOM selections: %s", paths)
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM: {e}")
 
     def load_dicom_folder(self):
         # Load all DICOM files under a selected folder and group them for display.
         if pydicom is None:
+            if hasattr(self, 'logger'):
+                self.logger.warning("pydicom not available; cannot load DICOM folder")
             messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
             return
         folder = filedialog.askdirectory(title="Select DICOM folder")
@@ -417,6 +469,7 @@ class DicomCreatorApp(tk.Tk):
                 self.series_tree.selection_set(first_series_id)
                 self.on_tree_select(None)
         except Exception as e:
+            self.logger.exception("Failed to load DICOM folder: %s", folder)
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
 
     def on_tree_select(self, event):
