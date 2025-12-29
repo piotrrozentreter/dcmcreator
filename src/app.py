@@ -19,7 +19,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.2\n"
+APP_TITLE = "DICOM Creator v0.2.1\n"
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
 except Exception:
@@ -138,7 +138,7 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 11)
         self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 12)
         self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 13)
-        self._add_labeled_entry(self.patient_frame, "Datetime of death (YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 14)
+        self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 14)
 
         # Study fields
         self.study_vars = {
