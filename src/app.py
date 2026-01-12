@@ -19,7 +19,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.2.1\n"
+APP_TITLE = "DICOM Creator v0.2.2\n"
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
 except Exception:
@@ -705,6 +705,18 @@ class DicomCreatorApp(tk.Tk):
         except Exception:
             messagebox.showerror(APP_TITLE, "Port must be an integer")
             return
+        
+        # Check if Patient ID is empty and confirm with user
+        patient_id = self.patient_vars["PatientID"].get().strip()
+        if not patient_id:
+            if not messagebox.askyesno(
+                APP_TITLE,
+                "Patient ID is empty. While technically allowed, this is not recommended "
+                "and may cause issues with some DICOM systems.\n\n"
+                "Do you want to continue sending anyway?"
+            ):
+                return
+        
         grouped_to_send = self.grouped_dicom
         if not grouped_to_send:
             # Build a single in-memory dataset from current form + image
@@ -727,7 +739,7 @@ class DicomCreatorApp(tk.Tk):
                         "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
                         "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
                         "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
-                        "PatientID": self.patient_vars["PatientID"].get().strip(),
+                        "PatientID": patient_id,
                         "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
                         "PatientSex": self.patient_vars["PatientSex"].get().strip(),
                         "PatientAge": self.patient_vars["PatientAge"].get().strip(),
