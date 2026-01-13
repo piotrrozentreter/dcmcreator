@@ -16,7 +16,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.2.3\n"
+APP_TITLE = "DICOM Creator v0.2.4\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -781,11 +781,10 @@ class DicomCreatorApp(tk.Tk):
             ):
                 return
         
-        grouped_to_send = self.grouped_dicom
+        # Always create dataset from current form values to ensure modifications are sent
+        grouped_to_send = self._create_in_memory_dataset(patient_id)
         if not grouped_to_send:
-            grouped_to_send = self._create_in_memory_dataset(patient_id)
-            if not grouped_to_send:
-                return
+            return
 
         # Clear previous messages
         self.remote_messages.configure(state=tk.NORMAL)
@@ -900,7 +899,7 @@ class DicomCreatorApp(tk.Tk):
             )
             suid = str(getattr(ds, 'StudyInstanceUID', ''))
             seruid = str(getattr(ds, 'SeriesInstanceUID', ''))
-            self._append_remote_message("No DICOM loaded; sending current in-memory dataset")
+            self._append_remote_message("Sending DICOM dataset from current form values")
             return {suid: {seruid: [(ds, self.pixel_array)]}}
         except Exception as ce:
             self.logger.exception("Failed to build in-memory dataset for sending")
