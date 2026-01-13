@@ -259,7 +259,17 @@ def load_dicom(path):
         _logger.warning("pydicom not available; cannot load DICOM: %s", path)
         raise RuntimeError("pydicom is required to load DICOM files")
 
-    ds = pydicom.dcmread(path)
+    # Try reading with standard DICOM header first
+    try:
+        ds = pydicom.dcmread(path)
+    except Exception as e:
+        # If it fails, try with force=True for files without proper preamble
+        try:
+            ds = pydicom.dcmread(path, force=True)
+            _logger.debug("Loaded DICOM file without standard header: %s", path)
+        except Exception:
+            # Re-raise original exception if force=True also fails
+            raise e
 
     pixel_array = None
     try:
@@ -278,7 +288,7 @@ def load_dicom(path):
             else:
                 pixel_array = None
     except Exception:
-        _logger.warning("Failed to extract pixel data from %s", path, exc_info=True)
+        _logger.debug("Failed to extract pixel data from %s", path)
         pixel_array = None
 
     return ds, pixel_array
@@ -288,7 +298,7 @@ def _iter_dicom_files(paths_or_dir):
     """
     Yield file paths from a list, tuple, directory, or single file path.
 
-    - For directories, walks recursively and yields all files (heuristic: accepts any file, giving precedence to common DICOM extensions).
+    - For directories, walks recursively and yields files with DICOM-like characteristics.
     - For lists/tuples, yields existing files only.
     """
     import os
@@ -300,9 +310,19 @@ def _iter_dicom_files(paths_or_dir):
         if os.path.isdir(paths_or_dir):
             for root, _, files in os.walk(paths_or_dir):
                 for f in files:
-                    # Heuristic: accept all, but prefer common DICOM extensions
-                    if f.lower().endswith((".dcm", ".dicom")) or True:
-                        yield os.path.join(root, f)
+                    # Skip obvious non-DICOM files
+                    lower_f = f.lower()
+                    
+                    # Skip common non-DICOM extensions
+                    skip_extensions = ('.txt', '.xml', '.html', '.json', '.ini', '.log', 
+                                      '.bat', '.sh', '.exe', '.dll', '.so', '.py', '.pyc',
+                                      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', 
+                                      '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.tar', '.gz')
+                    if any(lower_f.endswith(ext) for ext in skip_extensions):
+                        continue
+                    
+                    # Prefer files with DICOM extensions or no extension
+                    yield os.path.join(root, f)
         elif os.path.isfile(paths_or_dir):
             yield paths_or_dir
 
@@ -318,12 +338,14 @@ def load_dicom_grouped(paths_or_dir):
         raise RuntimeError("pydicom is required to load DICOM files")
 
     grouped = {}
+    skipped_count = 0
     for path in _iter_dicom_files(paths_or_dir):
         try:
             ds, arr = load_dicom(path)
         except Exception:
             # Skip unreadable files silently to keep batch import robust.
-            _logger.warning("Skipping unreadable DICOM file: %s", path, exc_info=True)
+            skipped_count += 1
+            _logger.debug("Skipping unreadable file: %s", path)
             continue
 
         study_uid = getattr(ds, "StudyInstanceUID", None) or ""
@@ -333,6 +355,9 @@ def load_dicom_grouped(paths_or_dir):
         study_bucket = grouped.setdefault(study_uid, {})
         series_bucket = study_bucket.setdefault(series_uid, [])
         series_bucket.append((ds, arr))
+
+    if skipped_count > 0:
+        _logger.info("Skipped %d non-DICOM or unreadable files", skipped_count)
 
     return grouped
 
@@ -347,6 +372,12 @@ def is_dicomdir(path):
     """
     if pydicom is None:
         return False
+    
+    # Quick check: if filename is DICOMDIR, likely a DICOMDIR
+    import os as _os
+    if _os.path.basename(path).upper() == 'DICOMDIR':
+        return True
+    
     try:
         ds = pydicom.dcmread(path, stop_before_pixels=True)
         if getattr(ds, 'SOPClassUID', None) == MediaStorageDirectoryStorage:
@@ -357,10 +388,18 @@ def is_dicomdir(path):
         if hasattr(ds, 'DirectoryRecordSequence'):
             return True
     except Exception:
-        _logger.warning("Failed to probe DICOMDIR file: %s", path, exc_info=True)
-        pass
-    import os as _os
-    return _os.path.basename(path).upper() == 'DICOMDIR'
+        # Try with force=True for files without proper preamble
+        try:
+            ds = pydicom.dcmread(path, stop_before_pixels=True, force=True)
+            if getattr(ds, 'SOPClassUID', None) == MediaStorageDirectoryStorage:
+                return True
+            if hasattr(ds, 'DirectoryRecordSequence'):
+                return True
+        except Exception:
+            # Not a DICOMDIR or not readable
+            pass
+    
+    return False
 
 
 def load_dicomdir_grouped(dicomdir_path):
