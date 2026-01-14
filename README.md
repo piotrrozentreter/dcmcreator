@@ -141,9 +141,12 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 
 ## Documentation
 
-- **[BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)** - Complete guide to building the EXE
-- **[BUILD_SUCCESS.md](BUILD_SUCCESS.md)** - Build details and troubleshooting
-- **[QUICK_START.md](QUICK_START.md)** - Quick reference guide
+- **[doc/INDEX.md](doc/INDEX.md)** - Documentation index and navigation guide
+- **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Quick start guide for Server Presets feature
+- **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Comprehensive Server Presets documentation
+- **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Complete guide to building the EXE
+- **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution and deployment guide
+- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer documentation for Server Presets
 
 ## Project Structure
 

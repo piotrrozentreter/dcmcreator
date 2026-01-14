@@ -16,12 +16,20 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.2.4\n"
+APP_TITLE = "DICOM Creator v0.3.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
 except Exception:
     from dcmlogger import setup_logging, LOGGER_NAME
+
+try:
+    from .presets import ServerPresetsManager
+except Exception:
+    try:
+        from presets import ServerPresetsManager
+    except Exception:
+        ServerPresetsManager = None
 
 
 class DicomCreatorApp(tk.Tk):
@@ -42,11 +50,18 @@ class DicomCreatorApp(tk.Tk):
         self.image_path = None
         self.pixel_array = None
         self._tk_img = None
+        self.image_source = None  # Track if image is from file ("file") or DICOM ("dicom")
 
         # DICOM loading state
         self.grouped_dicom = {}
         self.selected_study_uid = None
         self.selected_series_uid = None
+        
+        # Server presets
+        if ServerPresetsManager:
+            self.presets_manager = ServerPresetsManager()
+        else:
+            self.presets_manager = None
 
         self._build_ui()
 
@@ -266,22 +281,52 @@ class DicomCreatorApp(tk.Tk):
             "port": tk.StringVar(value="4321"),
             "calling_ae": tk.StringVar(value="DCMCREATOR"),
             "called_ae": tk.StringVar(value="AcuoMed1"),
+            "preset_name": tk.StringVar(),
         }
-        self._add_labeled_entry(self.remote_frame, "Server (IP/Name)", self.remote_vars["server"], 0)
-        self._add_labeled_entry(self.remote_frame, "Port", self.remote_vars["port"], 1)
-        self._add_labeled_entry(self.remote_frame, "Calling AE Title", self.remote_vars["calling_ae"], 2)
-        self._add_labeled_entry(self.remote_frame, "Called AE Title", self.remote_vars["called_ae"], 3)
+        
+        # Preset management section
+        preset_frame = ttk.LabelFrame(self.remote_frame, text="Server Presets", padding=10)
+        preset_frame.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        self.remote_frame.columnconfigure(0, weight=1)
+        
+        preset_inner = ttk.Frame(preset_frame)
+        preset_inner.pack(fill=tk.X)
+        preset_inner.columnconfigure(1, weight=1)
+        
+        ttk.Label(preset_inner, text="Preset:").grid(row=0, column=0, sticky="w", padx=5)
+        self.preset_combo = ttk.Combobox(preset_inner, textvariable=self.remote_vars["preset_name"], state="readonly")
+        self.preset_combo.grid(row=0, column=1, sticky="ew", padx=5)
+        self.preset_combo.bind("<<ComboboxSelected>>", self._on_preset_selected)
+        
+        preset_btn_frame = ttk.Frame(preset_frame)
+        preset_btn_frame.pack(fill=tk.X, pady=5)
+        ttk.Button(preset_btn_frame, text="Load", command=self._load_preset).pack(side=tk.LEFT, padx=2)
+        ttk.Button(preset_btn_frame, text="Save Current", command=self._save_current_preset).pack(side=tk.LEFT, padx=2)
+        ttk.Button(preset_btn_frame, text="Delete", command=self._delete_preset).pack(side=tk.LEFT, padx=2)
+        
+        # Refresh presets list on startup
+        self._refresh_presets_list()
+        
+        # Server configuration section
+        config_frame = ttk.LabelFrame(self.remote_frame, text="Server Configuration", padding=10)
+        config_frame.grid(row=1, column=0, sticky="ew", padx=10, pady=5)
+        self.remote_frame.columnconfigure(0, weight=1)
+        
+        self._add_labeled_entry(config_frame, "Server (IP/Name)", self.remote_vars["server"], 0)
+        self._add_labeled_entry(config_frame, "Port", self.remote_vars["port"], 1)
+        self._add_labeled_entry(config_frame, "Calling AE Title", self.remote_vars["calling_ae"], 2)
+        self._add_labeled_entry(config_frame, "Called AE Title", self.remote_vars["called_ae"], 3)
 
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
-        btn_row.grid(row=4, column=0, sticky="ew", padx=10, pady=10)
+        btn_row.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
         self.remote_send_button = ttk.Button(btn_row, text="Send All Loaded DICOM", command=self.send_remote)
         self.remote_send_button.pack(side=tk.LEFT)
 
         # Message area
         msg_row = ttk.Frame(self.remote_frame)
-        msg_row.grid(row=5, column=0, sticky="nsew", padx=10, pady=5)
-        self.remote_frame.rowconfigure(5, weight=1)
+        msg_row.grid(row=3, column=0, sticky="nsew", padx=10, pady=5)
+        self.remote_frame.rowconfigure(3, weight=1)
         self.remote_frame.columnconfigure(0, weight=1)
         ttk.Label(msg_row, text="Messages / Errors:").pack(anchor=tk.W)
         self.remote_messages = tk.Text(msg_row, height=8, wrap="word")
@@ -310,6 +355,7 @@ class DicomCreatorApp(tk.Tk):
         self.image_path = None
         self.pixel_array = None
         self._tk_img = None
+        self.image_source = None
         self.image_label.config(text="No image loaded")
         try:
             self.preview_label.configure(image="")
@@ -366,13 +412,14 @@ class DicomCreatorApp(tk.Tk):
             
         if Image is None or np is None:
             self.logger.warning("Pillow/numpy not available; cannot load image")
-            messagebox.showerror(APP_TITLE, "Pillow and numpy are required to load images.")
+            messagebox.showerror(APP_TITLE, "Pillar and numpy are required to load images.")
             return
             
         try:
             img = Image.open(path).convert("L")
             self.pixel_array = np.array(img)
             self.image_path = path
+            self.image_source = "file"  # Mark image as from file
             self.image_label.config(text=f"Loaded: {os.path.basename(path)} | {img.size[0]}x{img.size[1]}")
             self._update_image_preview(self.pixel_array)
         except Exception as e:
@@ -672,7 +719,9 @@ class DicomCreatorApp(tk.Tk):
             return
             
         ds, arr = instances[0]
-        self.pixel_array = arr if arr is not None else self.pixel_array
+        # Only update pixel_array if no image is currently loaded from a file
+        if self.image_source != "file":
+            self.pixel_array = arr if arr is not None else self.pixel_array
         
         # Populate patient fields
         self._populate_patient_fields(ds)
@@ -689,7 +738,9 @@ class DicomCreatorApp(tk.Tk):
         if rows and cols:
             self.image_label.config(text=f"Selected Series: {series_uid} | {cols}x{rows}")
             
-        if arr is not None:
+        # Only update preview if no user-loaded image is active
+        if self.image_source != "file" and arr is not None:
+            self.image_source = "dicom"
             self._update_image_preview(arr)
 
     def _populate_patient_fields(self, ds):
@@ -929,3 +980,121 @@ class DicomCreatorApp(tk.Tk):
             self.logger.exception("Failed to build in-memory dataset for sending")
             messagebox.showerror(APP_TITLE, f"Failed to build dataset from current form: {ce}")
             return None
+
+    def _on_preset_selected(self, event=None):
+        """Handle preset selection from the combobox."""
+        try:
+            if not self.presets_manager:
+                return
+            
+            name = self.preset_combo.get().strip()
+            if name:
+                preset = self.presets_manager.load_preset(name)
+                if preset:
+                    # Apply preset values to remote vars
+                    self.remote_vars["server"].set(preset.get('server', ''))
+                    self.remote_vars["port"].set(str(preset.get('port', '4321')))
+                    self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+                    self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+
+    def _refresh_presets_list(self):
+        """Refresh the list of presets in the combobox."""
+        try:
+            if not self.presets_manager:
+                self.preset_combo['values'] = []
+                return
+            
+            presets = self.presets_manager.list_presets()
+            self.preset_combo['values'] = presets
+            
+            # Clear current selection
+            self.preset_combo.set("")
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to refresh presets list")
+            self.preset_combo['values'] = []
+
+    def _load_preset(self):
+        """Load the selected preset into the remote settings fields."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            preset = self.presets_manager.load_preset(name)
+            if not preset:
+                messagebox.showerror(APP_TITLE, f"Preset '{name}' not found")
+                return
+            
+            # Apply preset values to remote vars
+            self.remote_vars["server"].set(preset.get('server', ''))
+            self.remote_vars["port"].set(str(preset.get('port', '4321')))
+            self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+            self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+            
+            self._append_remote_message(f"Loaded preset: {name}")
+            messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+            messagebox.showerror(APP_TITLE, f"Failed to load preset: {e}")
+
+    def _save_current_preset(self):
+        """Save the current remote settings to a preset."""
+        try:
+            name = self.remote_vars["preset_name"].get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "Preset name must be provided")
+                return
+            
+            # Collect current remote var values, excluding preset_name
+            preset = {
+                'server': self.remote_vars["server"].get().strip(),
+                'port': self.remote_vars["port"].get().strip(),
+                'calling_ae': self.remote_vars["calling_ae"].get().strip(),
+                'called_ae': self.remote_vars["called_ae"].get().strip(),
+            }
+            
+            if self.presets_manager.save_preset(name, preset):
+                self._refresh_presets_list()  # Refresh list to show the new preset
+                self._append_remote_message(f"Saved preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' saved successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to save preset '{name}'")
+        except Exception as e:
+            self.logger.exception("Failed to save preset")
+            messagebox.showerror(APP_TITLE, f"Failed to save preset: {e}")
+
+    def _delete_preset(self):
+        """Delete the selected preset."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            if not messagebox.askyesno(APP_TITLE, f"Delete preset '{name}'?"):
+                return
+            
+            if self.presets_manager.delete_preset(name):
+                self._refresh_presets_list()  # Refresh list to remove the deleted preset
+                self._append_remote_message(f"Deleted preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' deleted successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to delete preset '{name}'")
+            
+            # Clear preset name field
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to delete preset")
+            messagebox.showerror(APP_TITLE, f"Failed to delete preset: {e}")
