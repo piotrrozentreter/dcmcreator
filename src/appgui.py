@@ -31,6 +31,22 @@ except Exception:
     except Exception:
         ServerPresetsManager = None
 
+try:
+    from .random_dicom import RandomDicomGenerator
+except Exception:
+    try:
+        from random_dicom import RandomDicomGenerator
+    except Exception:
+        RandomDicomGenerator = None
+
+try:
+    from .test_runner import TestRunner
+except Exception:
+    try:
+        from test_runner import TestRunner
+    except Exception:
+        TestRunner = None
+
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
@@ -113,6 +129,7 @@ class DicomCreatorApp(tk.Tk):
         self.load_dcm_frame = ttk.Frame(container)
         self.save_frame = ttk.Frame(container)
         self.remote_frame = ttk.Frame(container)
+        self.test_frame = ttk.Frame(container)
 
         container.add(self.patient_frame, text="Patient")
         container.add(self.study_frame, text="Study")
@@ -121,6 +138,7 @@ class DicomCreatorApp(tk.Tk):
         container.add(self.load_dcm_frame, text="Load DICOM")
         container.add(self.save_frame, text="Save")
         container.add(self.remote_frame, text="Remote")
+        container.add(self.test_frame, text="Test/Generate")
 
         # Patient fields
         self._build_patient_fields()
@@ -142,6 +160,9 @@ class DicomCreatorApp(tk.Tk):
         
         # Remote tab UI
         self._build_remote_ui()
+        
+        # Test/Generator tab
+        self._build_test_tab()
 
     def _build_patient_fields(self):
         """Build patient metadata form fields."""
@@ -274,6 +295,14 @@ class DicomCreatorApp(tk.Tk):
 
         self.series_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
 
+    def _add_labeled_entry(self, parent, label, var, row):
+        """Helper: create a label + entry bound to a StringVar, aligned in a grid row."""
+        frame = ttk.Frame(parent)
+        frame.grid(row=row, column=0, sticky="ew", padx=10, pady=5)
+        parent.columnconfigure(0, weight=1)
+        ttk.Label(frame, text=label, width=30).pack(side=tk.LEFT)
+        ttk.Entry(frame, textvariable=var).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
     def _build_remote_ui(self):
         """Build remote DICOM transmission tab."""
         self.remote_vars = {
@@ -333,13 +362,186 @@ class DicomCreatorApp(tk.Tk):
         self.remote_messages.pack(fill=tk.BOTH, expand=True)
         self.remote_messages.configure(state=tk.DISABLED)
 
-    def _add_labeled_entry(self, parent, label, var, row):
-        """Helper: create a label + entry bound to a StringVar, aligned in a grid row."""
-        frame = ttk.Frame(parent)
-        frame.grid(row=row, column=0, sticky="ew", padx=10, pady=5)
-        parent.columnconfigure(0, weight=1)
-        ttk.Label(frame, text=label, width=30).pack(side=tk.LEFT)
-        ttk.Entry(frame, textvariable=var).pack(side=tk.LEFT, fill=tk.X, expand=True)
+    def _build_test_tab(self):
+        """Build Test/Generator tab for creating and testing bulk DICOM transmission."""
+        # Generator section
+        gen_frame = ttk.LabelFrame(self.test_frame, text="DICOM Generator", padding=10)
+        gen_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        gen_inner = ttk.Frame(gen_frame)
+        gen_inner.pack(fill=tk.X)
+        gen_inner.columnconfigure(1, weight=1)
+        
+        ttk.Label(gen_inner, text="Count:").grid(row=0, column=0, sticky="w", padx=5)
+        self.test_vars = {}
+        self.test_vars["count"] = tk.StringVar(value="10")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["count"], width=10).grid(row=0, column=1, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=0, column=2, sticky="w", padx=5)
+        self.test_vars["size_mb"] = tk.StringVar(value="1.0")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Output Dir:").grid(row=1, column=0, sticky="w", padx=5)
+        self.test_vars["output_dir"] = tk.StringVar()
+        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=1, column=1, columnspan=2, sticky="ew", padx=5)
+        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=1, column=3, padx=5)
+        
+        gen_buttons = ttk.Frame(gen_frame)
+        gen_buttons.pack(fill=tk.X, pady=10)
+        ttk.Button(gen_buttons, text="Generate DICOMs", command=self._generate_test_dicoms).pack(side=tk.LEFT, padx=2)
+        ttk.Button(gen_buttons, text="Generate & Send", command=self._generate_and_send).pack(side=tk.LEFT, padx=2)
+        
+        # Test section
+        test_frame = ttk.LabelFrame(self.test_frame, text="Test Transmission", padding=10)
+        test_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        test_inner = ttk.Frame(test_frame)
+        test_inner.pack(fill=tk.X)
+        
+        ttk.Button(test_inner, text="Test Connection", command=self._test_connection).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="Send All Generated", command=self._send_generated_files).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="View Results", command=self._view_test_results).pack(side=tk.LEFT, padx=2)
+        
+        # Status section
+        status_frame = ttk.LabelFrame(self.test_frame, text="Status", padding=10)
+        status_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        self.test_status = tk.Text(status_frame, height=15, wrap="word")
+        self.test_status.pack(fill=tk.BOTH, expand=True)
+        
+        scrollbar = ttk.Scrollbar(status_frame, orient="vertical", command=self.test_status.yview)
+        self.test_status.config(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    def _select_test_output_dir(self):
+        """Select output directory for generated DICOMs."""
+        folder = filedialog.askdirectory(title="Select output directory for test DICOMs")
+        if folder:
+            self.test_vars["output_dir"].set(folder)
+
+    def _generate_test_dicoms(self):
+        """Generate test DICOM files."""
+        if RandomDicomGenerator is None:
+            messagebox.showerror(APP_TITLE, "RandomDicomGenerator not available")
+            return
+
+        try:
+            count = int(self.test_vars["count"].get())
+            size_mb = float(self.test_vars["size_mb"].get())
+            output_dir = self.test_vars["output_dir"].get()
+
+            if not output_dir:
+                messagebox.showerror(APP_TITLE, "Please select an output directory")
+                return
+
+            self._append_test_status(f"Generating {count} test DICOMs ({size_mb}MB each)...")
+
+            generator = RandomDicomGenerator(logger=self.logger)
+            files = generator.generate_with_sizes(count=count, size_mb=size_mb, output_dir=output_dir)
+
+            self._append_test_status(f"? Generated {len(files)} test DICOM files")
+            self._append_test_status(f"  Location: {output_dir}")
+
+            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} test DICOM files")
+        except Exception as e:
+            self.logger.exception("Failed to generate test DICOMs")
+            messagebox.showerror(APP_TITLE, f"Generation failed: {e}")
+
+    def _generate_and_send(self):
+        """Generate test DICOMs and send them to the remote server."""
+        self._generate_test_dicoms()
+        self._send_generated_files()
+
+    def _send_generated_files(self):
+        """Send all generated files to remote server."""
+        output_dir = self.test_vars["output_dir"].get()
+        if not output_dir or not os.path.exists(output_dir):
+            messagebox.showerror(APP_TITLE, "No valid output directory")
+            return
+
+        # Load all DICOMs from directory
+        self._append_test_status("\nLoading generated DICOMs...")
+        try:
+            from .dcm import load_dicom_grouped
+        except:
+            try:
+                from dcm import load_dicom_grouped
+            except:
+                messagebox.showerror(APP_TITLE, "Failed to import DICOM loader")
+                return
+
+        try:
+            grouped = load_dicom_grouped(output_dir)
+            self._append_test_status(f"? Loaded {sum(len(v) for v in grouped.values())} instances")
+
+            # Send to remote
+            self.send_remote()
+        except Exception as e:
+            self.logger.exception("Failed to load generated DICOMs")
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOMs: {e}")
+
+    def _test_connection(self):
+        """Test connection to remote DICOM server."""
+        server = self.remote_vars["server"].get().strip()
+        port_s = self.remote_vars["port"].get().strip()
+        calling_ae = self.remote_vars["calling_ae"].get().strip() or "DCMCREATOR"
+        called_ae = self.remote_vars["called_ae"].get().strip() or "ANY-SCP"
+
+        if not server or not port_s:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_s)
+        except:
+            messagebox.showerror(APP_TITLE, "Port must be numeric")
+            return
+
+        self._append_test_status("\nTesting connection...")
+
+        def test_worker():
+            try:
+                import socket
+
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(5)
+
+                self._append_test_status(f"  Connecting to {server}:{port}...")
+                result = sock.connect_ex((server, port))
+                sock.close()
+
+                if result == 0:
+                    self._append_test_status(f"  ? Connection successful")
+                    self.after(0, lambda: messagebox.showinfo(APP_TITLE, "Connection test PASSED"))
+                else:
+                    self._append_test_status(f"  ? Connection failed (errno {result})")
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Connection FAILED (errno {result})"))
+            except Exception as e:
+                self._append_test_status(f"  ? Error: {e}")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Test failed: {e}"))
+
+        t = threading.Thread(target=test_worker, daemon=True)
+        t.start()
+
+    def _view_test_results(self):
+        """View test results (placeholder)."""
+        if TestRunner is None:
+            messagebox.showinfo(APP_TITLE, "TestRunner not available yet")
+            return
+
+        results = "Test Results\n" + "=" * 50 + "\n\nNo tests run yet"
+        messagebox.showinfo(APP_TITLE, results)
+
+    def _append_test_status(self, text):
+        """Append text to test status area."""
+        try:
+            self.test_status.configure(state=tk.NORMAL)
+            self.test_status.insert(tk.END, text + "\n")
+            self.test_status.see(tk.END)
+            self.test_status.configure(state=tk.DISABLED)
+            self.test_status.update_idletasks()
+        except Exception:
+            pass
 
     def new_file(self):
         """Clear all metadata, loaded images, and loaded DICOM."""
@@ -807,7 +1009,1882 @@ class DicomCreatorApp(tk.Tk):
             self.remote_messages.insert(tk.END, text + "\n")
             self.remote_messages.see(tk.END)
             self.remote_messages.configure(state=tk.DISABLED)
-            self.remote_messages.update_idletasks()
+        except Exception:
+            pass
+
+    def send_remote(self):
+        """Send all loaded DICOM instances to a remote DICOM SCP using C-STORE."""
+        try:
+            from .remote import send_grouped_dicom, is_remote_available, remote_unavailable_reason
+        except Exception:
+            try:
+                from remote import send_grouped_dicom, is_remote_available, remote_unavailable_reason
+            except Exception as e:
+                self.logger.exception("Failed to import remote sender")
+                messagebox.showerror(APP_TITLE, f"Failed to import remote sender: {e}")
+                return
+                
+        if not is_remote_available():
+            reason = remote_unavailable_reason()
+            self.logger.error("Remote send unavailable: %s", reason)
+            self._append_remote_message(f"Remote unavailable: {reason}")
+            messagebox.showerror(APP_TITLE, f"Remote unavailable: {reason}")
+            return
+
+        server = self.remote_vars["server"].get().strip()
+        port_s = self.remote_vars["port"].get().strip()
+        calling_ae = self.remote_vars["calling_ae"].get().strip() or "DCMCREATOR"
+        called_ae = self.remote_vars["called_ae"].get().strip() or "ANY-SCP"
+
+        # Validate inputs
+        if not server:
+            messagebox.showerror(APP_TITLE, "Server address is required")
+            return
+        try:
+            port = int(port_s)
+        except Exception:
+            messagebox.showerror(APP_TITLE, "Port must be an integer")
+            return
+        
+        # Check if Patient ID is empty and confirm with user
+        patient_id = self.patient_vars["PatientID"].get().strip()
+        if not patient_id:
+            if not messagebox.askyesno(
+                APP_TITLE,
+                "Patient ID is empty. While technically allowed, this is not recommended "
+                "and may cause issues with some DICOM systems.\n\n"
+                "Do you want to continue sending anyway?"
+            ):
+                return
+        
+        # Always create dataset from current form values to ensure modifications are sent
+        grouped_to_send = self._create_in_memory_dataset(patient_id)
+        if not grouped_to_send:
+            return
+
+        # Clear previous messages
+        self.remote_messages.configure(state=tk.NORMAL)
+        self.remote_messages.delete("1.0", tk.END)
+        self.remote_messages.configure(state=tk.DISABLED)
+
+        # Disable button during send
+        try:
+            self.remote_send_button.configure(state=tk.DISABLED)
+        except Exception:
+            pass
+
+        config = {
+            "server": server,
+            "port": port,
+            "calling_ae": calling_ae,
+            "called_ae": called_ae,
+        }
+
+        def post_message(msg: str):
+            try:
+                self.after(0, self._append_remote_message, msg)
+            except Exception:
+                pass
+
+        def worker():
+            try:
+                post_message(f"Starting send to {server}:{port} as {calling_ae}->{called_ae}")
+                send_grouped_dicom(
+                    grouped=grouped_to_send,
+                    config=config,
+                    logger=self.logger,
+                    on_message=post_message,
+                )
+                self.after(0, lambda: messagebox.showinfo(APP_TITLE, "All DICOM instances sent successfully"))
+            except Exception as e:
+                error_msg = str(e)
+                try:
+                    self.logger.exception("Remote send failed")
+                except Exception:
+                    pass
+                self.after(0, post_message, f"Error: {error_msg}")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Remote send failed: {error_msg}"))
+            finally:
+                try:
+                    self.after(0, lambda: self.remote_send_button.configure(state=tk.NORMAL))
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+
+    def _create_in_memory_dataset(self, patient_id):
+        """Create a DICOM dataset from current form values."""
+        try:
+            try:
+                from .dcm import create_dicom
+            except Exception:
+                from dcm import create_dicom
+        except Exception as ie:
+            self.logger.exception("Failed to import DICOM module for in-memory send")
+            messagebox.showerror(APP_TITLE, f"No DICOM loaded and cannot create one from current form: {ie}")
+            return None
+            
+        try:
+            ds = create_dicom(
+                save_path="in-memory",
+                patient={
+                    "PatientName": self.patient_vars["PatientName"].get().strip(),
+                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
+                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
+                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
+                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
+                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
+                    "PatientID": patient_id,
+                    "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
+                    "PatientSex": self.patient_vars["PatientSex"].get().strip(),
+                    "PatientAge": self.patient_vars["PatientAge"].get().strip(),
+                    "PatientWeight": self.patient_vars["PatientWeight"].get().strip(),
+                    "PatientSize": self.patient_vars["PatientSize"].get().strip(),
+                    "PatientComments": self.patient_vars["PatientComments"].get().strip(),
+                    "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
+                    "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                },
+                study={
+                    "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
+                    "StudyDate": self.study_vars["StudyDate"].get().strip(),
+                    "StudyTime": self.study_vars["StudyTime"].get().strip(),
+                    "StudyDescription": self.study_vars["StudyDescription"].get().strip(),
+                    "AccessionNumber": self.study_vars["AccessionNumber"].get().strip(),
+                    "StudyID": self.study_vars["StudyID"].get().strip(),
+                    "ReferringPhysicianName": self.study_vars["ReferringPhysicianName"].get().strip(),
+                    "ReadingPhysicianName": self.study_vars["ReadingPhysicianName"].get().strip(),
+                    "ReasonForStudy": self.study_vars["ReasonForStudy"].get().strip(),
+                    "AdmittingDiagnosesDescription": self.study_vars["AdmittingDiagnosesDescription"].get().strip(),
+                    "StudyPatientLocation": self.study_vars["StudyPatientLocation"].get().strip(),
+                },
+                series={
+                    "SeriesInstanceUID": self.series_vars["SeriesInstanceUID"].get().strip(),
+                    "SeriesNumber": self.series_vars["SeriesNumber"].get().strip(),
+                    "Modality": self.series_vars["Modality"].get().strip(),
+                    "SeriesDescription": self.series_vars["SeriesDescription"].get().strip(),
+                    "BodyPartExamined": self.series_vars["BodyPartExamined"].get().strip(),
+                    "ProtocolName": self.series_vars["ProtocolName"].get().strip(),
+                    "SeriesDate": self.series_vars["SeriesDate"].get().strip(),
+                    "SeriesTime": self.series_vars["SeriesTime"].get().strip(),
+                    "PerformingPhysicianName": self.series_vars["PerformingPhysicianName"].get().strip(),
+                    "OperatorsName": self.series_vars["OperatorsName"].get().strip(),
+                    "Laterality": self.series_vars["Laterality"].get().strip(),
+                },
+                pixel_array=self.pixel_array,
+            )
+            suid = str(getattr(ds, 'StudyInstanceUID', ''))
+            seruid = str(getattr(ds, 'SeriesInstanceUID', ''))
+            self._append_remote_message("Sending DICOM dataset from current form values")
+            return {suid: {seruid: [(ds, self.pixel_array)]}}
+        except Exception as ce:
+            self.logger.exception("Failed to build in-memory dataset for sending")
+            messagebox.showerror(APP_TITLE, f"Failed to build dataset from current form: {ce}")
+            return None
+
+    def _on_preset_selected(self, event=None):
+        """Handle preset selection from the combobox."""
+        try:
+            if not self.presets_manager:
+                return
+            
+            name = self.preset_combo.get().strip()
+            if name:
+                preset = self.presets_manager.load_preset(name)
+                if preset:
+                    # Apply preset values to remote vars
+                    self.remote_vars["server"].set(preset.get('server', ''))
+                    self.remote_vars["port"].set(str(preset.get('port', '4321')))
+                    self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+                    self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+
+    def _refresh_presets_list(self):
+        """Refresh the list of presets in the combobox."""
+        try:
+            if not self.presets_manager:
+                self.preset_combo['values'] = []
+                return
+            
+            presets = self.presets_manager.list_presets()
+            self.preset_combo['values'] = presets
+            
+            # Clear current selection
+            self.preset_combo.set("")
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to refresh presets list")
+            self.preset_combo['values'] = []
+
+    def _load_preset(self):
+        """Load the selected preset into the remote settings fields."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            preset = self.presets_manager.load_preset(name)
+            if not preset:
+                messagebox.showerror(APP_TITLE, f"Preset '{name}' not found")
+                return
+            
+            # Apply preset values to remote vars
+            self.remote_vars["server"].set(preset.get('server', ''))
+            self.remote_vars["port"].set(str(preset.get('port', '4321')))
+            self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+            self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+            
+            self._append_remote_message(f"Loaded preset: {name}")
+            messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+            messagebox.showerror(APP_TITLE, f"Failed to load preset: {e}")
+
+    def _save_current_preset(self):
+        """Save the current remote settings to a preset."""
+        try:
+            name = self.remote_vars["preset_name"].get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "Preset name must be provided")
+                return
+            
+            # Collect current remote var values, excluding preset_name
+            preset = {
+                'server': self.remote_vars["server"].get().strip(),
+                'port': self.remote_vars["port"].get().strip(),
+                'calling_ae': self.remote_vars["calling_ae"].get().strip(),
+                'called_ae': self.remote_vars["called_ae"].get().strip(),
+            }
+            
+            if self.presets_manager.save_preset(name, preset):
+                self._refresh_presets_list()  # Refresh list to show the new preset
+                self._append_remote_message(f"Saved preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' saved successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to save preset '{name}'")
+        except Exception as e:
+            self.logger.exception("Failed to save preset")
+            messagebox.showerror(APP_TITLE, f"Failed to save preset: {e}")
+
+    def _delete_preset(self):
+        """Delete the selected preset."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            if not messagebox.askyesno(APP_TITLE, f"Delete preset '{name}'?"):
+                return
+            
+            if self.presets_manager.delete_preset(name):
+                self._refresh_presets_list()  # Refresh list to remove the deleted preset
+                self._append_remote_message(f"Deleted preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' deleted successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to delete preset '{name}'")
+            
+            # Clear preset name field
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to delete preset")
+            messagebox.showerror(APP_TITLE, f"Failed to delete preset: {e}")
+
+    def _build_test_tab(self):
+        """Build Test/Generator tab for creating and testing bulk DICOM transmission."""
+        # Generator section
+        gen_frame = ttk.LabelFrame(self.test_frame, text="DICOM Generator", padding=10)
+        gen_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        gen_inner = ttk.Frame(gen_frame)
+        gen_inner.pack(fill=tk.X)
+        gen_inner.columnconfigure(1, weight=1)
+        
+        ttk.Label(gen_inner, text="Count:").grid(row=0, column=0, sticky="w", padx=5)
+        self.test_vars = {}
+        self.test_vars["count"] = tk.StringVar(value="10")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["count"], width=10).grid(row=0, column=1, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=0, column=2, sticky="w", padx=5)
+        self.test_vars["size_mb"] = tk.StringVar(value="1.0")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Output Dir:").grid(row=1, column=0, sticky="w", padx=5)
+        self.test_vars["output_dir"] = tk.StringVar()
+        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=1, column=1, columnspan=2, sticky="ew", padx=5)
+        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=1, column=3, padx=5)
+        
+        gen_buttons = ttk.Frame(gen_frame)
+        gen_buttons.pack(fill=tk.X, pady=10)
+        ttk.Button(gen_buttons, text="Generate DICOMs", command=self._generate_test_dicoms).pack(side=tk.LEFT, padx=2)
+        ttk.Button(gen_buttons, text="Generate & Send", command=self._generate_and_send).pack(side=tk.LEFT, padx=2)
+        
+        # Test section
+        test_frame = ttk.LabelFrame(self.test_frame, text="Test Transmission", padding=10)
+        test_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        test_inner = ttk.Frame(test_frame)
+        test_inner.pack(fill=tk.X)
+        
+        ttk.Button(test_inner, text="Test Connection", command=self._test_connection).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="Send All Generated", command=self._send_generated_files).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="View Results", command=self._view_test_results).pack(side=tk.LEFT, padx=2)
+        
+        # Status section
+        status_frame = ttk.LabelFrame(self.test_frame, text="Status", padding=10)
+        status_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        self.test_status = tk.Text(status_frame, height=15, wrap="word")
+        self.test_status.pack(fill=tk.BOTH, expand=True)
+        
+        scrollbar = ttk.Scrollbar(status_frame, orient="vertical", command=self.test_status.yview)
+        self.test_status.config(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    def _select_test_output_dir(self):
+        """Select output directory for generated DICOMs."""
+        folder = filedialog.askdirectory(title="Select output directory for test DICOMs")
+        if folder:
+            self.test_vars["output_dir"].set(folder)
+
+    def _generate_test_dicoms(self):
+        """Generate test DICOM files."""
+        if RandomDicomGenerator is None:
+            messagebox.showerror(APP_TITLE, "RandomDicomGenerator not available")
+            return
+
+        try:
+            count = int(self.test_vars["count"].get())
+            size_mb = float(self.test_vars["size_mb"].get())
+            output_dir = self.test_vars["output_dir"].get()
+
+            if not output_dir:
+                messagebox.showerror(APP_TITLE, "Please select an output directory")
+                return
+
+            self._append_test_status(f"Generating {count} test DICOMs ({size_mb}MB each)...")
+
+            generator = RandomDicomGenerator(logger=self.logger)
+            files = generator.generate_with_sizes(count=count, size_mb=size_mb, output_dir=output_dir)
+
+            self._append_test_status(f"? Generated {len(files)} test DICOM files")
+            self._append_test_status(f"  Location: {output_dir}")
+
+            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} test DICOM files")
+        except Exception as e:
+            self.logger.exception("Failed to generate test DICOMs")
+            messagebox.showerror(APP_TITLE, f"Generation failed: {e}")
+
+    def _generate_and_send(self):
+        """Generate test DICOMs and send them to the remote server."""
+        self._generate_test_dicoms()
+        self._send_generated_files()
+
+    def _send_generated_files(self):
+        """Send all generated files to remote server."""
+        output_dir = self.test_vars["output_dir"].get()
+        if not output_dir or not os.path.exists(output_dir):
+            messagebox.showerror(APP_TITLE, "No valid output directory")
+            return
+
+        # Load all DICOMs from directory
+        self._append_test_status("\nLoading generated DICOMs...")
+        try:
+            from .dcm import load_dicom_grouped
+        except:
+            try:
+                from dcm import load_dicom_grouped
+            except:
+                messagebox.showerror(APP_TITLE, "Failed to import DICOM loader")
+                return
+
+        try:
+            grouped = load_dicom_grouped(output_dir)
+            self._append_test_status(f"? Loaded {sum(len(v) for v in grouped.values())} instances")
+
+            # Send to remote
+            self.send_remote()
+        except Exception as e:
+            self.logger.exception("Failed to load generated DICOMs")
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOMs: {e}")
+
+    def _test_connection(self):
+        """Test connection to remote DICOM server."""
+        server = self.remote_vars["server"].get().strip()
+        port_s = self.remote_vars["port"].get().strip()
+        calling_ae = self.remote_vars["calling_ae"].get().strip() or "DCMCREATOR"
+        called_ae = self.remote_vars["called_ae"].get().strip() or "ANY-SCP"
+
+        if not server or not port_s:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_s)
+        except:
+            messagebox.showerror(APP_TITLE, "Port must be numeric")
+            return
+
+        self._append_test_status("\nTesting connection...")
+
+        def test_worker():
+            try:
+                import socket
+
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(5)
+
+                self._append_test_status(f"  Connecting to {server}:{port}...")
+                result = sock.connect_ex((server, port))
+                sock.close()
+
+                if result == 0:
+                    self._append_test_status(f"  ? Connection successful")
+                    self.after(0, lambda: messagebox.showinfo(APP_TITLE, "Connection test PASSED"))
+                else:
+                    self._append_test_status(f"  ? Connection failed (errno {result})")
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Connection FAILED (errno {result})"))
+            except Exception as e:
+                self._append_test_status(f"  ? Error: {e}")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Test failed: {e}"))
+
+        t = threading.Thread(target=test_worker, daemon=True)
+        t.start()
+
+    def _view_test_results(self):
+        """View test results (placeholder)."""
+        if TestRunner is None:
+            messagebox.showinfo(APP_TITLE, "TestRunner not available yet")
+            return
+
+        results = "Test Results\n" + "=" * 50 + "\n\nNo tests run yet"
+        messagebox.showinfo(APP_TITLE, results)
+
+    def _append_test_status(self, text):
+        """Append text to test status area."""
+        try:
+            self.test_status.configure(state=tk.NORMAL)
+            self.test_status.insert(tk.END, text + "\n")
+            self.test_status.see(tk.END)
+            self.test_status.configure(state=tk.DISABLED)
+            self.test_status.update_idletasks()
+        except Exception:
+            pass
+
+    def new_file(self):
+        """Clear all metadata, loaded images, and loaded DICOM."""
+        if not messagebox.askyesno(APP_TITLE, "This will clear all metadata, loaded images, and loaded DICOM. Continue?"):
+            return
+            
+        # Clear form fields
+        for d in (self.patient_vars, self.study_vars, self.series_vars):
+            for v in d.values():
+                v.set("")
+
+        # Reset image-related state
+        self.image_path = None
+        self.pixel_array = None
+        self._tk_img = None
+        self.image_source = None
+        self.image_label.config(text="No image loaded")
+        try:
+            self.preview_label.configure(image="")
+        except Exception:
+            pass
+
+        # Reset DICOM-loaded structures
+        self.grouped_dicom = {}
+        try:
+            self.series_tree.delete(*self.series_tree.get_children())
+        except Exception:
+            pass
+        self.dcm_info_label.config(text="No DICOM loaded")
+
+        # Reset selected identifiers
+        self.selected_study_uid = None
+        self.selected_series_uid = None
+
+        # Clear remote messages
+        try:
+            self.remote_messages.configure(state=tk.NORMAL)
+            self.remote_messages.delete("1.0", tk.END)
+            self.remote_messages.configure(state=tk.DISABLED)
+        except Exception:
+            pass
+
+    def show_about(self):
+        """Show About dialog."""
+        messagebox.showinfo(
+            APP_TITLE,
+            f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
+            "Simple tool to create and edit DICOM metadata and images."
+        )
+
+    def on_quit(self):
+        """Ask for confirmation before quitting the application."""
+        try:
+            if messagebox.askyesno(APP_TITLE, "Are you sure you want to quit? Any unsaved changes will be lost."):
+                self.destroy()
+        except Exception:
+            try:
+                self.destroy()
+            except Exception:
+                pass
+
+    def load_image(self):
+        """Load an image from disk and convert to grayscale pixel array for preview and DICOM."""
+        path = filedialog.askopenfilename(
+            title="Select image",
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+            
+        if Image is None or np is None:
+            self.logger.warning("Pillow/numpy not available; cannot load image")
+            messagebox.showerror(APP_TITLE, "Pillar and numpy are required to load images.")
+            return
+            
+        try:
+            img = Image.open(path).convert("L")
+            self.pixel_array = np.array(img)
+            self.image_path = path
+            self.image_source = "file"  # Mark image as from file
+            self.image_label.config(text=f"Loaded: {os.path.basename(path)} | {img.size[0]}x{img.size[1]}")
+            self._update_image_preview(self.pixel_array)
+        except Exception as e:
+            self.logger.exception("Failed to load image '%s'", path)
+            messagebox.showerror(APP_TITLE, f"Failed to load image: {e}")
+
+    def _update_image_preview(self, arr):
+        """Convert the array to a displayable image and update the Tkinter label."""
+        if arr is None:
+            return
+        
+        if Image is None or ImageTk is None:
+            self.logger.warning("PIL or ImageTk not available; cannot display image preview")
+            return
+            
+        try:
+            # Normalize to 8-bit if needed
+            if arr.ndim == 2:
+                img = Image.fromarray(self._to_uint8(arr), mode="L")
+            elif arr.ndim == 3 and arr.shape[2] in (3, 4):
+                if arr.dtype != np.uint8:
+                    arr = self._to_uint8(arr)
+                mode = "RGBA" if arr.shape[2] == 4 else "RGB"
+                img = Image.fromarray(arr, mode=mode)
+            else:
+                # Unsupported shape; try to extract first 2D slice if possible
+                if arr.size > 0:
+                    # Handle unusual multi-dimensional data
+                    if arr.ndim > 2:
+                        # Try to get the first valid 2D slice
+                        arr2 = arr[:, :, 0] if arr.shape[2] > 0 else arr.reshape(arr.shape[0], arr.shape[1])
+                    else:
+                        arr2 = np.squeeze(arr)
+                    
+                    # Ensure we have a 2D array
+                    if arr2.ndim != 2:
+                        self.logger.warning(f"Cannot preview image with shape {arr.shape}")
+                        return
+                        
+                    img = Image.fromarray(self._to_uint8(arr2), mode="L")
+                else:
+                    self.logger.warning("Empty pixel array, cannot preview")
+                    return
+
+            # Scale down to fit preview area - improved logic
+            try:
+                # Get the actual preview label size
+                self.preview_label.update_idletasks()  # Force layout update
+                max_w = self.preview_label.winfo_width()
+                max_h = self.preview_label.winfo_height()
+                
+                # Use reasonable defaults if sizes are not yet available
+                if max_w <= 1:
+                    max_w = 400
+                if max_h <= 1:
+                    max_h = 300
+                
+                # Ensure minimum reasonable size
+                max_w = max(200, max_w)
+                max_h = max(200, max_h)
+                
+                # Thumbnail with aspect ratio preservation
+                img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
+            except Exception as e:
+                self.logger.debug(f"Thumbnail sizing failed: {e}, using original image")
+                # Continue with original size if thumbnail fails
+
+            # Create PhotoImage - with explicit error handling
+            try:
+                self._tk_img = ImageTk.PhotoImage(img)
+                self.preview_label.configure(image=self._tk_img)
+                self.preview_label.image = self._tk_img  # Keep a reference!
+            except Exception as e:
+                self.logger.error(f"Failed to create PhotoImage: {e}")
+                self.preview_label.config(text="Image display error")
+                
+        except Exception as e:
+            self.logger.warning(f"Failed to update image preview: {e}", exc_info=True)
+            self.preview_label.config(text="Failed to load image")
+
+    def _to_uint8(self, arr):
+        """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
+        if arr.dtype == np.uint8:
+            return arr
+        a = arr.astype(np.float32)
+        mn = np.min(a)
+        mx = np.max(a)
+        if mx - mn > 1e-5:
+            a = (a - mn) / (mx - mn) * 255.0
+        else:
+            a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
+        return a.astype(np.uint8)
+
+    def save_dicom(self):
+        """Save the current metadata and pixel data into a DICOM file."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot save DICOM")
+            messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
+            return
+
+        save_path = filedialog.asksaveasfilename(
+            defaultextension=".dcm",
+            filetypes=[("DICOM", "*.dcm"), ("All Files", "*.*")]
+        )
+        if not save_path:
+            return
+            
+        try:
+            from .dcm import create_dicom
+        except Exception:
+            try:
+                from dcm import create_dicom
+            except Exception as e:
+                self.logger.exception("Failed to import DICOM module")
+                messagebox.showerror(APP_TITLE, f"Failed to import DICOM module: {e}")
+                return
+
+        try:
+            ds = create_dicom(
+                save_path=save_path,
+                patient={
+                    "PatientName": self.patient_vars["PatientName"].get().strip(),
+                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
+                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
+                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
+                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
+                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
+                    "PatientID": self.patient_vars["PatientID"].get().strip(),
+                    "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
+                    "PatientSex": self.patient_vars["PatientSex"].get().strip(),
+                    "PatientAge": self.patient_vars["PatientAge"].get().strip(),
+                    "PatientWeight": self.patient_vars["PatientWeight"].get().strip(),
+                    "PatientSize": self.patient_vars["PatientSize"].get().strip(),
+                    "PatientComments": self.patient_vars["PatientComments"].get().strip(),
+                    "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
+                    "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                },
+                study={
+                    "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
+                    "StudyDate": self.study_vars["StudyDate"].get().strip(),
+                    "StudyTime": self.study_vars["StudyTime"].get().strip(),
+                    "StudyDescription": self.study_vars["StudyDescription"].get().strip(),
+                    "AccessionNumber": self.study_vars["AccessionNumber"].get().strip(),
+                    "StudyID": self.study_vars["StudyID"].get().strip(),
+                    "ReferringPhysicianName": self.study_vars["ReferringPhysicianName"].get().strip(),
+                    "ReadingPhysicianName": self.study_vars["ReadingPhysicianName"].get().strip(),
+                    "ReasonForStudy": self.study_vars["ReasonForStudy"].get().strip(),
+                    "AdmittingDiagnosesDescription": self.study_vars["AdmittingDiagnosesDescription"].get().strip(),
+                    "StudyPatientLocation": self.study_vars["StudyPatientLocation"].get().strip(),
+                },
+                series={
+                    "SeriesInstanceUID": self.series_vars["SeriesInstanceUID"].get().strip(),
+                    "SeriesNumber": self.series_vars["SeriesNumber"].get().strip(),
+                    "Modality": self.series_vars["Modality"].get().strip(),
+                    "SeriesDescription": self.series_vars["SeriesDescription"].get().strip(),
+                    "BodyPartExamined": self.series_vars["BodyPartExamined"].get().strip(),
+                    "ProtocolName": self.series_vars["ProtocolName"].get().strip(),
+                    "SeriesDate": self.series_vars["SeriesDate"].get().strip(),
+                    "SeriesTime": self.series_vars["SeriesTime"].get().strip(),
+                    "PerformingPhysicianName": self.series_vars["PerformingPhysicianName"].get().strip(),
+                    "OperatorsName": self.series_vars["OperatorsName"].get().strip(),
+                    "Laterality": self.series_vars["Laterality"].get().strip(),
+                },
+                pixel_array=self.pixel_array,
+            )
+        except Exception as e:
+            self.logger.exception("Failed to create DICOM dataset")
+            messagebox.showerror(APP_TITLE, f"Failed to create DICOM: {e}")
+            return
+
+        try:
+            ds.save_as(save_path)
+            messagebox.showinfo(APP_TITLE, f"DICOM saved to: {save_path}")
+        except Exception as e:
+            self.logger.exception("Failed to save DICOM to '%s'", save_path)
+            messagebox.showerror(APP_TITLE, f"Failed to save DICOM: {e}")
+
+    def load_dicom_file(self):
+        """Load one or more DICOM files. Supports picking a DICOMDIR file to expand dataset references."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot load DICOM files")
+            messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
+            return
+            
+        paths = filedialog.askopenfilenames(
+            title="Select DICOM file(s)",
+            filetypes=[("DICOM Files", "*.dcm;*.dicom;*"), ("All Files", "*.*")]
+        )
+        if not paths:
+            return
+            
+        try:
+            try:
+                from .dcm import load_dicom_grouped, is_dicomdir, load_dicomdir_grouped
+            except Exception:
+                from dcm import load_dicom_grouped, is_dicomdir, load_dicomdir_grouped
+
+            grouped = {}
+
+            def merge_grouped(target, source):
+                for study_uid, series_map in source.items():
+                    t_series_map = target.setdefault(study_uid, {})
+                    for series_uid, instances in series_map.items():
+                        t_instances = t_series_map.setdefault(series_uid, [])
+                        t_instances.extend(instances)
+
+            if len(paths) == 1 and is_dicomdir(paths[0]):
+                grouped = load_dicomdir_grouped(paths[0])
+            else:
+                non_dir_files = []
+                for p in paths:
+                    if is_dicomdir(p):
+                        part = load_dicomdir_grouped(p)
+                        merge_grouped(grouped, part)
+                    else:
+                        non_dir_files.append(p)
+                if non_dir_files:
+                    part = load_dicom_grouped(list(non_dir_files))
+                    merge_grouped(grouped, part)
+                    
+            self._populate_dicom_tree(grouped)
+        except Exception as e:
+            self.logger.exception("Failed to load DICOM selections: %s", paths)
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOM: {e}")
+
+    def load_dicom_folder(self):
+        """Load all DICOM files under a selected folder and group them for display."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot load DICOM folder")
+            messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
+            return
+            
+        folder = filedialog.askdirectory(title="Select DICOM folder")
+        if not folder:
+            return
+            
+        try:
+            try:
+                from .dcm import load_dicom_grouped
+            except Exception:
+                from dcm import load_dicom_grouped
+                
+            grouped = load_dicom_grouped(folder)
+            self._populate_dicom_tree(grouped)
+        except Exception as e:
+            self.logger.exception("Failed to load DICOM folder: %s", folder)
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
+
+    def _populate_dicom_tree(self, grouped):
+        """Populate the tree view with loaded DICOM data."""
+        self.grouped_dicom = grouped
+        self.series_tree.delete(*self.series_tree.get_children())
+        
+        total_instances = 0
+        first_series_id = None
+        
+        for study_uid, series_map in grouped.items():
+            study_node = self.series_tree.insert("", "end", iid=f"study:{study_uid}", text=f"Study: {study_uid}")
+            for series_uid, instances in series_map.items():
+                series_node = self.series_tree.insert(
+                    study_node, "end",
+                    iid=f"series:{study_uid}:{series_uid}",
+                    text=f"Series: {series_uid} ({len(instances)} images)"
+                )
+                if first_series_id is None:
+                    first_series_id = f"series:{study_uid}:{series_uid}"
+                    
+                for idx, (ds, arr) in enumerate(instances):
+                    inst_text = f"Instance {idx+1}: {getattr(ds, 'SOPInstanceUID', '')}"
+                    self.series_tree.insert(series_node, "end", text=inst_text)
+                    total_instances += 1
+
+        self.dcm_info_label.config(
+            text=f"Loaded {len(grouped)} studies, {sum(len(v) for v in grouped.values())} series, {total_instances} instances"
+        )
+        
+        if first_series_id:
+            self.series_tree.selection_set(first_series_id)
+            self.on_tree_select(None)
+
+    def on_tree_select(self, event):
+        """Handle selection in the series tree."""
+        sel = self.series_tree.selection()
+        if not sel:
+            return
+            
+        node_id = sel[0]
+        if not node_id.startswith("series:"):
+            return
+            
+        _, study_uid, series_uid = node_id.split(":", 2)
+        self.selected_study_uid = study_uid
+        self.selected_series_uid = series_uid
+        instances = self.grouped_dicom.get(study_uid, {}).get(series_uid, [])
+        
+        if not instances:
+            return
+            
+        ds, arr = instances[0]
+        # Only update pixel_array if no image is currently loaded from a file
+        if self.image_source != "file":
+            self.pixel_array = arr if arr is not None else self.pixel_array
+        
+        # Populate patient fields
+        self._populate_patient_fields(ds)
+        
+        # Populate study fields
+        self._populate_study_fields(ds)
+        
+        # Populate series fields
+        self._populate_series_fields(ds)
+        
+        # Update image info
+        rows = getattr(ds, 'Rows', None)
+        cols = getattr(ds, 'Columns', None)
+        if rows and cols:
+            self.image_label.config(text=f"Selected Series: {series_uid} | {cols}x{rows}")
+            
+        # Only update preview if no user-loaded image is active
+        if self.image_source != "file" and arr is not None:
+            self.image_source = "dicom"
+            self._update_image_preview(arr)
+
+    def _populate_patient_fields(self, ds):
+        """Populate patient form fields from DICOM dataset."""
+        self.patient_vars["PatientName"].set(str(getattr(ds, 'PatientName', '') or ''))
+        
+        try:
+            pn = getattr(ds, 'PatientName', '')
+            fam = getattr(pn, 'family_name', '') if pn else ''
+            giv = getattr(pn, 'given_name', '') if pn else ''
+            mid = getattr(pn, 'middle_name', '') if pn else ''
+            pref = getattr(pn, 'name_prefix', '') if pn else ''
+            suf = getattr(pn, 'name_suffix', '') if pn else ''
+            self.patient_vars["PatientFamilyNameComplex"].set(str(fam or ''))
+            self.patient_vars["PatientGivenName"].set(str(giv or ''))
+            self.patient_vars["PatientMiddleName"].set(str(mid or ''))
+            self.patient_vars["PatientPrefix"].set(str(pref or ''))
+            self.patient_vars["PatientSuffix"].set(str(suf or ''))
+        except Exception:
+            pass
+            
+        self.patient_vars["PatientID"].set(str(getattr(ds, 'PatientID', '') or ''))
+        self.patient_vars["PatientBirthDate"].set(str(getattr(ds, 'PatientBirthDate', '') or ''))
+        self.patient_vars["PatientSex"].set(str(getattr(ds, 'PatientSex', '') or ''))
+        self.patient_vars["PatientAge"].set(str(getattr(ds, 'PatientAge', '') or ''))
+        self.patient_vars["PatientWeight"].set(str(getattr(ds, 'PatientWeight', '') or ''))
+        self.patient_vars["PatientSize"].set(str(getattr(ds, 'PatientSize', '') or ''))
+        self.patient_vars["PatientComments"].set(str(getattr(ds, 'PatientComments', '') or ''))
+        self.patient_vars["PatientMothersBirthName"].set(str(getattr(ds, 'PatientMotherBirthName', '') or ''))
+        self.patient_vars["PatientDeathDateTime"].set(str(getattr(ds, 'PatientDeathDateTime', '') or ''))
+
+    def _populate_study_fields(self, ds):
+        """Populate study form fields from DICOM dataset."""
+        self.study_vars["StudyInstanceUID"].set(str(getattr(ds, 'StudyInstanceUID', '') or ''))
+        self.study_vars["StudyDate"].set(str(getattr(ds, 'StudyDate', '') or ''))
+        self.study_vars["StudyTime"].set(str(getattr(ds, 'StudyTime', '') or ''))
+        self.study_vars["StudyDescription"].set(str(getattr(ds, 'StudyDescription', '') or ''))
+        self.study_vars["AccessionNumber"].set(str(getattr(ds, 'AccessionNumber', '') or ''))
+        self.study_vars["StudyID"].set(str(getattr(ds, 'StudyID', '') or ''))
+        self.study_vars["ReferringPhysicianName"].set(str(getattr(ds, 'ReferringPhysicianName', '') or ''))
+        self.study_vars["ReadingPhysicianName"].set(str(getattr(ds, 'NameOfPhysiciansReadingStudy', '') or ''))
+        self.study_vars["ReasonForStudy"].set(str(getattr(ds, 'ReasonForStudy', '') or ''))
+        self.study_vars["AdmittingDiagnosesDescription"].set(str(getattr(ds, 'AdmittingDiagnosesDescription', '') or ''))
+        self.study_vars["StudyPatientLocation"].set(str(getattr(ds, 'StudyPatientLocation', '') or ''))
+
+    def _populate_series_fields(self, ds):
+        """Populate series form fields from DICOM dataset."""
+        self.series_vars["SeriesInstanceUID"].set(str(getattr(ds, 'SeriesInstanceUID', '') or ''))
+        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'InstanceNumber', getattr(ds, 'SeriesNumber', '')) or ''))
+        self.series_vars["Modality"].set(str(getattr(ds, 'Modality', '') or ''))
+        self.series_vars["SeriesDescription"].set(str(getattr(ds, 'SeriesDescription', '') or ''))
+        self.series_vars["BodyPartExamined"].set(str(getattr(ds, 'BodyPartExamined', '') or ''))
+        self.series_vars["ProtocolName"].set(str(getattr(ds, 'ProtocolName', '') or ''))
+        self.series_vars["SeriesDate"].set(str(getattr(ds, 'SeriesDate', '') or ''))
+        self.series_vars["SeriesTime"].set(str(getattr(ds, 'SeriesTime', '') or ''))
+        self.series_vars["PerformingPhysicianName"].set(str(getattr(ds, 'PerformingPhysicianName', '') or ''))
+        self.series_vars["OperatorsName"].set(str(getattr(ds, 'OperatorsName', '') or ''))
+        self.series_vars["Laterality"].set(str(getattr(ds, 'Laterality', '') or ''))
+
+    def _append_remote_message(self, text):
+        """Append a message to the remote messages text area."""
+        try:
+            self.remote_messages.configure(state=tk.NORMAL)
+            self.remote_messages.insert(tk.END, text + "\n")
+            self.remote_messages.see(tk.END)
+            self.remote_messages.configure(state=tk.DISABLED)
+        except Exception:
+            pass
+
+    def send_remote(self):
+        """Send all loaded DICOM instances to a remote DICOM SCP using C-STORE."""
+        try:
+            from .remote import send_grouped_dicom, is_remote_available, remote_unavailable_reason
+        except Exception:
+            try:
+                from remote import send_grouped_dicom, is_remote_available, remote_unavailable_reason
+            except Exception as e:
+                self.logger.exception("Failed to import remote sender")
+                messagebox.showerror(APP_TITLE, f"Failed to import remote sender: {e}")
+                return
+                
+        if not is_remote_available():
+            reason = remote_unavailable_reason()
+            self.logger.error("Remote send unavailable: %s", reason)
+            self._append_remote_message(f"Remote unavailable: {reason}")
+            messagebox.showerror(APP_TITLE, f"Remote unavailable: {reason}")
+            return
+
+        server = self.remote_vars["server"].get().strip()
+        port_s = self.remote_vars["port"].get().strip()
+        calling_ae = self.remote_vars["calling_ae"].get().strip() or "DCMCREATOR"
+        called_ae = self.remote_vars["called_ae"].get().strip() or "ANY-SCP"
+
+        # Validate inputs
+        if not server:
+            messagebox.showerror(APP_TITLE, "Server address is required")
+            return
+        try:
+            port = int(port_s)
+        except Exception:
+            messagebox.showerror(APP_TITLE, "Port must be an integer")
+            return
+        
+        # Check if Patient ID is empty and confirm with user
+        patient_id = self.patient_vars["PatientID"].get().strip()
+        if not patient_id:
+            if not messagebox.askyesno(
+                APP_TITLE,
+                "Patient ID is empty. While technically allowed, this is not recommended "
+                "and may cause issues with some DICOM systems.\n\n"
+                "Do you want to continue sending anyway?"
+            ):
+                return
+        
+        # Always create dataset from current form values to ensure modifications are sent
+        grouped_to_send = self._create_in_memory_dataset(patient_id)
+        if not grouped_to_send:
+            return
+
+        # Clear previous messages
+        self.remote_messages.configure(state=tk.NORMAL)
+        self.remote_messages.delete("1.0", tk.END)
+        self.remote_messages.configure(state=tk.DISABLED)
+
+        # Disable button during send
+        try:
+            self.remote_send_button.configure(state=tk.DISABLED)
+        except Exception:
+            pass
+
+        config = {
+            "server": server,
+            "port": port,
+            "calling_ae": calling_ae,
+            "called_ae": called_ae,
+        }
+
+        def post_message(msg: str):
+            try:
+                self.after(0, self._append_remote_message, msg)
+            except Exception:
+                pass
+
+        def worker():
+            try:
+                post_message(f"Starting send to {server}:{port} as {calling_ae}->{called_ae}")
+                send_grouped_dicom(
+                    grouped=grouped_to_send,
+                    config=config,
+                    logger=self.logger,
+                    on_message=post_message,
+                )
+                self.after(0, lambda: messagebox.showinfo(APP_TITLE, "All DICOM instances sent successfully"))
+            except Exception as e:
+                error_msg = str(e)
+                try:
+                    self.logger.exception("Remote send failed")
+                except Exception:
+                    pass
+                self.after(0, post_message, f"Error: {error_msg}")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Remote send failed: {error_msg}"))
+            finally:
+                try:
+                    self.after(0, lambda: self.remote_send_button.configure(state=tk.NORMAL))
+                except Exception:
+                    pass
+
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+
+    def _create_in_memory_dataset(self, patient_id):
+        """Create a DICOM dataset from current form values."""
+        try:
+            try:
+                from .dcm import create_dicom
+            except Exception:
+                from dcm import create_dicom
+        except Exception as ie:
+            self.logger.exception("Failed to import DICOM module for in-memory send")
+            messagebox.showerror(APP_TITLE, f"No DICOM loaded and cannot create one from current form: {ie}")
+            return None
+            
+        try:
+            ds = create_dicom(
+                save_path="in-memory",
+                patient={
+                    "PatientName": self.patient_vars["PatientName"].get().strip(),
+                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
+                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
+                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
+                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
+                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
+                    "PatientID": patient_id,
+                    "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
+                    "PatientSex": self.patient_vars["PatientSex"].get().strip(),
+                    "PatientAge": self.patient_vars["PatientAge"].get().strip(),
+                    "PatientWeight": self.patient_vars["PatientWeight"].get().strip(),
+                    "PatientSize": self.patient_vars["PatientSize"].get().strip(),
+                    "PatientComments": self.patient_vars["PatientComments"].get().strip(),
+                    "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
+                    "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                },
+                study={
+                    "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
+                    "StudyDate": self.study_vars["StudyDate"].get().strip(),
+                    "StudyTime": self.study_vars["StudyTime"].get().strip(),
+                    "StudyDescription": self.study_vars["StudyDescription"].get().strip(),
+                    "AccessionNumber": self.study_vars["AccessionNumber"].get().strip(),
+                    "StudyID": self.study_vars["StudyID"].get().strip(),
+                    "ReferringPhysicianName": self.study_vars["ReferringPhysicianName"].get().strip(),
+                    "ReadingPhysicianName": self.study_vars["ReadingPhysicianName"].get().strip(),
+                    "ReasonForStudy": self.study_vars["ReasonForStudy"].get().strip(),
+                    "AdmittingDiagnosesDescription": self.study_vars["AdmittingDiagnosesDescription"].get().strip(),
+                    "StudyPatientLocation": self.study_vars["StudyPatientLocation"].get().strip(),
+                },
+                series={
+                    "SeriesInstanceUID": self.series_vars["SeriesInstanceUID"].get().strip(),
+                    "SeriesNumber": self.series_vars["SeriesNumber"].get().strip(),
+                    "Modality": self.series_vars["Modality"].get().strip(),
+                    "SeriesDescription": self.series_vars["SeriesDescription"].get().strip(),
+                    "BodyPartExamined": self.series_vars["BodyPartExamined"].get().strip(),
+                    "ProtocolName": self.series_vars["ProtocolName"].get().strip(),
+                    "SeriesDate": self.series_vars["SeriesDate"].get().strip(),
+                    "SeriesTime": self.series_vars["SeriesTime"].get().strip(),
+                    "PerformingPhysicianName": self.series_vars["PerformingPhysicianName"].get().strip(),
+                    "OperatorsName": self.series_vars["OperatorsName"].get().strip(),
+                    "Laterality": self.series_vars["Laterality"].get().strip(),
+                },
+                pixel_array=self.pixel_array,
+            )
+            suid = str(getattr(ds, 'StudyInstanceUID', ''))
+            seruid = str(getattr(ds, 'SeriesInstanceUID', ''))
+            self._append_remote_message("Sending DICOM dataset from current form values")
+            return {suid: {seruid: [(ds, self.pixel_array)]}}
+        except Exception as ce:
+            self.logger.exception("Failed to build in-memory dataset for sending")
+            messagebox.showerror(APP_TITLE, f"Failed to build dataset from current form: {ce}")
+            return None
+
+    def _on_preset_selected(self, event=None):
+        """Handle preset selection from the combobox."""
+        try:
+            if not self.presets_manager:
+                return
+            
+            name = self.preset_combo.get().strip()
+            if name:
+                preset = self.presets_manager.load_preset(name)
+                if preset:
+                    # Apply preset values to remote vars
+                    self.remote_vars["server"].set(preset.get('server', ''))
+                    self.remote_vars["port"].set(str(preset.get('port', '4321')))
+                    self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+                    self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+
+    def _refresh_presets_list(self):
+        """Refresh the list of presets in the combobox."""
+        try:
+            if not self.presets_manager:
+                self.preset_combo['values'] = []
+                return
+            
+            presets = self.presets_manager.list_presets()
+            self.preset_combo['values'] = presets
+            
+            # Clear current selection
+            self.preset_combo.set("")
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to refresh presets list")
+            self.preset_combo['values'] = []
+
+    def _load_preset(self):
+        """Load the selected preset into the remote settings fields."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            preset = self.presets_manager.load_preset(name)
+            if not preset:
+                messagebox.showerror(APP_TITLE, f"Preset '{name}' not found")
+                return
+            
+            # Apply preset values to remote vars
+            self.remote_vars["server"].set(preset.get('server', ''))
+            self.remote_vars["port"].set(str(preset.get('port', '4321')))
+            self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
+            self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+            
+            self._append_remote_message(f"Loaded preset: {name}")
+            messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
+        except Exception as e:
+            self.logger.exception("Failed to load preset")
+            messagebox.showerror(APP_TITLE, f"Failed to load preset: {e}")
+
+    def _save_current_preset(self):
+        """Save the current remote settings to a preset."""
+        try:
+            name = self.remote_vars["preset_name"].get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "Preset name must be provided")
+                return
+            
+            # Collect current remote var values, excluding preset_name
+            preset = {
+                'server': self.remote_vars["server"].get().strip(),
+                'port': self.remote_vars["port"].get().strip(),
+                'calling_ae': self.remote_vars["calling_ae"].get().strip(),
+                'called_ae': self.remote_vars["called_ae"].get().strip(),
+            }
+            
+            if self.presets_manager.save_preset(name, preset):
+                self._refresh_presets_list()  # Refresh list to show the new preset
+                self._append_remote_message(f"Saved preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' saved successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to save preset '{name}'")
+        except Exception as e:
+            self.logger.exception("Failed to save preset")
+            messagebox.showerror(APP_TITLE, f"Failed to save preset: {e}")
+
+    def _delete_preset(self):
+        """Delete the selected preset."""
+        try:
+            if not self.presets_manager:
+                messagebox.showerror(APP_TITLE, "Presets manager not available")
+                return
+            
+            name = self.preset_combo.get().strip()
+            if not name:
+                messagebox.showerror(APP_TITLE, "No preset selected")
+                return
+            
+            if not messagebox.askyesno(APP_TITLE, f"Delete preset '{name}'?"):
+                return
+            
+            if self.presets_manager.delete_preset(name):
+                self._refresh_presets_list()  # Refresh list to remove the deleted preset
+                self._append_remote_message(f"Deleted preset: {name}")
+                messagebox.showinfo(APP_TITLE, f"Preset '{name}' deleted successfully")
+            else:
+                messagebox.showerror(APP_TITLE, f"Failed to delete preset '{name}'")
+            
+            # Clear preset name field
+            self.remote_vars["preset_name"].set("")
+        except Exception as e:
+            self.logger.exception("Failed to delete preset")
+            messagebox.showerror(APP_TITLE, f"Failed to delete preset: {e}")
+
+    def _build_test_tab(self):
+        """Build Test/Generator tab for creating and testing bulk DICOM transmission."""
+        # Generator section
+        gen_frame = ttk.LabelFrame(self.test_frame, text="DICOM Generator", padding=10)
+        gen_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        gen_inner = ttk.Frame(gen_frame)
+        gen_inner.pack(fill=tk.X)
+        gen_inner.columnconfigure(1, weight=1)
+        
+        ttk.Label(gen_inner, text="Count:").grid(row=0, column=0, sticky="w", padx=5)
+        self.test_vars = {}
+        self.test_vars["count"] = tk.StringVar(value="10")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["count"], width=10).grid(row=0, column=1, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=0, column=2, sticky="w", padx=5)
+        self.test_vars["size_mb"] = tk.StringVar(value="1.0")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Output Dir:").grid(row=1, column=0, sticky="w", padx=5)
+        self.test_vars["output_dir"] = tk.StringVar()
+        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=1, column=1, columnspan=2, sticky="ew", padx=5)
+        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=1, column=3, padx=5)
+        
+        gen_buttons = ttk.Frame(gen_frame)
+        gen_buttons.pack(fill=tk.X, pady=10)
+        ttk.Button(gen_buttons, text="Generate DICOMs", command=self._generate_test_dicoms).pack(side=tk.LEFT, padx=2)
+        ttk.Button(gen_buttons, text="Generate & Send", command=self._generate_and_send).pack(side=tk.LEFT, padx=2)
+        
+        # Test section
+        test_frame = ttk.LabelFrame(self.test_frame, text="Test Transmission", padding=10)
+        test_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        test_inner = ttk.Frame(test_frame)
+        test_inner.pack(fill=tk.X)
+        
+        ttk.Button(test_inner, text="Test Connection", command=self._test_connection).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="Send All Generated", command=self._send_generated_files).pack(side=tk.LEFT, padx=2)
+        ttk.Button(test_inner, text="View Results", command=self._view_test_results).pack(side=tk.LEFT, padx=2)
+        
+        # Status section
+        status_frame = ttk.LabelFrame(self.test_frame, text="Status", padding=10)
+        status_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        self.test_status = tk.Text(status_frame, height=15, wrap="word")
+        self.test_status.pack(fill=tk.BOTH, expand=True)
+        
+        scrollbar = ttk.Scrollbar(status_frame, orient="vertical", command=self.test_status.yview)
+        self.test_status.config(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+    def _select_test_output_dir(self):
+        """Select output directory for generated DICOMs."""
+        folder = filedialog.askdirectory(title="Select output directory for test DICOMs")
+        if folder:
+            self.test_vars["output_dir"].set(folder)
+
+    def _generate_test_dicoms(self):
+        """Generate test DICOM files."""
+        if RandomDicomGenerator is None:
+            messagebox.showerror(APP_TITLE, "RandomDicomGenerator not available")
+            return
+
+        try:
+            count = int(self.test_vars["count"].get())
+            size_mb = float(self.test_vars["size_mb"].get())
+            output_dir = self.test_vars["output_dir"].get()
+
+            if not output_dir:
+                messagebox.showerror(APP_TITLE, "Please select an output directory")
+                return
+
+            self._append_test_status(f"Generating {count} test DICOMs ({size_mb}MB each)...")
+
+            generator = RandomDicomGenerator(logger=self.logger)
+            files = generator.generate_with_sizes(count=count, size_mb=size_mb, output_dir=output_dir)
+
+            self._append_test_status(f"? Generated {len(files)} test DICOM files")
+            self._append_test_status(f"  Location: {output_dir}")
+
+            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} test DICOM files")
+        except Exception as e:
+            self.logger.exception("Failed to generate test DICOMs")
+            messagebox.showerror(APP_TITLE, f"Generation failed: {e}")
+
+    def _generate_and_send(self):
+        """Generate test DICOMs and send them to the remote server."""
+        self._generate_test_dicoms()
+        self._send_generated_files()
+
+    def _send_generated_files(self):
+        """Send all generated files to remote server."""
+        output_dir = self.test_vars["output_dir"].get()
+        if not output_dir or not os.path.exists(output_dir):
+            messagebox.showerror(APP_TITLE, "No valid output directory")
+            return
+
+        # Load all DICOMs from directory
+        self._append_test_status("\nLoading generated DICOMs...")
+        try:
+            from .dcm import load_dicom_grouped
+        except:
+            try:
+                from dcm import load_dicom_grouped
+            except:
+                messagebox.showerror(APP_TITLE, "Failed to import DICOM loader")
+                return
+
+        try:
+            grouped = load_dicom_grouped(output_dir)
+            self._append_test_status(f"? Loaded {sum(len(v) for v in grouped.values())} instances")
+
+            # Send to remote
+            self.send_remote()
+        except Exception as e:
+            self.logger.exception("Failed to load generated DICOMs")
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOMs: {e}")
+
+    def _test_connection(self):
+        """Test connection to remote DICOM server."""
+        server = self.remote_vars["server"].get().strip()
+        port_s = self.remote_vars["port"].get().strip()
+        calling_ae = self.remote_vars["calling_ae"].get().strip() or "DCMCREATOR"
+        called_ae = self.remote_vars["called_ae"].get().strip() or "ANY-SCP"
+
+        if not server or not port_s:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_s)
+        except:
+            messagebox.showerror(APP_TITLE, "Port must be numeric")
+            return
+
+        self._append_test_status("\nTesting connection...")
+
+        def test_worker():
+            try:
+                import socket
+
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(5)
+
+                self._append_test_status(f"  Connecting to {server}:{port}...")
+                result = sock.connect_ex((server, port))
+                sock.close()
+
+                if result == 0:
+                    self._append_test_status(f"  ? Connection successful")
+                    self.after(0, lambda: messagebox.showinfo(APP_TITLE, "Connection test PASSED"))
+                else:
+                    self._append_test_status(f"  ? Connection failed (errno {result})")
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Connection FAILED (errno {result})"))
+            except Exception as e:
+                self._append_test_status(f"  ? Error: {e}")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Test failed: {e}"))
+
+        t = threading.Thread(target=test_worker, daemon=True)
+        t.start()
+
+    def _view_test_results(self):
+        """View test results (placeholder)."""
+        if TestRunner is None:
+            messagebox.showinfo(APP_TITLE, "TestRunner not available yet")
+            return
+
+        results = "Test Results\n" + "=" * 50 + "\n\nNo tests run yet"
+        messagebox.showinfo(APP_TITLE, results)
+
+    def _append_test_status(self, text):
+        """Append text to test status area."""
+        try:
+            self.test_status.configure(state=tk.NORMAL)
+            self.test_status.insert(tk.END, text + "\n")
+            self.test_status.see(tk.END)
+            self.test_status.configure(state=tk.DISABLED)
+            self.test_status.update_idletasks()
+        except Exception:
+            pass
+
+    def new_file(self):
+        """Clear all metadata, loaded images, and loaded DICOM."""
+        if not messagebox.askyesno(APP_TITLE, "This will clear all metadata, loaded images, and loaded DICOM. Continue?"):
+            return
+            
+        # Clear form fields
+        for d in (self.patient_vars, self.study_vars, self.series_vars):
+            for v in d.values():
+                v.set("")
+
+        # Reset image-related state
+        self.image_path = None
+        self.pixel_array = None
+        self._tk_img = None
+        self.image_source = None
+        self.image_label.config(text="No image loaded")
+        try:
+            self.preview_label.configure(image="")
+        except Exception:
+            pass
+
+        # Reset DICOM-loaded structures
+        self.grouped_dicom = {}
+        try:
+            self.series_tree.delete(*self.series_tree.get_children())
+        except Exception:
+            pass
+        self.dcm_info_label.config(text="No DICOM loaded")
+
+        # Reset selected identifiers
+        self.selected_study_uid = None
+        self.selected_series_uid = None
+
+        # Clear remote messages
+        try:
+            self.remote_messages.configure(state=tk.NORMAL)
+            self.remote_messages.delete("1.0", tk.END)
+            self.remote_messages.configure(state=tk.DISABLED)
+        except Exception:
+            pass
+
+    def show_about(self):
+        """Show About dialog."""
+        messagebox.showinfo(
+            APP_TITLE,
+            f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
+            "Simple tool to create and edit DICOM metadata and images."
+        )
+
+    def on_quit(self):
+        """Ask for confirmation before quitting the application."""
+        try:
+            if messagebox.askyesno(APP_TITLE, "Are you sure you want to quit? Any unsaved changes will be lost."):
+                self.destroy()
+        except Exception:
+            try:
+                self.destroy()
+            except Exception:
+                pass
+
+    def load_image(self):
+        """Load an image from disk and convert to grayscale pixel array for preview and DICOM."""
+        path = filedialog.askopenfilename(
+            title="Select image",
+            filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.bmp"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+            
+        if Image is None or np is None:
+            self.logger.warning("Pillow/numpy not available; cannot load image")
+            messagebox.showerror(APP_TITLE, "Pillar and numpy are required to load images.")
+            return
+            
+        try:
+            img = Image.open(path).convert("L")
+            self.pixel_array = np.array(img)
+            self.image_path = path
+            self.image_source = "file"  # Mark image as from file
+            self.image_label.config(text=f"Loaded: {os.path.basename(path)} | {img.size[0]}x{img.size[1]}")
+            self._update_image_preview(self.pixel_array)
+        except Exception as e:
+            self.logger.exception("Failed to load image '%s'", path)
+            messagebox.showerror(APP_TITLE, f"Failed to load image: {e}")
+
+    def _update_image_preview(self, arr):
+        """Convert the array to a displayable image and update the Tkinter label."""
+        if arr is None:
+            return
+        
+        if Image is None or ImageTk is None:
+            self.logger.warning("PIL or ImageTk not available; cannot display image preview")
+            return
+            
+        try:
+            # Normalize to 8-bit if needed
+            if arr.ndim == 2:
+                img = Image.fromarray(self._to_uint8(arr), mode="L")
+            elif arr.ndim == 3 and arr.shape[2] in (3, 4):
+                if arr.dtype != np.uint8:
+                    arr = self._to_uint8(arr)
+                mode = "RGBA" if arr.shape[2] == 4 else "RGB"
+                img = Image.fromarray(arr, mode=mode)
+            else:
+                # Unsupported shape; try to extract first 2D slice if possible
+                if arr.size > 0:
+                    # Handle unusual multi-dimensional data
+                    if arr.ndim > 2:
+                        # Try to get the first valid 2D slice
+                        arr2 = arr[:, :, 0] if arr.shape[2] > 0 else arr.reshape(arr.shape[0], arr.shape[1])
+                    else:
+                        arr2 = np.squeeze(arr)
+                    
+                    # Ensure we have a 2D array
+                    if arr2.ndim != 2:
+                        self.logger.warning(f"Cannot preview image with shape {arr.shape}")
+                        return
+                        
+                    img = Image.fromarray(self._to_uint8(arr2), mode="L")
+                else:
+                    self.logger.warning("Empty pixel array, cannot preview")
+                    return
+
+            # Scale down to fit preview area - improved logic
+            try:
+                # Get the actual preview label size
+                self.preview_label.update_idletasks()  # Force layout update
+                max_w = self.preview_label.winfo_width()
+                max_h = self.preview_label.winfo_height()
+                
+                # Use reasonable defaults if sizes are not yet available
+                if max_w <= 1:
+                    max_w = 400
+                if max_h <= 1:
+                    max_h = 300
+                
+                # Ensure minimum reasonable size
+                max_w = max(200, max_w)
+                max_h = max(200, max_h)
+                
+                # Thumbnail with aspect ratio preservation
+                img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
+            except Exception as e:
+                self.logger.debug(f"Thumbnail sizing failed: {e}, using original image")
+                # Continue with original size if thumbnail fails
+
+            # Create PhotoImage - with explicit error handling
+            try:
+                self._tk_img = ImageTk.PhotoImage(img)
+                self.preview_label.configure(image=self._tk_img)
+                self.preview_label.image = self._tk_img  # Keep a reference!
+            except Exception as e:
+                self.logger.error(f"Failed to create PhotoImage: {e}")
+                self.preview_label.config(text="Image display error")
+                
+        except Exception as e:
+            self.logger.warning(f"Failed to update image preview: {e}", exc_info=True)
+            self.preview_label.config(text="Failed to load image")
+
+    def _to_uint8(self, arr):
+        """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
+        if arr.dtype == np.uint8:
+            return arr
+        a = arr.astype(np.float32)
+        mn = np.min(a)
+        mx = np.max(a)
+        if mx - mn > 1e-5:
+            a = (a - mn) / (mx - mn) * 255.0
+        else:
+            a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
+        return a.astype(np.uint8)
+
+    def save_dicom(self):
+        """Save the current metadata and pixel data into a DICOM file."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot save DICOM")
+            messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
+            return
+
+        save_path = filedialog.asksaveasfilename(
+            defaultextension=".dcm",
+            filetypes=[("DICOM", "*.dcm"), ("All Files", "*.*")]
+        )
+        if not save_path:
+            return
+            
+        try:
+            from .dcm import create_dicom
+        except Exception:
+            try:
+                from dcm import create_dicom
+            except Exception as e:
+                self.logger.exception("Failed to import DICOM module")
+                messagebox.showerror(APP_TITLE, f"Failed to import DICOM module: {e}")
+                return
+
+        try:
+            ds = create_dicom(
+                save_path=save_path,
+                patient={
+                    "PatientName": self.patient_vars["PatientName"].get().strip(),
+                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
+                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
+                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
+                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
+                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
+                    "PatientID": self.patient_vars["PatientID"].get().strip(),
+                    "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
+                    "PatientSex": self.patient_vars["PatientSex"].get().strip(),
+                    "PatientAge": self.patient_vars["PatientAge"].get().strip(),
+                    "PatientWeight": self.patient_vars["PatientWeight"].get().strip(),
+                    "PatientSize": self.patient_vars["PatientSize"].get().strip(),
+                    "PatientComments": self.patient_vars["PatientComments"].get().strip(),
+                    "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
+                    "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                },
+                study={
+                    "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
+                    "StudyDate": self.study_vars["StudyDate"].get().strip(),
+                    "StudyTime": self.study_vars["StudyTime"].get().strip(),
+                    "StudyDescription": self.study_vars["StudyDescription"].get().strip(),
+                    "AccessionNumber": self.study_vars["AccessionNumber"].get().strip(),
+                    "StudyID": self.study_vars["StudyID"].get().strip(),
+                    "ReferringPhysicianName": self.study_vars["ReferringPhysicianName"].get().strip(),
+                    "ReadingPhysicianName": self.study_vars["ReadingPhysicianName"].get().strip(),
+                    "ReasonForStudy": self.study_vars["ReasonForStudy"].get().strip(),
+                    "AdmittingDiagnosesDescription": self.study_vars["AdmittingDiagnosesDescription"].get().strip(),
+                    "StudyPatientLocation": self.study_vars["StudyPatientLocation"].get().strip(),
+                },
+                series={
+                    "SeriesInstanceUID": self.series_vars["SeriesInstanceUID"].get().strip(),
+                    "SeriesNumber": self.series_vars["SeriesNumber"].get().strip(),
+                    "Modality": self.series_vars["Modality"].get().strip(),
+                    "SeriesDescription": self.series_vars["SeriesDescription"].get().strip(),
+                    "BodyPartExamined": self.series_vars["BodyPartExamined"].get().strip(),
+                    "ProtocolName": self.series_vars["ProtocolName"].get().strip(),
+                    "SeriesDate": self.series_vars["SeriesDate"].get().strip(),
+                    "SeriesTime": self.series_vars["SeriesTime"].get().strip(),
+                    "PerformingPhysicianName": self.series_vars["PerformingPhysicianName"].get().strip(),
+                    "OperatorsName": self.series_vars["OperatorsName"].get().strip(),
+                    "Laterality": self.series_vars["Laterality"].get().strip(),
+                },
+                pixel_array=self.pixel_array,
+            )
+        except Exception as e:
+            self.logger.exception("Failed to create DICOM dataset")
+            messagebox.showerror(APP_TITLE, f"Failed to create DICOM: {e}")
+            return
+
+        try:
+            ds.save_as(save_path)
+            messagebox.showinfo(APP_TITLE, f"DICOM saved to: {save_path}")
+        except Exception as e:
+            self.logger.exception("Failed to save DICOM to '%s'", save_path)
+            messagebox.showerror(APP_TITLE, f"Failed to save DICOM: {e}")
+
+    def load_dicom_file(self):
+        """Load one or more DICOM files. Supports picking a DICOMDIR file to expand dataset references."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot load DICOM files")
+            messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
+            return
+            
+        paths = filedialog.askopenfilenames(
+            title="Select DICOM file(s)",
+            filetypes=[("DICOM Files", "*.dcm;*.dicom;*"), ("All Files", "*.*")]
+        )
+        if not paths:
+            return
+            
+        try:
+            try:
+                from .dcm import load_dicom_grouped, is_dicomdir, load_dicomdir_grouped
+            except Exception:
+                from dcm import load_dicom_grouped, is_dicomdir, load_dicomdir_grouped
+
+            grouped = {}
+
+            def merge_grouped(target, source):
+                for study_uid, series_map in source.items():
+                    t_series_map = target.setdefault(study_uid, {})
+                    for series_uid, instances in series_map.items():
+                        t_instances = t_series_map.setdefault(series_uid, [])
+                        t_instances.extend(instances)
+
+            if len(paths) == 1 and is_dicomdir(paths[0]):
+                grouped = load_dicomdir_grouped(paths[0])
+            else:
+                non_dir_files = []
+                for p in paths:
+                    if is_dicomdir(p):
+                        part = load_dicomdir_grouped(p)
+                        merge_grouped(grouped, part)
+                    else:
+                        non_dir_files.append(p)
+                if non_dir_files:
+                    part = load_dicom_grouped(list(non_dir_files))
+                    merge_grouped(grouped, part)
+                    
+            self._populate_dicom_tree(grouped)
+        except Exception as e:
+            self.logger.exception("Failed to load DICOM selections: %s", paths)
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOM: {e}")
+
+    def load_dicom_folder(self):
+        """Load all DICOM files under a selected folder and group them for display."""
+        if pydicom is None:
+            self.logger.warning("pydicom not available; cannot load DICOM folder")
+            messagebox.showerror(APP_TITLE, "pydicom is required to load DICOM files.")
+            return
+            
+        folder = filedialog.askdirectory(title="Select DICOM folder")
+        if not folder:
+            return
+            
+        try:
+            try:
+                from .dcm import load_dicom_grouped
+            except Exception:
+                from dcm import load_dicom_grouped
+                
+            grouped = load_dicom_grouped(folder)
+            self._populate_dicom_tree(grouped)
+        except Exception as e:
+            self.logger.exception("Failed to load DICOM folder: %s", folder)
+            messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
+
+    def _populate_dicom_tree(self, grouped):
+        """Populate the tree view with loaded DICOM data."""
+        self.grouped_dicom = grouped
+        self.series_tree.delete(*self.series_tree.get_children())
+        
+        total_instances = 0
+        first_series_id = None
+        
+        for study_uid, series_map in grouped.items():
+            study_node = self.series_tree.insert("", "end", iid=f"study:{study_uid}", text=f"Study: {study_uid}")
+            for series_uid, instances in series_map.items():
+                series_node = self.series_tree.insert(
+                    study_node, "end",
+                    iid=f"series:{study_uid}:{series_uid}",
+                    text=f"Series: {series_uid} ({len(instances)} images)"
+                )
+                if first_series_id is None:
+                    first_series_id = f"series:{study_uid}:{series_uid}"
+                    
+                for idx, (ds, arr) in enumerate(instances):
+                    inst_text = f"Instance {idx+1}: {getattr(ds, 'SOPInstanceUID', '')}"
+                    self.series_tree.insert(series_node, "end", text=inst_text)
+                    total_instances += 1
+
+        self.dcm_info_label.config(
+            text=f"Loaded {len(grouped)} studies, {sum(len(v) for v in grouped.values())} series, {total_instances} instances"
+        )
+        
+        if first_series_id:
+            self.series_tree.selection_set(first_series_id)
+            self.on_tree_select(None)
+
+    def on_tree_select(self, event):
+        """Handle selection in the series tree."""
+        sel = self.series_tree.selection()
+        if not sel:
+            return
+            
+        node_id = sel[0]
+        if not node_id.startswith("series:"):
+            return
+            
+        _, study_uid, series_uid = node_id.split(":", 2)
+        self.selected_study_uid = study_uid
+        self.selected_series_uid = series_uid
+        instances = self.grouped_dicom.get(study_uid, {}).get(series_uid, [])
+        
+        if not instances:
+            return
+            
+        ds, arr = instances[0]
+        # Only update pixel_array if no image is currently loaded from a file
+        if self.image_source != "file":
+            self.pixel_array = arr if arr is not None else self.pixel_array
+        
+        # Populate patient fields
+        self._populate_patient_fields(ds)
+        
+        # Populate study fields
+        self._populate_study_fields(ds)
+        
+        # Populate series fields
+        self._populate_series_fields(ds)
+        
+        # Update image info
+        rows = getattr(ds, 'Rows', None)
+        cols = getattr(ds, 'Columns', None)
+        if rows and cols:
+            self.image_label.config(text=f"Selected Series: {series_uid} | {cols}x{rows}")
+            
+        # Only update preview if no user-loaded image is active
+        if self.image_source != "file" and arr is not None:
+            self.image_source = "dicom"
+            self._update_image_preview(arr)
+
+    def _populate_patient_fields(self, ds):
+        """Populate patient form fields from DICOM dataset."""
+        self.patient_vars["PatientName"].set(str(getattr(ds, 'PatientName', '') or ''))
+        
+        try:
+            pn = getattr(ds, 'PatientName', '')
+            fam = getattr(pn, 'family_name', '') if pn else ''
+            giv = getattr(pn, 'given_name', '') if pn else ''
+            mid = getattr(pn, 'middle_name', '') if pn else ''
+            pref = getattr(pn, 'name_prefix', '') if pn else ''
+            suf = getattr(pn, 'name_suffix', '') if pn else ''
+            self.patient_vars["PatientFamilyNameComplex"].set(str(fam or ''))
+            self.patient_vars["PatientGivenName"].set(str(giv or ''))
+            self.patient_vars["PatientMiddleName"].set(str(mid or ''))
+            self.patient_vars["PatientPrefix"].set(str(pref or ''))
+            self.patient_vars["PatientSuffix"].set(str(suf or ''))
+        except Exception:
+            pass
+            
+        self.patient_vars["PatientID"].set(str(getattr(ds, 'PatientID', '') or ''))
+        self.patient_vars["PatientBirthDate"].set(str(getattr(ds, 'PatientBirthDate', '') or ''))
+        self.patient_vars["PatientSex"].set(str(getattr(ds, 'PatientSex', '') or ''))
+        self.patient_vars["PatientAge"].set(str(getattr(ds, 'PatientAge', '') or ''))
+        self.patient_vars["PatientWeight"].set(str(getattr(ds, 'PatientWeight', '') or ''))
+        self.patient_vars["PatientSize"].set(str(getattr(ds, 'PatientSize', '') or ''))
+        self.patient_vars["PatientComments"].set(str(getattr(ds, 'PatientComments', '') or ''))
+        self.patient_vars["PatientMothersBirthName"].set(str(getattr(ds, 'PatientMotherBirthName', '') or ''))
+        self.patient_vars["PatientDeathDateTime"].set(str(getattr(ds, 'PatientDeathDateTime', '') or ''))
+
+    def _populate_study_fields(self, ds):
+        """Populate study form fields from DICOM dataset."""
+        self.study_vars["StudyInstanceUID"].set(str(getattr(ds, 'StudyInstanceUID', '') or ''))
+        self.study_vars["StudyDate"].set(str(getattr(ds, 'StudyDate', '') or ''))
+        self.study_vars["StudyTime"].set(str(getattr(ds, 'StudyTime', '') or ''))
+        self.study_vars["StudyDescription"].set(str(getattr(ds, 'StudyDescription', '') or ''))
+        self.study_vars["AccessionNumber"].set(str(getattr(ds, 'AccessionNumber', '') or ''))
+        self.study_vars["StudyID"].set(str(getattr(ds, 'StudyID', '') or ''))
+        self.study_vars["ReferringPhysicianName"].set(str(getattr(ds, 'ReferringPhysicianName', '') or ''))
+        self.study_vars["ReadingPhysicianName"].set(str(getattr(ds, 'NameOfPhysiciansReadingStudy', '') or ''))
+        self.study_vars["ReasonForStudy"].set(str(getattr(ds, 'ReasonForStudy', '') or ''))
+        self.study_vars["AdmittingDiagnosesDescription"].set(str(getattr(ds, 'AdmittingDiagnosesDescription', '') or ''))
+        self.study_vars["StudyPatientLocation"].set(str(getattr(ds, 'StudyPatientLocation', '') or ''))
+
+    def _populate_series_fields(self, ds):
+        """Populate series form fields from DICOM dataset."""
+        self.series_vars["SeriesInstanceUID"].set(str(getattr(ds, 'SeriesInstanceUID', '') or ''))
+        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'InstanceNumber', getattr(ds, 'SeriesNumber', '')) or ''))
+        self.series_vars["Modality"].set(str(getattr(ds, 'Modality', '') or ''))
+        self.series_vars["SeriesDescription"].set(str(getattr(ds, 'SeriesDescription', '') or ''))
+        self.series_vars["BodyPartExamined"].set(str(getattr(ds, 'BodyPartExamined', '') or ''))
+        self.series_vars["ProtocolName"].set(str(getattr(ds, 'ProtocolName', '') or ''))
+        self.series_vars["SeriesDate"].set(str(getattr(ds, 'SeriesDate', '') or ''))
+        self.series_vars["SeriesTime"].set(str(getattr(ds, 'SeriesTime', '') or ''))
+        self.series_vars["PerformingPhysicianName"].set(str(getattr(ds, 'PerformingPhysicianName', '') or ''))
+        self.series_vars["OperatorsName"].set(str(getattr(ds, 'OperatorsName', '') or ''))
+        self.series_vars["Laterality"].set(str(getattr(ds, 'Laterality', '') or ''))
+
+    def _append_remote_message(self, text):
+        """Append a message to the remote messages text area."""
+        try:
+            self.remote_messages.configure(state=tk.NORMAL)
+            self.remote_messages.insert(tk.END, text + "\n")
+            self.remote_messages.see(tk.END)
+            self.remote_messages.configure(state=tk.DISABLED)
         except Exception:
             pass
 
