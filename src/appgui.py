@@ -381,7 +381,11 @@ class DicomCreatorApp(tk.Tk):
 
     def _update_image_preview(self, arr):
         """Convert the array to a displayable image and update the Tkinter label."""
-        if arr is None or Image is None:
+        if arr is None:
+            return
+        
+        if Image is None or ImageTk is None:
+            self.logger.warning("PIL or ImageTk not available; cannot display image preview")
             return
             
         try:
@@ -413,21 +417,41 @@ class DicomCreatorApp(tk.Tk):
                     self.logger.warning("Empty pixel array, cannot preview")
                     return
 
-            # Scale down to fit preview area
+            # Scale down to fit preview area - improved logic
             try:
-                max_w = max(200, self.preview_label.winfo_width())
-                max_h = max(200, self.preview_label.winfo_height())
-                if max_w > 0 and max_h > 0:
-                    img.thumbnail((max_w, max_h))
-            except Exception:
-                pass
+                # Get the actual preview label size
+                self.preview_label.update_idletasks()  # Force layout update
+                max_w = self.preview_label.winfo_width()
+                max_h = self.preview_label.winfo_height()
+                
+                # Use reasonable defaults if sizes are not yet available
+                if max_w <= 1:
+                    max_w = 400
+                if max_h <= 1:
+                    max_h = 300
+                
+                # Ensure minimum reasonable size
+                max_w = max(200, max_w)
+                max_h = max(200, max_h)
+                
+                # Thumbnail with aspect ratio preservation
+                img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
+            except Exception as e:
+                self.logger.debug(f"Thumbnail sizing failed: {e}, using original image")
+                # Continue with original size if thumbnail fails
 
-            if ImageTk is None:
-                return
-            self._tk_img = ImageTk.PhotoImage(img)
-            self.preview_label.configure(image=self._tk_img)
-        except Exception:
-            self.logger.warning("Failed to update image preview", exc_info=True)
+            # Create PhotoImage - with explicit error handling
+            try:
+                self._tk_img = ImageTk.PhotoImage(img)
+                self.preview_label.configure(image=self._tk_img)
+                self.preview_label.image = self._tk_img  # Keep a reference!
+            except Exception as e:
+                self.logger.error(f"Failed to create PhotoImage: {e}")
+                self.preview_label.config(text="Image display error")
+                
+        except Exception as e:
+            self.logger.warning(f"Failed to update image preview: {e}", exc_info=True)
+            self.preview_label.config(text="Failed to load image")
 
     def _to_uint8(self, arr):
         """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
