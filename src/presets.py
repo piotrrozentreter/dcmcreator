@@ -51,8 +51,169 @@ class ServerPresetsManager:
         except Exception:
             return False
     
+    def _validate_preset_name(self, name):
+        """Validate preset name.
+        
+        Args:
+            name: Name to validate
+            
+        Returns:
+            Tuple: (is_valid, error_message)
+        """
+        if not name:
+            return False, "Preset name cannot be empty"
+        
+        name = str(name).strip()
+        
+        if not name:
+            return False, "Preset name cannot be empty or whitespace only"
+        
+        if len(name) > 100:
+            return False, "Preset name is too long (max 100 characters)"
+        
+        # Check for invalid characters
+        invalid_chars = ['/', '\\', ':', '*', '?', '"', '<', '>', '|']
+        for char in invalid_chars:
+            if char in name:
+                return False, f"Preset name cannot contain: {char}"
+        
+        return True, ""
+    
+    def _validate_server_config(self, config_dict):
+        """Validate server configuration.
+        
+        Args:
+            config_dict: Configuration dictionary
+            
+        Returns:
+            Tuple: (is_valid, error_message)
+        """
+        if not config_dict or not isinstance(config_dict, dict):
+            return False, "Configuration must be a dictionary"
+        
+        # Check required fields
+        if 'server' not in config_dict or not config_dict['server']:
+            return False, "Server address is required"
+        
+        server = str(config_dict['server']).strip()
+        if not server:
+            return False, "Server address cannot be empty"
+        
+        # Validate port
+        try:
+            port = int(config_dict.get('port', 4321))
+            if port < 1 or port > 65535:
+                return False, "Port must be between 1 and 65535"
+        except (ValueError, TypeError):
+            return False, "Port must be a valid number"
+        
+        return True, ""
+    
+    def create_preset(self, name, server, port, calling_ae=None, called_ae=None):
+        """Create and save a new preset with full validation.
+        
+        Args:
+            name: Preset name
+            server: Server IP or hostname
+            port: Server port (int or str)
+            calling_ae: Calling AE title (optional, defaults to DCMCREATOR)
+            called_ae: Called AE title (optional, defaults to ANY-SCP)
+            
+        Returns:
+            Tuple: (success, message)
+        """
+        # Validate name
+        valid, error = self._validate_preset_name(name)
+        if not valid:
+            return False, error
+        
+        name = name.strip()
+        
+        # Check if preset already exists
+        if name in self.presets:
+            return False, f"Preset '{name}' already exists. Use update_preset to modify it."
+        
+        # Validate server config
+        config_dict = {
+            'server': server,
+            'port': port,
+            'calling_ae': calling_ae or 'DCMCREATOR',
+            'called_ae': called_ae or 'ANY-SCP'
+        }
+        
+        valid, error = self._validate_server_config(config_dict)
+        if not valid:
+            return False, error
+        
+        # Try to save
+        try:
+            port = int(port)
+            self.presets[name] = {
+                'server': str(server).strip(),
+                'port': port,
+                'calling_ae': str(calling_ae or 'DCMCREATOR').strip(),
+                'called_ae': str(called_ae or 'ANY-SCP').strip(),
+            }
+            
+            if self._save_presets():
+                return True, f"Preset '{name}' created successfully"
+            else:
+                del self.presets[name]  # Rollback on save failure
+                return False, "Failed to save preset to file"
+        except Exception as e:
+            return False, f"Error creating preset: {str(e)}"
+    
+    def update_preset(self, name, server=None, port=None, calling_ae=None, called_ae=None):
+        """Update an existing preset.
+        
+        Args:
+            name: Preset name to update
+            server: New server (optional)
+            port: New port (optional)
+            calling_ae: New calling AE (optional)
+            called_ae: New called AE (optional)
+            
+        Returns:
+            Tuple: (success, message)
+        """
+        if name not in self.presets:
+            return False, f"Preset '{name}' not found"
+        
+        # Get current values
+        current = self.presets[name]
+        
+        # Use provided values or keep current
+        new_config = {
+            'server': server if server else current['server'],
+            'port': port if port is not None else current['port'],
+            'calling_ae': calling_ae if calling_ae else current['calling_ae'],
+            'called_ae': called_ae if called_ae else current['called_ae'],
+        }
+        
+        # Validate
+        valid, error = self._validate_server_config(new_config)
+        if not valid:
+            return False, error
+        
+        try:
+            port_int = int(new_config['port'])
+            self.presets[name] = {
+                'server': str(new_config['server']).strip(),
+                'port': port_int,
+                'calling_ae': str(new_config['calling_ae']).strip(),
+                'called_ae': str(new_config['called_ae']).strip(),
+            }
+            
+            if self._save_presets():
+                return True, f"Preset '{name}' updated successfully"
+            else:
+                self.presets[name] = current  # Rollback
+                return False, "Failed to save preset to file"
+        except Exception as e:
+            return False, f"Error updating preset: {str(e)}"
+    
     def save_preset(self, name, config_dict):
-        """Save a server configuration preset.
+        """Save a server configuration preset (legacy method).
         
         Args:
             name: Preset name (must be non-empty)
@@ -108,13 +269,77 @@ class ServerPresetsManager:
         """Delete a preset by name.
         
         Returns:
-            True if successful, False otherwise
+            Tuple: (success, message)
         """
         if name not in self.presets:
-            return False
+            return False, f"Preset '{name}' not found"
         
-        del self.presets[name]
-        return self._save_presets()
+        try:
+            del self.presets[name]
+            if self._save_presets():
+                return True, f"Preset '{name}' deleted successfully"
+            else:
+                # Rollback on save failure
+                self._load_presets()
+                return False, "Failed to save changes to file"
+        except Exception as e:
+            return False, f"Error deleting preset: {str(e)}"
+    
+    def rename_preset(self, old_name, new_name):
+        """Rename a preset.
+        
+        Args:
+            old_name: Current preset name
+            new_name: New preset name
+            
+        Returns:
+            Tuple: (success, message)
+        """
+        # Validate new name
+        valid, error = self._validate_preset_name(new_name)
+        if not valid:
+            return False, error
+        
+        new_name = new_name.strip()
+        
+        if old_name not in self.presets:
+            return False, f"Preset '{old_name}' not found"
+        
+        if new_name in self.presets:
+            return False, f"Preset '{new_name}' already exists"
+        
+        try:
+            self.presets[new_name] = self.presets.pop(old_name)
+            if self._save_presets():
+                return True, f"Preset renamed from '{old_name}' to '{new_name}'"
+            else:
+                # Rollback
+                self._load_presets()
+                return False, "Failed to save changes to file"
+        except Exception as e:
+            return False, f"Error renaming preset: {str(e)}"
+    
+    def duplicate_preset(self, source_name, new_name):
+        """Create a copy of an existing preset with a new name.
+        
+        Args:
+            source_name: Name of preset to copy
+            new_name: Name for the new preset
+            
+        Returns:
+            Tuple: (success, message)
+        """
+        if source_name not in self.presets:
+            return False, f"Preset '{source_name}' not found"
+        
+        config = self.presets[source_name].copy()
+        return self.create_preset(
+            new_name,
+            config['server'],
+            config['port'],
+            config['calling_ae'],
+            config['called_ae']
+        )
     
     def list_presets(self):
         """Get list of all preset names, sorted alphabetically.
@@ -132,6 +357,33 @@ class ServerPresetsManager:
         """
         return self.list_presets()
     
+    def get_all_presets(self):
+        """Get all presets with their full configuration.
+        
+        Returns:
+            Dict mapping preset name -> configuration dict
+        """
+        return {name: config.copy() for name, config in self.presets.items()}
+    
     def has_presets(self):
         """Check if any presets exist."""
         return len(self.presets) > 0
+    
+    def preset_exists(self, name):
+        """Check if a specific preset exists.
+        
+        Args:
+            name: Preset name
+            
+        Returns:
+            Boolean
+        """
+        return name in self.presets
+    
+    def get_preset_count(self):
+        """Get total number of presets.
+        
+        Returns:
+            Integer count
+        """
+        return len(self.presets)

@@ -1,122 +1,227 @@
-# ? Documentation Organization Complete
+# DICOM Creator v0.3.1
 
-## Summary
+A professional DICOM file creation, editing, and transmission tool with comprehensive testing and validation capabilities.
 
-All documentation has been successfully organized into a clean, professional structure.
+## ? Features
 
----
+### Core Features
+- **DICOM Metadata Management** - Create and edit patient, study, and series metadata
+- **Image Support** - Load and preview images (PNG, JPG, BMP) as DICOM pixel data
+- **DICOM File Operations** - Load, save, and organize DICOM files and folders
+- **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
+- **Server Presets** - Save and manage server connection profiles
 
-## ?? Final Structure
+### Advanced Testing System (v0.3.1)
 
-### Root Directory (Clean)
+#### **Connection Testing Tab**
+- TCP connection validation
+- Connection quality assessment  
+- Latency variation analysis
+- Real-time performance metrics
+
+#### **Stress Testing Tab**
+- Load simulation and planning
+- Configurable test parameters (files/sec, duration, file size)
+- Multi-worker support for parallel testing
+- Performance metrics collection
+
+#### **Transmission History Tab**
+- Track all DICOM transmissions
+- Success/failure statistics
+- Throughput analysis
+- JSON export for reporting
+
+#### **Performance Benchmarking Tab**
+- File size performance analysis
+- Latency benchmarking
+- Throughput measurements
+- Performance trend analysis
+
+#### **Parallel Transmission Tab**
+- Multi-threaded transmission manager
+- 1-10 configurable worker threads
+- 3-5x speed improvement over sequential
+- Real-time progress tracking
+
+### Test Data Generation
+- **Random DICOM Generator** - Create test DICOM files with random metadata
+- **Bulk Generation** - Generate multiple files with configurable sizes
+- **Integrated Testing** - Generate and immediately send test files
+
+## ?? Quick Start
+
+### Installation
+```bash
+git clone https://github.com/piotrrozentreter/dcmcreator.git
+cd dcmcreator
+pip install -r requirements.txt
+```
+
+### Running the Application
+```bash
+python src/app.py
+```
+
+## ?? 13 Application Tabs
+
+| Tab | Purpose |
+|-----|---------|
+| **Patient** | Patient metadata (name, ID, age, sex, etc.) |
+| **Study** | Study metadata (date, description, accession) |
+| **Series/Modality** | Series metadata (modality, description, protocol) |
+| **Image** | Image loading and preview |
+| **Load DICOM** | Load and browse DICOM files/folders |
+| **Save** | Save DICOM files |
+| **Remote** | Configure server and send DICOM |
+| **Test/Generate** | Generate test DICOMs and transmission tests |
+| **Connection Test** | Validate server connectivity |
+| **Stress Test** | Simulate high-load scenarios |
+| **Transmission History** | Track and analyze transmission history |
+| **Benchmarking** | Performance analysis and reporting |
+| **Parallel Send** | Multi-threaded transmission management |
+
+## ?? Testing System
+
+### Test Execution Workflow
+
+1. **Connection Validation**
+   ```
+   Connection Test Tab ? Test TCP/Quality/Latency
+   ```
+
+2. **DICOM Generation**
+   ```
+   Test/Generate Tab ? Generate DICOMs ? Creates test files
+   ```
+
+3. **Stress Testing**
+   ```
+   Stress Test Tab ? Create Plan ? Start Test ? Analyze Results
+   ```
+
+4. **Transmission**
+   ```
+   Test/Generate Tab ? Send All Generated ? Transmission History
+   ```
+
+### Quick Test Execution
+
+See `doc/QUICK_TEST_EXECUTION_GUIDE.md` for step-by-step testing procedures.
+
+See `doc/WHERE_TO_RUN_TESTS.md` for recommended test environments.
+
+## ?? Documentation
+
+### Getting Started
+- [Getting Started Guide](doc/GETTING_STARTED.md)
+- [Build Instructions](doc/BUILD_INSTRUCTIONS.md)
+
+### Features & Usage
+- [Index & Navigation](doc/INDEX.md)
+- [Server Presets Guide](doc/SERVER_PRESETS.md)
+- [Random DICOM Generator](doc/RANDOM_DICOM_GENERATOR.md)
+- [Quick Start - Presets](doc/QUICK_START_PRESETS.md)
+- [Quick Start - DICOM Generator](doc/QUICK_START_RANDOM_DICOM.md)
+
+### Testing & Development
+- [Complete Test Execution Reference](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)
+- [Quick Test Execution Guide](doc/QUICK_TEST_EXECUTION_GUIDE.md)
+- [Where to Run Tests](doc/WHERE_TO_RUN_TESTS.md)
+- [Developer Guide - Presets](doc/DEVELOPER_GUIDE_PRESETS.md)
+
+### Project Info
+- [Project Structure](doc/ORGANIZATION.md)
+- [Changelog](doc/CHANGELOG_v0.3.0.md)
+- [Distribution Guide](doc/DISTRIBUTION_GUIDE.md)
+
+## ?? System Requirements
+
+- **Python** 3.7+
+- **pydicom** - DICOM file handling
+- **Pillow** - Image processing
+- **numpy** - Numerical operations
+- **pynetdicom** - DICOM networking (optional, for remote send)
+
+## ?? Project Structure
+
 ```
 dcmcreator/
-??? README.md          ? Main project documentation
-??? LICENSE            ? License file
-??? doc/               ? All other documentation
-??? ... project files
+??? src/
+?   ??? app.py                          # Main application entry point
+?   ??? appgui.py                       # GUI implementation (13 tabs)
+?   ??? dcm.py                          # DICOM operations
+?   ??? presets.py                      # Server presets manager
+?   ??? random_dicom.py                 # Test DICOM generator
+?   ??? connection_validator.py         # Connection testing
+?   ??? stress_tester.py                # Stress testing
+?   ??? transmission_history.py         # Transmission tracking
+?   ??? performance_benchmarking.py     # Performance testing
+?   ??? parallel_transmission.py        # Parallel sending
+?   ??? dcmlogger.py                    # Logging utilities
+??? doc/                                # Complete documentation
+??? requirements.txt                    # Dependencies
+??? README.md                           # This file
 ```
 
-### Documentation Folder
-```
-doc/
-??? INDEX.md                        ? START HERE for navigation
-??? QUICK_START_PRESETS.md          ? User quick start
-??? SERVER_PRESETS.md               ? Feature documentation
-??? DEVELOPER_GUIDE_PRESETS.md      ? Developer guide
-??? IMPLEMENTATION_SUMMARY.md       ? Technical details
-??? CHANGELOG_v0.3.0.md             ? Release notes
-??? BUILD_INSTRUCTIONS.md           ? Build guide
-??? DISTRIBUTION_GUIDE.md           ? Deployment guide
-??? ORGANIZATION.md                 ? Organization details
-??? DOCUMENTATION_COMPLETE.md       ? Completion report
-```
+## ?? Use Cases
+
+### Clinical Testing
+- Validate DICOM SCP server connectivity
+- Test remote DICOM transmission
+- Performance benchmarking under load
+
+### Development
+- Generate test DICOM files
+- Stress test DICOM servers
+- Performance analysis and optimization
+
+### Quality Assurance
+- Transmission history tracking
+- Success rate monitoring
+- Latency and throughput analysis
+
+## ?? Key Metrics
+
+- **Transmission Tracking** - Track all sent/received DICOMs
+- **Performance Analysis** - Measure latency, throughput, success rates
+- **Stress Testing** - Simulate up to 50 files/second
+- **Parallel Performance** - Up to 10x improvement with worker threads
+
+## ?? Version History
+
+### v0.3.1 (Current)
+- ? Connection Testing System
+- ? Stress Testing Framework
+- ? Transmission History Tracking
+- ? Performance Benchmarking
+- ? Parallel Transmission Manager
+- ? Complete Test Execution Reference
+
+### v0.3.0
+- DICOM creation and editing
+- Server presets management
+- Remote DICOM transmission
+- Random DICOM generator
+
+## ?? Contributing
+
+For development guidelines, see `doc/DEVELOPER_GUIDE_PRESETS.md`.
+
+## ?? License
+
+See LICENSE file for details.
+
+## ?? Author
+
+Written by Piotr Rozentreter  
+© 2025-2026 Hyland
 
 ---
 
-## Changes Made
+## ?? Next Steps
 
-### ? Created (3)
-- `doc/` folder
-- `doc/INDEX.md` - Navigation guide
-- `doc/ORGANIZATION.md` - Organization details
-- `doc/DOCUMENTATION_COMPLETE.md` - Completion report
-
-### ? Organized (7)
-Moved to `doc/` folder:
-- QUICK_START_PRESETS.md
-- SERVER_PRESETS.md
-- DEVELOPER_GUIDE_PRESETS.md
-- IMPLEMENTATION_SUMMARY.md
-- CHANGELOG_v0.3.0.md
-- BUILD_INSTRUCTIONS.md
-- DISTRIBUTION_GUIDE.md
-
-### ? Removed (4)
-Cleaned up temporary artifacts:
-- DELIVERABLES.md
-- FEATURE_COMPLETE.md
-- WHICH_EXE_TO_DISTRIBUTE.md
-- (FINAL_SUMMARY.md - not created in root)
-
-### ? Updated (1)
-- README.md - Updated documentation links
-
----
-
-## Key Improvements
-
-| Aspect | Before | After |
-|--------|--------|-------|
-| Root .md files | 15+ (cluttered) | 1 (clean) |
-| Documentation location | Scattered in root | Organized in `doc/` |
-| Navigation | Confusing | Easy with INDEX.md |
-| Findability | Hard | Simple |
-| Professional | Low | High |
-
----
-
-## ?? Ready for Use
-
-? **For Users:**
-- README.md ? doc/INDEX.md ? Specific guides
-
-? **For Developers:**
-- README.md ? doc/DEVELOPER_GUIDE_PRESETS.md ? Code
-
-? **For Distribution:**
-- All docs properly organized
-- Clean root directory
-- Professional structure
-
----
-
-## ?? Quick Links
-
-### Start Here
-? [README.md](README.md)  
-? [doc/INDEX.md](doc/INDEX.md)
-
-### User Guides
-? [doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)  
-? [doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)
-
-### Developer
-? [doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)
-
-### Build & Deploy
-? [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)  
-? [doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)
-
----
-
-## ? Status
-
-**? DOCUMENTATION ORGANIZATION COMPLETE**
-
-- All user-relevant documentation preserved
-- All developer documentation organized
-- Clean, professional structure
-- Easy navigation
-- Ready for production release
+1. **First Time Users** ? Read [Getting Started Guide](doc/GETTING_STARTED.md)
+2. **Test System Users** ? Read [Complete Test Execution Reference](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)
+3. **Developers** ? Read [Developer Guide](doc/DEVELOPER_GUIDE_PRESETS.md)
+4. **Deployment** ? Read [Distribution Guide](doc/DISTRIBUTION_GUIDE.md)
 
