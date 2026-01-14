@@ -22,29 +22,29 @@ A simple yet powerful GUI application to create, edit, and transmit DICOM files.
 - Performing Physician, Operator's Name, Laterality
 
 ### Image & DICOM Operations
-- ?? Load images (PNG, JPG, BMP) and preview
-- ?? Save as DICOM files (.dcm)
-- ?? Load existing DICOM files
-- ?? Batch load DICOM folders
-- ?? DICOMDIR support
-- ?? Edit loaded DICOM metadata
+- Load images (PNG, JPG, BMP) and preview
+- Save as DICOM files (.dcm)
+- Load existing DICOM files
+- Batch load DICOM folders
+- DICOMDIR support
+- Edit loaded DICOM metadata
 
 ### Remote DICOM Transmission
-- ?? Send DICOM to remote DICOM SCP servers
-- ? C-STORE protocol support
-- ?? Live transmission progress
-- ?? Automatic association handling
-- ? Per-instance transmission status
+- Send DICOM to remote DICOM SCP servers
+- C-STORE protocol support
+- Live transmission progress
+- Automatic association handling
+- Per-instance transmission status
 
 ### Additional Features
-- ?? Centralized logging (console + dcmcreator.log)
-- ?? Confirmation dialogs for destructive operations
-- ?? Multi-bit depth image support (8-bit, 16-bit, etc.)
-- ??? Robust error handling with user-friendly messages
+- Centralized logging (console + dcmcreator.log)
+- Confirmation dialogs for destructive operations
+- Multi-bit depth image support (8-bit, 16-bit, etc.)
+- Robust error handling with user-friendly messages
 
 ## Quick Start
 
-### Option 1: Run as EXE (Windows, No Python Required) ?
+### Option 1: Run as EXE (Windows, No Python Required)
 
 **Download & Extract:**
 1. Get the `DICOM Creator` folder from `dist/`
@@ -130,14 +130,14 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 
 ### For EXE (Windows Only)
 - Windows 7 or newer (64-bit)
-- ~100 MB disk space
-- ~300 MB RAM minimum
+- 100 MB disk space
+- 300 MB RAM minimum
 
 ### For Python
 - Python 3.9+
 - Cross-platform: Windows, macOS, Linux
-- ~500 MB disk space
-- ~500 MB RAM minimum
+- 500 MB disk space
+- 500 MB RAM minimum
 
 ## Documentation
 
@@ -149,20 +149,20 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 
 ```
 dcmcreator/
-??? src/
-?   ??? app.py              # Entry point
-?   ??? appgui.py           # Main GUI application
-?   ??? dcm.py              # DICOM creation/loading
-?   ??? remote.py           # DICOM C-STORE sending
-?   ??? dcmlogger.py        # Logging setup
-??? dist/                   # Distribution EXE folder
-??? build.py                # Python build script
-??? build.bat               # Windows build script
-??? dcmcreator.spec         # PyInstaller configuration
-??? create_icon.py          # Icon generator
-??? requirements.txt        # Runtime dependencies
-??? build-requirements.txt  # Build dependencies
-??? README.md              # This file
+|-- src/
+|   |-- app.py              (Entry point)
+|   |-- appgui.py           (Main GUI application)
+|   |-- dcm.py              (DICOM creation/loading)
+|   |-- remote.py           (DICOM C-STORE sending)
+|   +-- dcmlogger.py        (Logging setup)
+|-- dist/                   (Distribution EXE folder)
+|-- build.py                (Python build script)
+|-- build.bat               (Windows build script)
+|-- dcmcreator.spec         (PyInstaller configuration)
+|-- create_icon.py          (Icon generator)
+|-- requirements.txt        (Runtime dependencies)
+|-- build-requirements.txt  (Build dependencies)
++-- README.md              (This file)
 ```
 
 ## Version
@@ -188,7 +188,7 @@ Written by **Piotr Rozentreter** for **Hyland**
 ## Troubleshooting
 
 ### EXE Won't Start
-- Windows may block unsigned executables - click "More info" ? "Run anyway"
+- Windows may block unsigned executables - click "More info" -> "Run anyway"
 - Check antivirus software settings
 - Run from command line for error messages
 
@@ -213,7 +213,7 @@ python -c "import pydicom; import PIL; import numpy; print('All OK!')"
 
 ## Performance Notes
 
-- **Memory**: ~150-200 MB typical usage
+- **Memory**: 150-200 MB typical usage
 - **Startup**: 5-10 seconds (Python), 10-15 seconds (EXE first run)
 - **Remote Send**: Depends on network speed and image size
 - **Image Processing**: Real-time for typical medical images
@@ -233,6 +233,8 @@ python -c "import pydicom; import PIL; import numpy; print('All OK!')"
 - Improved image preview for unusual array shapes
 - Better file filtering and DICOM detection
 - Created standalone EXE builds
+- Fixed image preview with proper PhotoImage reference handling
+- Enhanced PIL/Pillow plugin support
 
 ### v0.2.3
 - Previous version features
@@ -241,4 +243,4 @@ See commit history for full details.
 
 ---
 
-**Ready to use! Download the EXE or run from Python source.** ??
+**Ready to use! Download the EXE or run from Python source.**

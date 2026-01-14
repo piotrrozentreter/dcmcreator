@@ -2,17 +2,17 @@
 
 This guide explains how to build a standalone executable (.exe) file that can run on Windows computers without Python installed.
 
-## ?? Important: What to Distribute
+## Important: What to Distribute
 
 **The build process now automatically creates a ZIP file!**
 
-- ? **Best option**: Use the auto-generated `DICOM Creator.zip` file
-- ? **Alternative**: Distribute the entire `dist\DICOM Creator\` folder
-- ? **DON'T distribute**: Just the `DICOM Creator.exe` alone (needs libraries)
+- [x] **Best option**: Use the auto-generated `DICOM Creator.zip` file
+- [x] **Alternative**: Distribute the entire `dist\DICOM Creator\` folder
+- [ ] **DON'T distribute**: Just the `DICOM Creator.exe` alone (needs libraries)
 
 ## Quick Start
 
-### Option 1: Using Batch Script (Easiest on Windows) ?
+### Option 1: Using Batch Script (Easiest on Windows)
 
 1. Open Command Prompt or PowerShell
 2. Navigate to the project directory:
@@ -25,8 +25,8 @@ This guide explains how to build a standalone executable (.exe) file that can ru
    ```
 4. Wait for the build to complete (takes 3-5 minutes)
 5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (~15-20 MB) ? For email/upload
-   - `dist\DICOM Creator\` folder (~53 MB) ? For direct sharing
+   - `DICOM Creator.zip` (15-20 MB) - For email/upload
+   - `dist\DICOM Creator\` folder (53 MB) - For direct sharing
 
 ### Option 2: Using Python Script
 
@@ -41,30 +41,30 @@ This guide explains how to build a standalone executable (.exe) file that can ru
    ```
 4. Wait for the build to complete
 5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (~15-20 MB) ? For email/upload
-   - `dist\DICOM Creator\` folder (~53 MB) ? For direct sharing
+   - `DICOM Creator.zip` (15-20 MB) - For email/upload
+   - `dist\DICOM Creator\` folder (53 MB) - For direct sharing
 
 ## What Gets Built
 
-### Automatic ZIP Creation ?
+### Automatic ZIP Creation
 The build script now automatically creates `DICOM Creator.zip` containing:
 - `DICOM Creator.exe` - Main executable (18.19 MB)
 - `_internal\` - All Python libraries (required!)
 - `src\` - Application source code
-- **Total ZIP size**: ~15-20 MB (compressed)
+- **Total ZIP size**: 15-20 MB (compressed)
 
 ### Also Available
 - **Distribution folder**: `dist\DICOM Creator\` (53.49 MB uncompressed)
 - **For direct folder sharing** or USB distribution
 
 ### Compression Savings
-- Folder size: ~53.49 MB
-- ZIP size: ~15-20 MB
-- **Compression: 60-70%** ?
+- Folder size: 53.49 MB
+- ZIP size: 15-20 MB
+- **Compression: 60-70%**
 
 ## Distribution
 
-### ? Recommended: Use the ZIP File
+### Recommended: Use the ZIP File
 
 **Best for:**
 - Email distribution (small file)
@@ -78,7 +78,7 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 3. Double-click `DICOM Creator.exe`
 4. Done!
 
-### ? Alternative: Use the Folder
+### Alternative: Use the Folder
 
 **Best for:**
 - USB drives
@@ -98,8 +98,8 @@ If the automatic ZIP wasn't created or you want to regenerate it:
 
 ```cmd
 # Using Windows built-in compression
-Right-click dist\DICOM Creator ? Send to ? Compressed (zipped) folder
-# Creates DICOM Creator.zip (~15-20 MB)
+Right-click dist\DICOM Creator -> Send to -> Compressed (zipped) folder
+# Creates DICOM Creator.zip (15-20 MB)
 
 # Or using PowerShell
 powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', 'DICOM Creator.zip')"
@@ -117,56 +117,56 @@ For enterprise deployment, create an installer using NSIS:
 
 See [NSIS Documentation](https://nsis.sourceforge.io/) for details.
 
-## ?? Common Mistakes
+## Common Mistakes
 
-### ? Mistake 1: Distributing just the EXE
+### Mistake 1: Distributing just the EXE
 ```
-? WRONG: Send only DICOM Creator.exe
-   Result: Won't work! Missing _internal\ folder with libraries
-```
-
-### ? Solution 1: Use the ZIP file
-```
-? CORRECT: Send DICOM Creator.zip
-   Result: Works perfectly! ZIP includes everything needed
+WRONG: Send only DICOM Creator.exe
+Result: Won't work! Missing _internal\ folder with libraries
 ```
 
-### ? Mistake 2: Distributing just the EXE from ZIP
+### Solution 1: Use the ZIP file
 ```
-? WRONG: Extract ZIP, then send only DICOM Creator.exe
-   Result: Won't work! Missing _internal\ folder
+CORRECT: Send DICOM Creator.zip
+Result: Works perfectly! ZIP includes everything needed
 ```
 
-### ? Solution 2: Send the entire extracted folder or use ZIP as-is
+### Mistake 2: Distributing just the EXE from ZIP
 ```
-? CORRECT: Send DICOM Creator.zip directly (users extract)
-   or send entire dist\DICOM Creator\ folder
-   Result: Works perfectly!
+WRONG: Extract ZIP, then send only DICOM Creator.exe
+Result: Won't work! Missing _internal\ folder
+```
+
+### Solution 2: Send the entire extracted folder or use ZIP as-is
+```
+CORRECT: Send DICOM Creator.zip directly (users extract)
+or send entire dist\DICOM Creator\ folder
+Result: Works perfectly!
 ```
 
 ## File Structure After Build
 
 ```
 dcmcreator/
-??? DICOM Creator.zip              ? ? AUTO-CREATED! Use this for distribution
-??? dist/
-?   ??? DICOM Creator/              ? ? ALTERNATIVE distribution folder
-?       ??? DICOM Creator.exe       ? Main executable
-?       ??? _internal/              ? ? REQUIRED! All libraries
-?       ?   ??? pydicom/
-?       ?   ??? pynetdicom/
-?       ?   ??? PIL/
-?       ?   ??? numpy/
-?       ?   ??? tcl8/, tk8/
-?       ?   ??? [many more DLLs]
-?       ??? src/                    ? Application source
-??? build/                          ? Temporary (can delete)
-??? dcmcreator.spec                 ? Build configuration
-??? build.bat                       ? Windows batch build script
-??? build.py                        ? Python build script
-??? create_icon.py                  ? Icon generator
-??? app.ico                         ? Generated icon
-??? ...
+|-- DICOM Creator.zip              <-- AUTO-CREATED! Use this for distribution
+|-- dist/
+|   |-- DICOM Creator/              <-- ALTERNATIVE distribution folder
+|       |-- DICOM Creator.exe       (Main executable)
+|       |-- _internal/              <-- REQUIRED! All libraries
+|       |   |-- pydicom/
+|       |   |-- pynetdicom/
+|       |   |-- PIL/
+|       |   |-- numpy/
+|       |   |-- tcl8/, tk8/
+|       |   |-- [many more DLLs]
+|       |-- src/                    (Application source)
+|-- build/                          (Temporary - can delete)
+|-- dcmcreator.spec                 (Build configuration)
+|-- build.bat                       (Windows batch build script)
+|-- build.py                        (Python build script)
+|-- create_icon.py                  (Icon generator)
+|-- app.ico                         (Generated icon)
+|-- ...
 ```
 
 ## Troubleshooting
@@ -206,7 +206,7 @@ pip install PyInstaller>=6.0.0
 1. The executable was still built successfully
 2. Manually create ZIP:
    ```cmd
-   Right-click dist\DICOM Creator ? Send to ? Compressed (zipped) folder
+   Right-click dist\DICOM Creator -> Send to -> Compressed (zipped) folder
    ```
 3. Or use PowerShell command provided above
 
@@ -233,7 +233,7 @@ coll = COLLECT(...)
 
 Then rebuild. **Note**: 
 - Single file executables are **much slower** to start (30-60 seconds first run)
-- File size is larger (~80-100 MB)
+- File size is larger (80-100 MB)
 - We recommend the folder/ZIP distribution instead
 
 ## Clean Build
@@ -251,12 +251,12 @@ build.bat
 
 ## Performance
 
-- **Distribution size (ZIP)**: ~15-20 MB (compressed)
+- **Distribution size (ZIP)**: 15-20 MB (compressed)
 - **Distribution size (folder)**: 53.49 MB (uncompressed)
 - **Extract/Copy time**: 1-2 minutes on typical system
 - **First run**: 10-15 seconds (unpacking and initializing)
 - **Subsequent runs**: 5-10 seconds
-- **Memory usage**: ~150-200 MB (normal for Python applications)
+- **Memory usage**: 150-200 MB (normal for Python applications)
 
 ## Signing the EXE (Optional)
 
