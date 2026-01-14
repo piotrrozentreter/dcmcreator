@@ -162,7 +162,7 @@ class DicomCreatorApp(tk.Tk):
 
         # View menu
         view_menu = tk.Menu(menubar, tearoff=False)
-        view_menu.add_label("Core Tabs", state=tk.DISABLED)
+        view_menu.add_command(label="Core Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Patient", variable=self.tab_visibility["Patient"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Study", variable=self.tab_visibility["Study"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Series/Modality", variable=self.tab_visibility["Series/Modality"], command=self._update_tab_visibility)
@@ -171,7 +171,7 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_checkbutton(label="Save", variable=self.tab_visibility["Save"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Remote", variable=self.tab_visibility["Remote"], command=self._update_tab_visibility)
         view_menu.add_separator()
-        view_menu.add_label("Test Tabs", state=tk.DISABLED)
+        view_menu.add_command(label="Test Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Test/Generate", variable=self.tab_visibility["Test/Generate"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Connection Test", variable=self.tab_visibility["Connection Test"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Stress Test", variable=self.tab_visibility["Stress Test"], command=self._update_tab_visibility)
@@ -284,6 +284,9 @@ class DicomCreatorApp(tk.Tk):
         self._build_benchmark_tab()
         self._build_parallel_tab()
         
+        # Apply initial tab visibility (hide test tabs by default)
+        self._update_tab_visibility()
+
     def _build_patient_fields(self):
         """Build patient metadata form fields."""
         self.patient_vars = {
@@ -1435,7 +1438,7 @@ class DicomCreatorApp(tk.Tk):
     def _save_current_preset(self):
         """Save the current remote settings to a preset.
         
-        If preset name is provided, uses that. Otherwise uses Server IP/name.
+        If preset name is provided, uses that. Otherwise uses Server IP/hostname.
         If preset already exists, it will be replaced.
         """
         try:
