@@ -621,7 +621,7 @@ class DicomCreatorApp(tk.Tk):
                     self._append_test_status(f"? Populated form fields from generated DICOM")
 
             # Send to remote
-            self.send_remote()
+            self.send_remote();
         except Exception as e:
             self.logger.exception("Failed to load generated DICOMs")
             messagebox.showerror(APP_TITLE, f"Failed to load DICOMs: {e}")
@@ -1601,7 +1601,7 @@ class DicomCreatorApp(tk.Tk):
         
         self.connection_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    
+
     def _test_tcp(self):
         """Test TCP connection."""
         if ConnectionValidator is None:
@@ -2087,11 +2087,12 @@ print(bench.get_benchmark_report(0))
         # Buttons
         btn_frame = ttk.Frame(self.parallel_frame)
         btn_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Button(btn_frame, text="Save Config", command=self.save_parallel_config).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_frame, text="Example Code", command=self._show_parallel_example).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_frame, text="Documentation", command=self._show_parallel_docs).pack(side=tk.LEFT, padx=2)
     
     def _show_parallel_example(self):
-        """Show parallel transmission example."""
+        """Show parallel transmission example code."""
         example = """Parallel Transmission Example:
 
 from src.parallel_transmission import ParallelTransmissionManager
@@ -2102,27 +2103,36 @@ mgr = ParallelTransmissionManager(max_workers=5)
 # Start session
 session = mgr.start_session("Bulk Send")
 
-# Queue files for transmission
+# Define send function
+def send_dicom(file_path):
+    # Your transmission logic
+    return True
+
+# Queue files
 for file_path in file_list:
-    mgr.queue_transmission(file_path, send_function)
+    mgr.queue_transmission(file_path, send_dicom)
 
 # Or queue batch
-mgr.queue_batch(file_list, send_function)
+mgr.queue_batch(file_list, send_dicom)
 
 # Wait for completion
 mgr.wait_for_completion(timeout=3600)
 
-# Get report
-print(mgr.get_session_report())
+# Get session report
+report = mgr.get_session_report()
+print(f"Files sent: {report['files_sent']}")
+print(f"Success rate: {report['success_rate']}%")
+print(f"Duration: {report['duration_seconds']}s")
+print(f"Throughput: {report['throughput_mbps']} MB/s")
 
-# Benefits:
-# - 5 workers = ~5x faster than sequential
-# - Automatic load balancing
-# - Real-time progress tracking
-# - Detailed performance report
+Benefits:
+- 5 workers = ~5x faster than sequential
+- Automatic load balancing
+- Real-time progress tracking
+- Detailed performance report
 """
         messagebox.showinfo(APP_TITLE, example)
-    
+
     def _show_parallel_docs(self):
         """Show parallel transmission documentation."""
         docs = """Parallel Transmission Manager
@@ -2153,19 +2163,21 @@ See: doc/WHERE_TO_RUN_TESTS.md
 """
         messagebox.showinfo(APP_TITLE, docs)
 
-    def _build_view_menu(self, menubar):
-        """Build the View menu for controlling tab visibility."""
-        for tab_name, var in self.tab_visibility.items():
-            # Skip built-in tabs
-            if tab_name in ("Patient", "Study", "Series/Modality", "Image", "Load DICOM", "Save", "Remote"):
-                continue
-            
-            # Add checkbox menu item for each tab
-            menubar.add_checkbutton(
-                label=f"Show {tab_name} Tab",
-                variable=var,
-                command=self._update_tab_visibility
-            )
+    def save_parallel_config(self):
+        """Save parallel transmission configuration to JSON file."""
+        try:
+            import json
+            config = {
+                "workers": int(self.parallel_workers.get()),
+                "session_name": self.parallel_session_name.get()
+            }
+            with open("parallel_config.json", "w") as f:
+                json.dump(config, f, indent=2)
+            messagebox.showinfo(APP_TITLE, "Configuration saved to: parallel_config.json\n\n"
+                                          "You can now run: python examples/parallel_send.py")
+        except Exception as e:
+            messagebox.showerror(APP_TITLE, f"Failed to save config: {e}")
+            self.logger.exception("Failed to save parallel config")
 
     def _update_tab_visibility(self):
         """Update the visibility of tabs based on the menu selections."""
