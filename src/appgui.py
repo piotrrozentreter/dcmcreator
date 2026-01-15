@@ -88,6 +88,14 @@ except Exception:
     except Exception:
         ParallelTransmissionManager = None
 
+try:
+    from .app_logic import DicomLogicHandler
+except Exception:
+    try:
+        from app_logic import DicomLogicHandler
+    except Exception:
+        DicomLogicHandler = None
+
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
@@ -850,6 +858,11 @@ class DicomCreatorApp(tk.Tk):
 
     def _to_uint8(self, arr):
         """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
+        if DicomLogicHandler is not None:
+            logic = DicomLogicHandler(self.logger)
+            return logic.process_image_to_uint8(arr)
+        
+        # Fallback if logic handler not available
         if arr.dtype == np.uint8:
             return arr
         a = arr.astype(np.float32)
@@ -1831,10 +1844,46 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, "Create a plan first")
             return
         
-        test = self.stress_runner.start_stress_test(self.stress_runner.current_test['plan'] if hasattr(self.stress_runner, 'current_test') else self.stress_runner.create_test_plan("Test", 50, 60))
+        # Get the test plan
+        if self.stress_runner.current_test and 'plan' in self.stress_runner.current_test:
+            plan = self.stress_runner.current_test['plan']
+        else:
+            plan = self.stress_runner.create_test_plan("Test", 50, 60, 1.0, 1)
+        
+        test = self.stress_runner.start_stress_test(plan)
         
         self.stress_results.configure(state=tk.NORMAL)
-        self.stress_results.insert(tk.END, "\nTest running...\n")
+        self.stress_results.insert(tk.END, f"\nStarting test: {plan['name']}\n")
+        self.stress_results.insert(tk.END, f"Target: {plan['files_per_second']} files/sec for {plan['duration_seconds']}s\n")
+        self.stress_results.insert(tk.END, "Running...\n\n")
+        self.stress_results.configure(state=tk.DISABLED)
+        
+        # Use logic handler to run simulation
+        if DicomLogicHandler:
+            logic = DicomLogicHandler(self.logger)
+            logic.run_stress_test_simulation(
+                self.stress_runner,
+                on_complete_callback=self._display_stress_report,
+                on_error_callback=lambda err: messagebox.showerror(APP_TITLE, f"Test error: {err}")
+            )
+        else:
+            # Fallback: run directly
+            def run_test():
+                try:
+                    self.stress_runner.run_simulation()
+                    report = self.stress_runner.get_stress_test_report()
+                    self.after(0, lambda: self._display_stress_report(report))
+                except Exception as e:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Test error: {e}"))
+            
+            t = threading.Thread(target=run_test, daemon=True)
+            t.start()
+    
+    def _display_stress_report(self, report):
+        """Display stress test report in results area."""
+        self.stress_results.configure(state=tk.NORMAL)
+        self.stress_results.insert(tk.END, report)
+        self.stress_results.see(tk.END)
         self.stress_results.configure(state=tk.DISABLED)
     
     def _clear_stress_results(self):

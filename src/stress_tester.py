@@ -96,6 +96,63 @@ class StressTestRunner:
         
         return self.current_test
     
+    def run_simulation(self):
+        """Simulate stress test transmission (non-blocking).
+        
+        Runs in a separate thread to simulate file transmissions.
+        Updates current_test with results as it progresses.
+        """
+        if not self.current_test:
+            return
+        
+        plan = self.current_test['plan']
+        target_fps = plan['files_per_second']
+        duration = plan['duration_seconds']
+        file_size = plan['file_size_mb']
+        
+        bytes_per_file = int(file_size * 1024 * 1024)
+        start_time = time.time()
+        
+        while not self.stop_flag:
+            elapsed = time.time() - start_time
+            
+            # Stop if duration exceeded
+            if elapsed >= duration:
+                break
+            
+            # Calculate how many files should have been sent by now
+            expected_files = int(elapsed * target_fps)
+            sent_files = self.current_test['files_sent'] + self.current_test['files_failed']
+            
+            # Send files up to expected count
+            while sent_files < expected_files and not self.stop_flag:
+                # Simulate transmission time (typically 90-110% of ideal time)
+                ideal_time = 1.0 / target_fps
+                actual_time = ideal_time * (0.9 + (0.2 * (hash(time.time()) % 100) / 100))
+                
+                time.sleep(actual_time * 0.1)  # Simulate network latency
+                
+                # Record as successful (95% success rate simulation)
+                success = (hash(sent_files) % 100) < 95
+                
+                if success:
+                    self.record_file_sent(bytes_per_file, success=True, time_taken=actual_time)
+                else:
+                    self.record_file_sent(
+                        0, 
+                        success=False, 
+                        error=f"Simulated transmission error for file {sent_files + 1}",
+                        time_taken=actual_time
+                    )
+                
+                sent_files += 1
+            
+            # Small sleep to prevent CPU spinning
+            time.sleep(0.01)
+        
+        # End the test
+        self.end_stress_test('COMPLETED' if not self.stop_flag else 'INTERRUPTED')
+    
     def record_file_sent(self, bytes_sent, success=True, error=None, time_taken=0):
         """Record result of a file transmission during stress test.
         
@@ -249,7 +306,7 @@ class StressTestRunner:
             report.append("ERRORS")
             report.append("-" * 70)
             for error in test['errors'][:10]:
-                report.append(f"• {error['error']}")
+                report.append(f"* {error['error']}")
             if len(test['errors']) > 10:
                 report.append(f"... and {len(test['errors']) - 10} more errors")
             report.append("")
