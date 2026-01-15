@@ -57,6 +57,7 @@ def send_grouped_dicom(
     config: Dict[str, Any],
     logger=None,
     on_message: Callable[[str], None] = None,
+    transmission_history=None,
 ) -> None:
     """
     Send all datasets in grouped dict to remote SCP via C-STORE.
@@ -65,6 +66,7 @@ def send_grouped_dicom(
     config: {server, port, calling_ae, called_ae}
     logger: optional logger for errors
     on_message: optional callback to append status messages
+    transmission_history: optional TransmissionHistory instance for recording
 
     Raises on first error, enforcing all-or-nothing semantics.
     """
@@ -134,8 +136,10 @@ def send_grouped_dicom(
             if on_message:
                 on_message("Verifying connectivity (C-ECHO)...")
             status = assoc.send_c_echo()
-            if status and status.Status != 0x0000:
-                msg = f"C-ECHO failed: 0x{status.Status:04X}"
+            # Safely get status code
+            status_code = getattr(status, 'Status', None) if status else None
+            if status and status_code and status_code != 0x0000:
+                msg = f"C-ECHO failed: 0x{status_code:04X}"
                 if logger:
                     logger.error(msg)
                 if on_message:
@@ -150,6 +154,7 @@ def send_grouped_dicom(
         # Pre-compute total count for nicer progress messages
         total_count = sum(len(instances) for series_map in grouped.values() for instances in series_map.values())
         sent_count = 0
+        import time
         for study_uid, series_map in grouped.items():
             for series_uid, instances in series_map.items():
                 for ds, _ in instances:
@@ -162,21 +167,62 @@ def send_grouped_dicom(
                     if on_message:
                         uid = getattr(ds, 'SOPInstanceUID', '')
                         on_message(f"Sending {sent_count}/{total_count} SOPInstanceUID={uid} (~{size_bytes} bytes)...")
-                    # Send
+                    # Send with timing
+                    start_time = time.time()
                     status = assoc.send_c_store(ds)
+                    duration = time.time() - start_time
                     total += 1
                     if status is None:
                         raise RuntimeError("No response to C-STORE")
-                    if status.Status != 0x0000:
-                        msg = f"C-STORE failed (Status=0x{status.Status:04X}) for SOPInstanceUID={getattr(ds, 'SOPInstanceUID', '')}"
+                    # Safely get status code
+                    status_code = getattr(status, 'Status', None)
+                    if status_code != 0x0000:
+                        msg = f"C-STORE failed (Status=0x{status_code:04X})" if status_code else f"C-STORE failed (no status code)"
+                        msg += f" for SOPInstanceUID={getattr(ds, 'SOPInstanceUID', '')}"
                         if logger:
                             logger.error(msg)
                         if on_message:
                             on_message(msg)
+                        # Record failed transmission
+                        if transmission_history:
+                            transmission_history.record_transmission(
+                                filename=getattr(ds, 'SOPInstanceUID', 'unknown'),
+                                server_ip=server,
+                                server_port=port,
+                                calling_ae=calling_ae,
+                                called_ae=called_ae,
+                                success=False,
+                                bytes_sent=0,
+                                duration_seconds=duration,
+                                error_message=msg,
+                                patient_name=str(getattr(ds, 'PatientName', '')),
+                                patient_id=str(getattr(ds, 'PatientID', '')),
+                                study_uid=study_uid,
+                                series_uid=series_uid
+                            )
                         raise RuntimeError(msg)
                     else:
+                        # Safely format success message
+                        status_code_str = f"0x{status_code:04X}" if status_code is not None else "OK"
                         if on_message:
-                            on_message(f"OK 0x{status.Status:04X}")
+                            on_message(f"OK {status_code_str}")
+                        # Record successful transmission
+                        if transmission_history:
+                            transmission_history.record_transmission(
+                                filename=getattr(ds, 'SOPInstanceUID', 'unknown'),
+                                server_ip=server,
+                                server_port=port,
+                                calling_ae=calling_ae,
+                                called_ae=called_ae,
+                                success=True,
+                                bytes_sent=size_bytes,
+                                duration_seconds=duration,
+                                error_message=None,
+                                patient_name=str(getattr(ds, 'PatientName', '')),
+                                patient_id=str(getattr(ds, 'PatientID', '')),
+                                study_uid=study_uid,
+                                series_uid=series_uid
+                            )
         if on_message:
             on_message(f"Successfully sent {total} instances")
     finally:

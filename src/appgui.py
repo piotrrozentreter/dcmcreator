@@ -128,6 +128,12 @@ class DicomCreatorApp(tk.Tk):
         else:
             self.presets_manager = None
 
+        # Transmission history
+        if TransmissionHistory:
+            self.transmission_history = TransmissionHistory(logger=self.logger)
+        else:
+            self.transmission_history = None
+
         # Tab visibility state
         self.tab_visibility = {
             "Patient": tk.BooleanVar(value=True),
@@ -1296,6 +1302,7 @@ class DicomCreatorApp(tk.Tk):
                     config=config,
                     logger=self.logger,
                     on_message=post_message,
+                    transmission_history=self.transmission_history,
                 )
                 self.after(0, lambda: messagebox.showinfo(APP_TITLE, "All DICOM instances sent successfully"))
             except Exception as e:
