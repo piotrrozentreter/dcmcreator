@@ -1510,7 +1510,7 @@ class DicomCreatorApp(tk.Tk):
                     server=server,
                     port=port,
                     calling_ae=calling_ae,
-                    called_ae=callsed_ae
+                    called_ae=called_ae
                 )
                 
                 if success:
@@ -1527,7 +1527,7 @@ class DicomCreatorApp(tk.Tk):
                     server=server,
                     port=port,
                     calling_ae=calling_ae,
-                    called_ae=callsed_ae
+                    called_ae=called_ae
                 )
                 
                 if success:
