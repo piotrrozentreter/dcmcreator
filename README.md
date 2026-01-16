@@ -1,46 +1,59 @@
-# DICOM Creator GUI App
+# DICOM Creator
 
-A simple yet powerful GUI application to create, edit, and transmit DICOM files.
+A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-## Features
+## ? Features
 
-### Patient Metadata
-- Patient Name, ID, Birth Date, Sex, Age, Weight, Height
-- Extended fields: Family Name, Prefix, Given Name, Middle Name, Suffix
-- Mother's Birth Name, Death DateTime
+### Core Features
+- **DICOM Metadata Management** - Create and edit patient, study, and series metadata
+- **Image Support** - Load and preview images (PNG, JPG, BMP) as DICOM pixel data
+- **DICOM File Operations** - Load, save, and organize DICOM files and folders
+- **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
+- **Server Presets** - Save and manage server connection profiles
 
-### Study Metadata
-- Study Instance UID, Date, Time, Description
-- Accession Number, Study ID
-- Referring Physician, Reading Physician
-- Reason for Study, Admitting Diagnoses, Patient Location
+### Advanced Features (v0.3+)
 
-### Series Metadata
-- Series Instance UID, Number, Date, Time
-- Modality, Series Description
-- Body Part Examined, Protocol Name
-- Performing Physician, Operator's Name, Laterality
+#### **Server Presets**
+- Save frequently used DICOM server configurations
+- Quick load and apply with one click
+- Persistent storage across sessions
+- Multi-server profile management
 
-### Image & DICOM Operations
-- Load images (PNG, JPG, BMP) and preview
-- Save as DICOM files (.dcm)
-- Load existing DICOM files
-- Batch load DICOM folders
-- DICOMDIR support
-- Edit loaded DICOM metadata
+#### **Connection Testing & Validation**
+- TCP connection validation to DICOM servers
+- Connection quality assessment
+- Latency variation analysis
+- Real-time network performance metrics
 
-### Remote DICOM Transmission
-- Send DICOM to remote DICOM SCP servers
-- C-STORE protocol support
-- Live transmission progress
-- Automatic association handling
-- Per-instance transmission status
+#### **Stress Testing**
+- Load simulation and capacity planning
+- Configurable test parameters (files/sec, duration, file size)
+- Multi-worker support for parallel testing
+- Performance metrics collection
 
-### Additional Features
-- Centralized logging (console + dcmcreator.log)
-- Confirmation dialogs for destructive operations
-- Multi-bit depth image support (8-bit, 16-bit, etc.)
-- Robust error handling with user-friendly messages
+#### **Transmission History & Analytics**
+- Track all DICOM transmissions with timestamps
+- Success/failure statistics and reporting
+- Throughput analysis
+- JSON export for external reporting
+
+#### **Performance Benchmarking**
+- File size performance analysis
+- Latency benchmarking
+- Throughput measurements
+- Performance trend visualization
+
+#### **Parallel Transmission**
+- Multi-threaded transmission manager
+- 1-10 configurable worker threads
+- 3-5x speed improvement over sequential sending
+- Real-time progress tracking
+
+#### **Test Data Generation**
+- Random DICOM Generator - Create test files with random metadata
+- Bulk generation with configurable sizes
+- Integrated testing workflow
+- Immediate test and send capabilities
 
 ## Quick Start
 
@@ -99,7 +112,7 @@ python build.py
 
 Your standalone EXE will be created in `dist/DICOM Creator/`
 
-**See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build guide.**
+**See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
 
 ## Usage
 
@@ -119,6 +132,44 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 2. Optionally adjust AE Titles
 3. Click "Send All Loaded DICOM"
 4. Monitor progress in Messages area
+
+#### Using Server Presets
+1. Go to "Remote" tab
+2. (Optional) Select a preset from dropdown to auto-load settings
+3. Or manually enter server details and click "Save Current" to save as preset
+4. Select preset and click "Load" or simply select and it auto-applies
+5. Click "Send All Loaded DICOM"
+
+### Testing & Validation
+
+#### Connection Testing
+- Go to "Connection Test" tab
+- Enter server details
+- Click "Test Connection" to validate
+- Review latency and connection quality metrics
+
+#### Stress Testing
+- Go to "Stress Test" tab
+- Configure test parameters (number of files, duration, worker threads)
+- Click "Start Stress Test"
+- Monitor real-time performance metrics
+
+#### Transmission History
+- Go to "Transmission History" tab
+- View all past transmissions
+- See success/failure rates
+- Export data as JSON
+
+#### Performance Benchmarking
+- Go to "Performance Benchmark" tab
+- Run benchmarks for file size and latency analysis
+- Review throughput trends
+
+#### Parallel Transmission
+- Go to "Parallel Transmission" tab
+- Configure number of worker threads (1-10)
+- Select files and destination
+- Transmit with improved performance
 
 ### Loading Images
 1. Go to Image tab
@@ -141,36 +192,64 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 
 ## Documentation
 
-- **[doc/INDEX.md](doc/INDEX.md)** - Documentation index and navigation guide
-- **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Quick start guide for Server Presets feature
+### ?? User Documentation
+- **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index and navigation
+- **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start guide
 - **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Comprehensive Server Presets documentation
+- **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - Random DICOM generator quick start
+- **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - Detailed DICOM generator guide
+
+### ?? Advanced Testing Guides
+- **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup and tuning
+- **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow guide
+- **[doc/COMPLETE_TEST_EXECUTION_REFERENCE.md](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)** - Complete testing reference
+
+### ????? Developer Documentation
+- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
+- **[doc/EXTERNAL_SCRIPT_USAGE.md](doc/EXTERNAL_SCRIPT_USAGE.md)** - Using DICOM Creator as a library
+
+### ?? Build & Deployment
 - **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Complete guide to building the EXE
 - **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution and deployment guide
-- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer documentation for Server Presets
+
+### ?? Additional Resources
+- **[examples/](examples/)** - Example scripts for common tasks
+- **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
 
 ## Project Structure
 
 ```
 dcmcreator/
-|-- src/
-|   |-- app.py              (Entry point)
-|   |-- appgui.py           (Main GUI application)
-|   |-- dcm.py              (DICOM creation/loading)
-|   |-- remote.py           (DICOM C-STORE sending)
-|   +-- dcmlogger.py        (Logging setup)
-|-- dist/                   (Distribution EXE folder)
-|-- build.py                (Python build script)
-|-- build.bat               (Windows build script)
-|-- dcmcreator.spec         (PyInstaller configuration)
-|-- create_icon.py          (Icon generator)
-|-- requirements.txt        (Runtime dependencies)
-|-- build-requirements.txt  (Build dependencies)
-+-- README.md              (This file)
+??? src/
+?   ??? app.py                      (Entry point)
+?   ??? appgui.py                   (Main GUI application)
+?   ??? app_logic.py                (Core application logic)
+?   ??? dcm.py                      (DICOM creation/loading)
+?   ??? remote.py                   (DICOM C-STORE sending)
+?   ??? presets.py                  (Server Presets management)
+?   ??? connection_validator.py     (Connection testing)
+?   ??? stress_tester.py            (Stress testing)
+?   ??? transmission_history.py     (Transmission tracking)
+?   ??? performance_benchmarking.py (Performance analysis)
+?   ??? parallel_transmission.py    (Multi-threaded sending)
+?   ??? random_dicom.py             (Test DICOM generator)
+?   ??? test_runner.py              (Testing framework)
+?   ??? dcmlogger.py                (Logging setup)
+??? examples/                       (Example scripts for features)
+??? doc/                            (Comprehensive documentation)
+??? dist/                           (Distribution EXE folder)
+??? build.py                        (Python build script)
+??? build.bat                       (Windows build script)
+??? dcmcreator.spec                 (PyInstaller configuration)
+??? create_icon.py                  (Icon generator)
+??? requirements.txt                (Runtime dependencies)
+??? build-requirements.txt          (Build dependencies)
+??? README.md                       (This file)
 ```
 
 ## Version
 
-- **Current Version**: 0.2.4
+- **Current Version**: 0.3.1
 - **Release Date**: 2025-2026
 - **Status**: Active Development
 
@@ -198,52 +277,14 @@ Written by **Piotr Rozentreter** for **Hyland**
 ### Slow Startup
 - First run takes 15-30 seconds (unpacking files)
 - Subsequent runs are faster (5-10 seconds)
-- Normal for Python/PyInstaller applications
 
-### Python Import Errors
-```bash
-# Reinstall dependencies
-pip install --upgrade -r requirements.txt
+### Dependencies Missing
+- Ensure Python 3.9+ is installed
+- Run `pip install -r requirements.txt` to install dependencies
+- Check that pydicom and pynetdicom are properly installed
 
-# Verify installation
-python -c "import pydicom; import PIL; import numpy; print('All OK!')"
-```
-
-### DICOM Load Issues
-- Ensure files are valid DICOM format
-- Check file permissions
-- Try loading single files before batch operations
-
-## Performance Notes
-
-- **Memory**: 150-200 MB typical usage
-- **Startup**: 5-10 seconds (Python), 10-15 seconds (EXE first run)
-- **Remote Send**: Depends on network speed and image size
-- **Image Processing**: Real-time for typical medical images
-
-## Related Tools
-
-- [PyDICOM](https://github.com/pydicom/pydicom) - Python DICOM library
-- [PyNetDICOM](https://github.com/pydicom/pynetdicom) - DICOM networking
-- [DCMTK](https://dicom.offis.de/dcmtk.php.en) - Command-line DICOM tools
-
-## Changelog
-
-### v0.2.4 (Latest)
-- Fixed logger initialization
-- Improved DICOM pixel data handling (preserves bit depth)
-- Enhanced remote send to always use current form values
-- Improved image preview for unusual array shapes
-- Better file filtering and DICOM detection
-- Created standalone EXE builds
-- Fixed image preview with proper PhotoImage reference handling
-- Enhanced PIL/Pillow plugin support
-
-### v0.2.3
-- Previous version features
-
-See commit history for full details.
-
----
-
-**Ready to use! Download the EXE or run from Python source.**
+### Connection Issues
+- Use "Connection Test" tab to validate server connectivity
+- Check firewall and network settings
+- Verify server IP and port are correct
+- Try saving and loading a Server Preset
