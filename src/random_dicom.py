@@ -190,9 +190,9 @@ class RandomDicomGenerator:
         # Generate unique patients if requested
         if randomize_patient:
             first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia',
-                          'David', 'Linda', 'Richard', 'Barbara', 'Joseph', 'Susan']
-            last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia',
-                         'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez']
+                          'David', 'Linda', 'Richard', 'Barbara', 'Joseph', 'Susan', 'Piotr', 'Adam']
+            last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Brzeszczyszczykiewicz',
+                         'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Rozen', 'Rozsoft']
             
             for i in range(count):
                 first = random.choice(first_names)
