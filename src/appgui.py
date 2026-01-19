@@ -29,52 +29,19 @@ except Exception:
 from .import_helper import LazyImport
 
 # Feature modules (optional)
-try:
-    ServerPresetsManager = LazyImport(".presets", "presets")
-except Exception:
-    ServerPresetsManager = None
-
-try:
-    RandomDicomGenerator = LazyImport(".random_dicom", "random_dicom")
-except Exception:
-    RandomDicomGenerator = None
-
-try:
-    TestRunner = LazyImport(".test_runner", "test_runner")
-except Exception:
-    TestRunner = None
+ServerPresetsManager = LazyImport(".presets", "presets")
+RandomDicomGenerator = LazyImport(".random_dicom", "random_dicom")
+TestRunner = LazyImport(".test_runner", "test_runner")
 
 # Test-related modules (optional)
-try:
-    ConnectionValidator = LazyImport(".connection_validator", "connection_validator")
-except Exception:
-    ConnectionValidator = None
-
-try:
-    StressTestRunner = LazyImport(".stress_tester", "stress_tester")
-except Exception:
-    StressTestRunner = None
-
-try:
-    TransmissionHistory = LazyImport(".transmission_history", "transmission_history")
-except Exception:
-    TransmissionHistory = None
-
-try:
-    PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
-except Exception:
-    PerformanceBenchmark = None
-
-try:
-    ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
-except Exception:
-    ParallelTransmissionManager = None
+ConnectionValidator = LazyImport(".connection_validator", "connection_validator")
+StressTestRunner = LazyImport(".stress_tester", "stress_tester")
+TransmissionHistory = LazyImport(".transmission_history", "transmission_history")
+PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
+ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
 
 # Logic handler
-try:
-    DicomLogicHandler = LazyImport(".app_logic", "app_logic")
-except Exception:
-    DicomLogicHandler = None
+DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
