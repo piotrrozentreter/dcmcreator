@@ -10,6 +10,20 @@ This guide explains how to build a standalone executable (.exe) file that can ru
 - [x] **Alternative**: Distribute the entire `dist\DICOM Creator\` folder
 - [ ] **DON'T distribute**: Just the `DICOM Creator.exe` alone (needs libraries)
 
+## Version 0.4.0+ Changes
+
+Starting with v0.4.0, the build now includes **additional optional modules** for testing and performance analysis:
+
+| Module | Features |
+|--------|----------|
+| **connection_validator** | Network connectivity testing |
+| **stress_tester** | Load testing and stress simulation |
+| **transmission_history** | Transmission tracking and statistics |
+| **performance_benchmarking** | Performance measurements |
+| **parallel_transmission** | Multi-threaded DICOM sending |
+
+**Good news**: These are automatically bundled into the executable. No additional steps needed!
+
 ## Quick Start
 
 ### Option 1: Using Batch Script (Easiest on Windows)
@@ -23,10 +37,10 @@ This guide explains how to build a standalone executable (.exe) file that can ru
    ```cmd
    build.bat
    ```
-4. Wait for the build to complete (takes 3-5 minutes)
+4. Wait for the build to complete (takes 5-10 minutes)
 5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (15-20 MB) - For email/upload
-   - `dist\DICOM Creator\` folder (53 MB) - For direct sharing
+   - `DICOM Creator.zip` (60-70 MB) - For email/upload
+   - `dist\DICOM Creator\` folder (150-200 MB) - For direct sharing
 
 ### Option 2: Using Python Script
 
@@ -41,26 +55,44 @@ This guide explains how to build a standalone executable (.exe) file that can ru
    ```
 4. Wait for the build to complete
 5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (15-20 MB) - For email/upload
-   - `dist\DICOM Creator\` folder (53 MB) - For direct sharing
+   - `DICOM Creator.zip` (60-70 MB) - For email/upload
+   - `dist\DICOM Creator\` folder (150-200 MB) - For direct sharing
 
 ## What Gets Built
 
 ### Automatic ZIP Creation
 The build script now automatically creates `DICOM Creator.zip` containing:
-- `DICOM Creator.exe` - Main executable (18.19 MB)
-- `_internal\` - All Python libraries (required!)
+- `DICOM Creator.exe` - Main executable (~25 MB)
+- `_internal\` - All Python libraries (required!) - PyDICOM, PyNetDICOM, NumPy, Pillow, etc.
 - `src\` - Application source code
-- **Total ZIP size**: 15-20 MB (compressed)
+- **Total ZIP size**: 60-70 MB (compressed)
 
 ### Also Available
-- **Distribution folder**: `dist\DICOM Creator\` (53.49 MB uncompressed)
+- **Distribution folder**: `dist\DICOM Creator\` (150-200 MB uncompressed)
 - **For direct folder sharing** or USB distribution
 
 ### Compression Savings
-- Folder size: 53.49 MB
-- ZIP size: 15-20 MB
-- **Compression: 60-70%**
+- Folder size: 150-200 MB
+- ZIP size: 60-70 MB
+- **Compression: 55-65%**
+
+## What's Included
+
+### Core Features (Always Included)
+- Patient/Study/Series metadata editing
+- DICOM file creation and loading
+- Image loading and preview
+- Remote DICOM transmission (C-STORE)
+- Server preset management
+
+### New in v0.4.0+ (Now Bundled)
+- **Connection Testing**: TCP connection verification, latency testing
+- **Stress Testing**: Load testing with configurable parameters
+- **Transmission History**: Track and analyze past transmissions
+- **Performance Benchmarking**: Measure throughput and latency
+- **Parallel Transmission**: Multi-threaded file sending (1-10 workers)
+
+All test features are available via the **View** menu ? **Test Tabs**.
 
 ## Distribution
 
@@ -99,7 +131,7 @@ If the automatic ZIP wasn't created or you want to regenerate it:
 ```cmd
 # Using Windows built-in compression
 Right-click dist\DICOM Creator -> Send to -> Compressed (zipped) folder
-# Creates DICOM Creator.zip (15-20 MB)
+# Creates DICOM Creator.zip (60-70 MB)
 
 # Or using PowerShell
 powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', 'DICOM Creator.zip')"
@@ -153,21 +185,46 @@ dcmcreator/
 |   |-- DICOM Creator/              <-- ALTERNATIVE distribution folder
 |       |-- DICOM Creator.exe       (Main executable)
 |       |-- _internal/              <-- REQUIRED! All libraries
-|       |   |-- pydicom/
-|       |   |-- pynetdicom/
-|       |   |-- PIL/
-|       |   |-- numpy/
-|       |   |-- tcl8/, tk8/
-|       |   |-- [many more DLLs]
+|       |   |-- pydicom/            (DICOM library - core functionality)
+|       |   |-- pynetdicom/         (Network DICOM - transmission)
+|       |   |-- PIL/                (Image processing)
+|       |   |-- numpy/              (Array processing)
+|       |   |-- [other DLLs]
 |       |-- src/                    (Application source)
 |-- build/                          (Temporary - can delete)
-|-- dcmcreator.spec                 (Build configuration)
+|-- dcmcreator.spec                 (Build configuration - UPDATED for v0.4.0+)
 |-- build.bat                       (Windows batch build script)
 |-- build.py                        (Python build script)
 |-- create_icon.py                  (Icon generator)
 |-- app.ico                         (Generated icon)
+|-- requirements.txt                (Runtime dependencies - for source installs)
+|-- build-requirements.txt          (Build dependencies - UPDATED for v0.4.0+)
 |-- ...
 ```
+
+## Build Configuration (v0.4.0+)
+
+### Updated Files
+
+**build-requirements.txt** - Dependencies for building:
+```
+PyInstaller>=6.0.0
+pillow>=10.0.0
+pydicom>=2.4.0
+pynetdicom>=2.0.0
+numpy>=1.20.0
+```
+
+**dcmcreator.spec** - PyInstaller configuration:
+- Includes 9 optional application modules
+- Automatically bundles all test features
+- No manual configuration needed
+
+### Why These Changes?
+
+PyInstaller uses static analysis to find modules. The new optional modules use lazy imports (only load when needed), making them "invisible" to PyInstaller. The updated spec file explicitly declares them so they're bundled automatically.
+
+**Result**: Users get all features without needing to install anything extra!
 
 ## Troubleshooting
 
@@ -181,12 +238,18 @@ python -m pip install --upgrade pip
 ```
 
 ### Issue: Build takes too long or freezes
-**Solution**: This is normal! The first build can take 5-10 minutes. Be patient.
+**Solution**: This is normal! First builds can take 5-10 minutes (was 3-5 in v0.3.x due to additional modules). Be patient.
 
 ### Issue: "PyInstaller not found"
 **Solution**: The build script will install it automatically. If not:
 ```cmd
 pip install PyInstaller>=6.0.0
+```
+
+### Issue: "Module not found" during build (v0.4.0+)
+**Solution**: Install build dependencies:
+```cmd
+pip install -r build-requirements.txt
 ```
 
 ### Issue: ".exe file won't start when distributed"
@@ -198,108 +261,42 @@ pip install PyInstaller>=6.0.0
 ### Issue: "Missing DLL" or "ModuleNotFoundError"
 **Solution**:
 1. If using ZIP: Users must extract the entire ZIP file
-2. If using folder: Distribute the entire `dist\DICOM Creator\` folder
-3. Never delete or modify files in the `_internal\` folder
+2. If distributing folder: Ensure `_internal\` folder is included
+3. Test before distributing by running from dist folder
 
-### Issue: ZIP creation failed
-**Solution**:
-1. The executable was still built successfully
-2. Manually create ZIP:
-   ```cmd
-   Right-click dist\DICOM Creator -> Send to -> Compressed (zipped) folder
-   ```
-3. Or use PowerShell command provided above
+### Issue: Test tabs show "not available" (v0.4.0+)
+**Solution**: This shouldn't happen with the new build process:
+- Verify you built with updated `dcmcreator.spec`
+- Check that `build-requirements.txt` was installed
+- Run `python check_modules.py` to verify all modules load
+- Rebuild with `python build.py`
 
-## Build Customization
+## First Time Build Checklist
 
-### Modify Icon
+- [ ] Python 3.8+ installed and in PATH
+- [ ] Navigated to project directory
+- [ ] Run: `pip install -r build-requirements.txt`
+- [ ] Run: `python build.py`
+- [ ] Wait 5-10 minutes for completion
+- [ ] Check `DICOM Creator.zip` file created
+- [ ] Extract ZIP and test `DICOM Creator.exe`
+- [ ] Verify View menu ? Show All shows all 13 tabs
+- [ ] Test a core feature (File ? New or Remote ? Send)
+- [ ] Ready to distribute!
 
-1. Create your own icon (256x256 PNG works well)
-2. Replace `create_icon.py` with your own icon generation
-3. Rebuild using the build script
+## For Developers
 
-### Single File Executable (Not Recommended)
+If modifying the build process:
 
-To create a single `.exe` file instead of a folder:
+1. **Adding new optional modules**: Update `dcmcreator.spec` hiddenimports list
+2. **Adding new dependencies**: Update `build-requirements.txt` AND `requirements.txt`
+3. **Testing module availability**: Run `python check_modules.py`
+4. **Rebuilding**: Always clean before rebuilding: `python build.py`
 
-Edit `dcmcreator.spec` and change:
-```python
-# From:
-coll = COLLECT(...)
+## See Also
 
-# To:
-# Just use exe without COLLECT
-```
-
-Then rebuild. **Note**: 
-- Single file executables are **much slower** to start (30-60 seconds first run)
-- File size is larger (80-100 MB)
-- We recommend the folder/ZIP distribution instead
-
-## Clean Build
-
-To start fresh:
-
-```cmd
-# Windows
-rmdir /s /q build dist __pycache__
-del DICOM\ Creator.zip
-
-# Or just run build script again (it cleans automatically)
-build.bat
-```
-
-## Performance
-
-- **Distribution size (ZIP)**: 15-20 MB (compressed)
-- **Distribution size (folder)**: 53.49 MB (uncompressed)
-- **Extract/Copy time**: 1-2 minutes on typical system
-- **First run**: 10-15 seconds (unpacking and initializing)
-- **Subsequent runs**: 5-10 seconds
-- **Memory usage**: 150-200 MB (normal for Python applications)
-
-## Signing the EXE (Optional)
-
-For production use, you may want to digitally sign the executable:
-
-1. Obtain a code signing certificate
-2. Sign the EXE before distribution:
-   ```cmd
-   signtool sign /f certificate.pfx /p password /t http://timestamp.server /fd SHA256 "dist\DICOM Creator\DICOM Creator.exe"
-   ```
-3. Then create the ZIP with the signed EXE
-
-## Support
-
-If you encounter issues:
-
-1. Check that all dependencies are installed:
-   ```cmd
-   pip list | findstr pydicom
-   ```
-
-2. Verify Python version (3.9 or higher required):
-   ```cmd
-   python --version
-   ```
-
-3. Try rebuilding from scratch:
-   ```cmd
-   rmdir /s /q build dist
-   del DICOM\ Creator.zip
-   build.bat
-   ```
-
-4. For ZIP creation issues, manually create using:
-   ```cmd
-   powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', 'DICOM Creator.zip')"
-   ```
-
-## Additional Resources
-
-- [PyInstaller Documentation](https://pyinstaller.org/en/stable/)
-- [Python Official Website](https://www.python.org/)
-- [DICOM Creator GitHub](https://github.com/piotrrozentreter/dcmcreator)
-- [NSIS Installer](https://nsis.sourceforge.io/)
-- [Distribution Guide](DISTRIBUTION_GUIDE.md)
-- [Which EXE to Distribute](WHICH_EXE_TO_DISTRIBUTE.md)
+- [README.md](../README.md) - Project overview
+- [requirements.txt](../requirements.txt) - Runtime dependencies for source installs
+- [build-requirements.txt](../build-requirements.txt) - Build environment dependencies
+- [dcmcreator.spec](../dcmcreator.spec) - PyInstaller configuration
+- [build.py](../build.py) - Build orchestration script

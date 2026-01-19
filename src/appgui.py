@@ -26,7 +26,10 @@ except Exception:
 # ============================================================================
 # LAZY IMPORTS - Import modules only when actually needed
 # ============================================================================
-from .import_helper import LazyImport
+try:
+    from .import_helper import LazyImport
+except Exception:
+    from import_helper import LazyImport
 
 # Feature modules (optional)
 ServerPresetsManager = LazyImport(".presets", "presets")

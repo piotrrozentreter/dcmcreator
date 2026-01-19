@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-## ? Features
+## Features
 
 ### Core Features
 - **DICOM Metadata Management** - Create and edit patient, study, and series metadata
@@ -99,20 +99,57 @@ python src/app.py
 
 Want to build a standalone executable yourself?
 
-```bash
-# Install build dependencies
-pip install -r build-requirements.txt
+### Build Requirements
 
+Starting with **v0.4.0+**, the build includes additional optional modules for testing. Make sure you have all dependencies:
+
+```bash
+# Install build dependencies (updated for v0.4.0+)
+pip install -r build-requirements.txt
+```
+
+**build-requirements.txt** now includes:
+- `PyInstaller>=6.0.0` - EXE builder
+- `pillow>=10.0.0` - Image processing
+- `pydicom>=2.4.0` - DICOM library (analysis)
+- `pynetdicom>=2.0.0` - Network DICOM (analysis)
+- `numpy>=1.20.0` - Array processing (analysis)
+
+### Build Process
+
+```bash
 # Create icon (generates app.ico)
 python create_icon.py
 
-# Build the executable
+# Build the executable (includes all optional modules)
 python build.py
 ```
 
-Your standalone EXE will be created in `dist/DICOM Creator/`
+Your standalone EXE will be created in `dist/DICOM Creator/` with:
+- ? All core DICOM features
+- ? All connection testing features (NEW in v0.4.0+)
+- ? All stress testing features (NEW in v0.4.0+)
+- ? All transmission history features (NEW in v0.4.0+)
+- ? All performance benchmarking features (NEW in v0.4.0+)
+- ? All parallel transmission features (NEW in v0.4.0+)
 
 **See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
+
+### What's Bundled (v0.4.0+)
+
+The build now automatically includes:
+
+| Component | Size | Purpose |
+|-----------|------|---------|
+| PyDICOM | ~40 MB | DICOM file handling |
+| PyNetDICOM | ~30 MB | Network DICOM C-STORE |
+| NumPy | ~30 MB | Array processing |
+| PIL/Pillow | ~10 MB | Image processing |
+| Application | ~5 MB | GUI and logic |
+| **Total** | **150-200 MB** | Uncompressed |
+| **ZIP** | **60-70 MB** | Compressed distribution |
+
+All optional test modules are automatically included in the build - no extra configuration needed!
 
 ## Usage
 
@@ -192,27 +229,27 @@ Your standalone EXE will be created in `dist/DICOM Creator/`
 
 ## Documentation
 
-### ?? User Documentation
+### User Documentation
 - **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index and navigation
 - **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start guide
 - **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Comprehensive Server Presets documentation
 - **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - Random DICOM generator quick start
 - **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - Detailed DICOM generator guide
 
-### ?? Advanced Testing Guides
+### Advanced Testing Guides
 - **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup and tuning
 - **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow guide
 - **[doc/COMPLETE_TEST_EXECUTION_REFERENCE.md](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)** - Complete testing reference
 
-### ????? Developer Documentation
+### Developer Documentation
 - **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
 - **[doc/EXTERNAL_SCRIPT_USAGE.md](doc/EXTERNAL_SCRIPT_USAGE.md)** - Using DICOM Creator as a library
 
-### ?? Build & Deployment
+### Build & Deployment
 - **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Complete guide to building the EXE
 - **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution and deployment guide
 
-### ?? Additional Resources
+### Additional Resources
 - **[examples/](examples/)** - Example scripts for common tasks
 - **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
 
@@ -249,7 +286,7 @@ dcmcreator/
 
 ## Version
 
-- **Current Version**: 0.3.1
+- **Current Version**: 0.4.0
 - **Release Date**: 2025-2026
 - **Status**: Active Development
 
