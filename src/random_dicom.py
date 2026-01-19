@@ -9,7 +9,11 @@ import os
 import uuid
 from datetime import datetime, timedelta
 import random
-import numpy as np
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 try:
     import pydicom
@@ -27,7 +31,13 @@ class RandomDicomGenerator:
         
         Args:
             logger: Optional logger instance
+        
+        Raises:
+            ImportError: If required dependencies (numpy, pydicom) are not available
         """
+        if np is None or pydicom is None:
+            raise ImportError("RandomDicomGenerator requires numpy and pydicom. Install with: pip install numpy pydicom")
+        
         self.logger = logger
         self.generated_dicoms = []
     

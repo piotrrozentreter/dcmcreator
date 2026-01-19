@@ -5,7 +5,7 @@ import threading
 
 try:
     import pydicom
-except Exception as e:
+except Exception:
     pydicom = None
 
 try:
@@ -16,86 +16,65 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.3.1\n"
+APP_TITLE = "DICOM Creator v0.3.2\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
 except Exception:
     from dcmlogger import setup_logging, LOGGER_NAME
 
+# ============================================================================
+# LAZY IMPORTS - Import modules only when actually needed
+# ============================================================================
+from .import_helper import LazyImport
+
+# Feature modules (optional)
 try:
-    from .presets import ServerPresetsManager
+    ServerPresetsManager = LazyImport(".presets", "presets")
 except Exception:
-    try:
-        from presets import ServerPresetsManager
-    except Exception:
-        ServerPresetsManager = None
+    ServerPresetsManager = None
 
 try:
-    from .random_dicom import RandomDicomGenerator
+    RandomDicomGenerator = LazyImport(".random_dicom", "random_dicom")
 except Exception:
-    try:
-        from random_dicom import RandomDicomGenerator
-    except Exception:
-        RandomDicomGenerator = None
+    RandomDicomGenerator = None
 
 try:
-    from .test_runner import TestRunner
+    TestRunner = LazyImport(".test_runner", "test_runner")
 except Exception:
-    try:
-        from test_runner import TestRunner
-    except Exception:
-        TestRunner = None
+    TestRunner = None
 
-# New test modules imports
+# Test-related modules (optional)
 try:
-    from .connection_validator import ConnectionValidator
+    ConnectionValidator = LazyImport(".connection_validator", "connection_validator")
 except Exception:
-    try:
-        from connection_validator import ConnectionValidator
-    except Exception:
-        ConnectionValidator = None
+    ConnectionValidator = None
 
 try:
-    from .stress_tester import StressTestRunner
+    StressTestRunner = LazyImport(".stress_tester", "stress_tester")
 except Exception:
-    try:
-        from stress_tester import StressTestRunner
-    except Exception:
-        StressTestRunner = None
+    StressTestRunner = None
 
 try:
-    from .transmission_history import TransmissionHistory
+    TransmissionHistory = LazyImport(".transmission_history", "transmission_history")
 except Exception:
-    try:
-        from transmission_history import TransmissionHistory
-    except Exception:
-        TransmissionHistory = None
+    TransmissionHistory = None
 
 try:
-    from .performance_benchmarking import PerformanceBenchmark
+    PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
 except Exception:
-    try:
-        from performance_benchmarking import PerformanceBenchmark
-    except Exception:
-        PerformanceBenchmark = None
+    PerformanceBenchmark = None
 
 try:
-    from .parallel_transmission import ParallelTransmissionManager
+    ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
 except Exception:
-    try:
-        from parallel_transmission import ParallelTransmissionManager
-    except Exception:
-        ParallelTransmissionManager = None
+    ParallelTransmissionManager = None
 
+# Logic handler
 try:
-    from .app_logic import DicomLogicHandler
+    DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 except Exception:
-    try:
-        from app_logic import DicomLogicHandler
-    except Exception:
-        DicomLogicHandler = None
-
+    DicomLogicHandler = None
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
@@ -123,16 +102,20 @@ class DicomCreatorApp(tk.Tk):
         self.selected_series_uid = None
         
         # Server presets
-        if ServerPresetsManager:
-            self.presets_manager = ServerPresetsManager()
-        else:
+        try:
+            presets_cls = ServerPresetsManager._load_class()
+            self.presets_manager = presets_cls() if presets_cls else None
+        except Exception:
             self.presets_manager = None
 
         # Transmission history
-        if TransmissionHistory:
-            self.transmission_history = TransmissionHistory(logger=self.logger)
-        else:
+        try:
+            history_cls = TransmissionHistory._load_class()
+            self.transmission_history = history_cls(logger=self.logger) if history_cls else None
+            self.history = self.transmission_history  # Also set as self.history for convenience
+        except Exception:
             self.transmission_history = None
+            self.history = None
 
         # Tab visibility state
         self.tab_visibility = {
@@ -1618,9 +1601,9 @@ class DicomCreatorApp(tk.Tk):
         self.connection_results = tk.Text(results_frame, height=15, width=70, state=tk.DISABLED)
         scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.connection_results.yview)
         self.connection_results.config(yscrollcommand=scrollbar.set)
-        
-        self.connection_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.connection_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def _test_tcp(self):
         """Test TCP connection."""
@@ -1800,11 +1783,11 @@ class DicomCreatorApp(tk.Tk):
         results_frame = ttk.LabelFrame(self.stress_test_frame, text="Results", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
-        self.stress_results = tk.Text(results_frame, height=15, width=70, state=tk.DISABLED)
-        scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.stress_results.yview)
-        self.stress_results.config(yscrollcommand=scrollbar.set)
+        self.stress_results = tk.Text(results_frame, height=15, wrap="word")
+        self.stress_results.pack(fill=tk.BOTH, expand=True)
         
-        self.stress_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=self.stress_results.yview)
+        self.stress_results.config(yscrollcommand=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.stress_runner = None
@@ -1929,9 +1912,7 @@ class DicomCreatorApp(tk.Tk):
         
         self.history_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self.history = TransmissionHistory(logger=self.logger) if TransmissionHistory else None
-    
+
     def _refresh_history(self):
         """Refresh transmission history."""
         if self.history is None:
