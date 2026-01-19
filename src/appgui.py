@@ -16,7 +16,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.3.2\n"
+APP_TITLE = "DICOM Creator v0.4.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -381,6 +381,11 @@ class DicomCreatorApp(tk.Tk):
         tree_container.grid_columnconfigure(0, weight=1)
 
         self.series_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
+        self.series_tree.bind("<Button-3>", self._show_instance_context_menu)
+    
+        # CREATE CONTEXT MENU:
+        self.instance_context_menu = tk.Menu(self, tearoff=0)
+        self.instance_context_menu.add_command(label="Show Image", command=self._show_instance_image)
 
     def _add_labeled_entry(self, parent, label, var, row):
         """Helper: create a label + entry bound to a StringVar, aligned in a grid row."""
@@ -985,6 +990,71 @@ class DicomCreatorApp(tk.Tk):
             self.logger.exception("Failed to load DICOM folder: %s", folder)
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
 
+    def _show_instance_context_menu(self, event):
+        """Show context menu for instance nodes on right-click."""
+        try:
+            item_id = self.series_tree.identify_row(event.y)
+        
+            if not item_id or not item_id.startswith("instance:"):
+                return
+        
+            self.series_tree.selection_set(item_id)
+            self.selected_instance_id = item_id
+            self.instance_context_menu.post(event.x_root, event.y_root)
+        except Exception as e:
+            self.logger.exception("Failed to show instance context menu")
+
+    def _show_instance_image(self):
+        """Show the image for the selected instance in the Image tab."""
+        try:
+            if not hasattr(self, 'selected_instance_id') or not self.selected_instance_id:
+                return
+        
+            parts = self.selected_instance_id.split(":", 3)
+            if len(parts) != 4 or parts[0] != "instance":
+                return
+        
+            _, study_uid, series_uid, idx_str = parts
+            idx = int(idx_str)
+        
+            instances = self.grouped_dicom.get(study_uid, {}).get(series_uid, [])
+        
+            if idx < 0 or idx >= len(instances):
+                messagebox.showerror(APP_TITLE, "Instance not found")
+                return
+        
+            ds, arr = instances[idx]
+        
+            if arr is None:
+                messagebox.showwarning(APP_TITLE, "No pixel data available for this instance")
+                return
+        
+            self.pixel_array = arr
+            self.image_source = "dicom"
+        
+            rows = getattr(ds, 'Rows', None)
+            cols = getattr(ds, 'Columns', None)
+            sop_uid = getattr(ds, 'SOPInstanceUID', 'N/A')
+        
+            if rows and cols:
+                self.image_label.config(text=f"Instance: {sop_uid} | {cols}x{rows}")
+            else:
+                self.image_label.config(text=f"Instance: {sop_uid}")
+        
+            self._update_image_preview(arr)
+        
+            # Switch to Image tab
+            for i, tab_id in enumerate(self.container.tabs()):
+                if self.container.tab(tab_id, "text") == "Image":
+                    self.container.select(i)
+                    break
+        
+            self.logger.info(f"Displayed image for instance: {sop_uid}")
+        
+        except Exception as e:
+            self.logger.exception("Failed to show instance image")
+            messagebox.showerror(APP_TITLE, f"Failed to show image: {e}")
+        
     def _populate_dicom_tree(self, grouped):
         """Populate the tree view with loaded DICOM data."""
         self.grouped_dicom = grouped
@@ -1006,7 +1076,8 @@ class DicomCreatorApp(tk.Tk):
                     
                 for idx, (ds, arr) in enumerate(instances):
                     inst_text = f"Instance {idx+1}: {getattr(ds, 'SOPInstanceUID', '')}"
-                    self.series_tree.insert(series_node, "end", text=inst_text)
+                    inst_id = f"instance:{study_uid}:{series_uid}:{idx}"
+                    self.series_tree.insert(series_node, "end", iid=inst_id, text=inst_text)
                     total_instances += 1
 
         self.dcm_info_label.config(
