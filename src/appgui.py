@@ -43,6 +43,18 @@ TransmissionHistory = LazyImport(".transmission_history", "transmission_history"
 PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
 ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
 
+# Validator
+VRValidator = LazyImport(".vr_validator", "vr_validator")
+
+# Import ValidationDialog directly from its own module
+try:
+    from .validation_dialog import ValidationDialog
+except ImportError:
+    try:
+        from validation_dialog import ValidationDialog
+    except ImportError:
+        ValidationDialog = None
+
 # Logic handler
 DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
@@ -87,6 +99,27 @@ class DicomCreatorApp(tk.Tk):
             self.transmission_history = None
             self.history = None
 
+        # VR Validator
+        self.vr_validator = None
+        self.vr_validator_error = None
+        try:
+            validator_cls = VRValidator._load_class()
+            if validator_cls is None:
+                # LazyImport returned None - try to get more details
+                try:
+                    # Try to import directly to get the actual error
+                    from .vr_validator import VRValidator as DirectImport
+                    self.vr_validator = DirectImport(logger=self.logger)
+                except Exception as direct_error:
+                    self.vr_validator_error = f"VRValidator class could not be loaded: {direct_error}"
+                    self.logger.exception("Direct import of VRValidator failed")
+            else:
+                self.vr_validator = validator_cls(logger=self.logger)
+        except Exception as e:
+            self.vr_validator_error = str(e)
+            self.logger.exception("VR Validator not available")
+            self.vr_validator = None
+
         # Tab visibility state
         self.tab_visibility = {
             "Patient": tk.BooleanVar(value=True),
@@ -119,6 +152,8 @@ class DicomCreatorApp(tk.Tk):
         file_menu.add_command(label="Load Folder", command=self.load_dicom_folder, accelerator="Ctrl+Shift+O")
         file_menu.add_command(label="Save", command=self.save_dicom, accelerator="Ctrl+S")
         file_menu.add_separator()
+        file_menu.add_command(label="Validate", command=self.validate_current_data, accelerator="Ctrl+V")
+        file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.on_quit)
         menubar.add_cascade(label="File", menu=file_menu)
 
@@ -150,6 +185,11 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_command(label="Hide Test Tabs", command=self._hide_test_tabs)
         menubar.add_cascade(label="View", menu=view_menu)
 
+        # VR menu
+        vr_menu = tk.Menu(menubar, tearoff=False)
+        vr_menu.add_command(label="View VRs", command=self.show_vr_viewer)
+        menubar.add_cascade(label="VR", menu=vr_menu)
+
         # About menu
         about_menu = tk.Menu(menubar, tearoff=False)
         about_menu.add_command(label="About", command=self.show_about)
@@ -167,6 +207,7 @@ class DicomCreatorApp(tk.Tk):
         self.bind_all("<Control-o>", lambda e: self.load_dicom_file())
         self.bind_all("<Control-Shift-o>", lambda e: self.load_dicom_folder())
         self.bind_all("<Control-s>", lambda e: self.save_dicom())
+        self.bind_all("<Control-v>", lambda e: self.validate_current_data())
         self.bind_all("<Control-r>", lambda e: self.send_remote())
 
         # Tabbed container for different sections
@@ -710,6 +751,100 @@ class DicomCreatorApp(tk.Tk):
             "Simple tool to create and edit DICOM metadata and images."
         )
 
+    def show_vr_viewer(self):
+        """Show DICOM Value Representation viewer dialog."""
+        VRViewerDialog(self, self.logger)
+
+    def validate_current_data(self):
+        """Validate current form data and show validation report."""
+        if self.vr_validator is None:
+            error_details = ""
+            if self.vr_validator_error:
+                error_details = f"\n\nError details:\n{self.vr_validator_error}"
+            
+            messagebox.showerror(
+                APP_TITLE,
+                f"VR Validator is not available.{error_details}\n\n"
+                "The validator module could not be loaded.\n"
+                "Check the log for more details."
+            )
+            return
+        
+        try:
+            # Helper fields that aren't actual DICOM tags (used internally to build PatientName)
+            skip_fields = {
+                'PatientFamilyNameComplex', 'PatientPrefix', 'PatientGivenName',
+                'PatientMiddleName', 'PatientSuffix'
+            }
+            
+            # Collect all form fields
+            all_fields = {}
+            
+            # Patient fields (skip helper fields)
+            for field_name, var in self.patient_vars.items():
+                if field_name not in skip_fields:
+                    all_fields[field_name] = var
+            
+            # Study fields
+            for field_name, var in self.study_vars.items():
+                all_fields[field_name] = var
+            
+            # Series fields
+            for field_name, var in self.series_vars.items():
+                all_fields[field_name] = var
+            
+            # Validate
+            validation_result = self.vr_validator.validate_form_fields(all_fields)
+            
+            # Check if all valid
+            if validation_result['valid'] and not validation_result['has_warnings']:
+                field_count = validation_result.get('field_count', len(all_fields))
+                messagebox.showinfo(
+                    APP_TITLE,
+                    "? Validation Passed\n\n"
+                    f"All {field_count} fields are valid.\n"
+                    "No errors or warnings found."
+                )
+                self.logger.info("Manual validation passed - all fields valid")
+                return
+            
+            # Show validation report dialog
+            try:
+                if ValidationDialog is None:
+                    # Fallback: show simple text report
+                    report = self.vr_validator.format_validation_report(validation_result)
+                    messagebox.showwarning(
+                        APP_TITLE,
+                        f"Validation Report:\n\n{report}\n\n"
+                        "(ValidationDialog not available for detailed view)"
+                    )
+                    return
+                
+                # Show full dialog without action buttons (just for viewing)
+                ValidationDialog.show_validation_report(
+                    self,
+                    validation_result,
+                    self.vr_validator,
+                    "validate"  # Special action to indicate this is manual validation
+                )
+            except Exception as e:
+                self.logger.exception("Error showing validation dialog")
+                # Fallback: show simple text report
+                report = self.vr_validator.format_validation_report(validation_result)
+                messagebox.showwarning(
+                    APP_TITLE,
+                    f"Validation Report:\n\n{report}\n\n"
+                    f"(Error displaying full dialog: {e})"
+                )
+        
+        except Exception as e:
+            self.logger.exception("Error during validation")
+            messagebox.showerror(
+                APP_TITLE,
+                f"Validation error occurred:\n\n{e}\n\n"
+                "Check the log for details."
+            )
+
     def on_quit(self):
         """Ask for confirmation before quitting the application."""
         try:
@@ -838,11 +973,77 @@ class DicomCreatorApp(tk.Tk):
             a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
         return a.astype(np.uint8)
 
+    def _validate_form_fields(self, action="save"):
+        """
+        Validate all form fields against VR specifications.
+        
+        Args:
+            action: Action being performed ("save", "send", "load")
+            
+        Returns:
+            bool: True if validation passed or user wants to continue anyway
+        """
+        if self.vr_validator is None:
+            return True  # Skip validation if validator not available
+        
+        # Helper fields that aren't actual DICOM tags (used internally to build PatientName)
+        skip_fields = {
+            'PatientFamilyNameComplex', 'PatientPrefix', 'PatientGivenName',
+            'PatientMiddleName', 'PatientSuffix'
+        }
+        
+        # Collect all form fields
+        all_fields = {}
+        
+        # Patient fields (skip helper fields)
+        for field_name, var in self.patient_vars.items():
+            if field_name not in skip_fields:
+                all_fields[field_name] = var
+        
+        # Study fields
+        for field_name, var in self.study_vars.items():
+            all_fields[field_name] = var
+        
+        # Series fields
+        for field_name, var in self.series_vars.items():
+            all_fields[field_name] = var
+        
+        # Validate
+        validation_result = self.vr_validator.validate_form_fields(all_fields)
+        
+        # If all valid, return True
+        if validation_result['valid'] and not validation_result['has_warnings']:
+            return True
+        
+        # Show validation report and ask for confirmation
+        try:
+            if ValidationDialog is None:
+                return True
+            
+            return ValidationDialog.show_validation_report(
+                self,
+                validation_result,
+                self.vr_validator,
+                action
+            )
+        except Exception as e:
+            self.logger.exception("Error showing validation dialog")
+            # On error, ask user if they want to continue
+            return messagebox.askyesno(
+                APP_TITLE,
+                f"Validation error occurred: {e}\n\nContinue anyway?"
+            )
+    
     def save_dicom(self):
         """Save the current metadata and pixel data into a DICOM file."""
         if pydicom is None:
             self.logger.warning("pydicom not available; cannot save DICOM")
             messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
+            return
+        
+        # Validate fields before saving
+        if not self._validate_form_fields(action="save"):
+            self.logger.info("Save cancelled due to validation")
             return
 
         save_path = filedialog.asksaveasfilename(
@@ -1157,16 +1358,54 @@ class DicomCreatorApp(tk.Tk):
         if self.image_source != "file":
             self.pixel_array = arr if arr is not None else self.pixel_array
         
-        # Populate patient fields
-        self._populate_patient_fields(ds)
-        
-        # Populate study fields
-        self._populate_study_fields(ds)
-        
-        # Populate series fields
-        self._populate_series_fields(ds)
-        
-        # Update image info
+            # Populate patient fields
+            self._populate_patient_fields(ds)
+            
+            # Populate study fields
+            self._populate_study_fields(ds)
+            
+            # Populate series fields
+            self._populate_series_fields(ds)
+            
+            # Validate loaded fields
+            if self.vr_validator is not None:
+                try:
+                    # Collect all fields
+                    all_fields = {}
+                    all_fields.update(self.patient_vars)
+                    all_fields.update(self.study_vars)
+                    all_fields.update(self.series_vars)
+                    
+                    # Validate
+                    validation_result = self.vr_validator.validate_form_fields(all_fields)
+                    
+                    # Show warnings if any
+                    if validation_result['error_count'] > 0 or validation_result['warning_count'] > 0:
+                        report = self.vr_validator.format_validation_report(validation_result)
+                        self.logger.warning(f"Validation issues in loaded DICOM:\n{report}")
+                        
+                        # Only show dialog if there are errors (not just warnings)
+                        if validation_result['error_count'] > 0:
+                            if messagebox.askyesno(
+                                APP_TITLE,
+                                f"Loaded DICOM has {validation_result['error_count']} validation error(s).\n\n"
+                                "View validation report?",
+                                icon=messagebox.WARNING
+                            ):
+                                try:
+                                    if ValidationDialog:
+                                        ValidationDialog.show_validation_report(
+                                            self,
+                                            validation_result,
+                                            self.vr_validator,
+                                            "load"
+                                        )
+                                except Exception as e:
+                                    self.logger.exception("Error showing validation dialog")
+                except Exception as e:
+                    self.logger.exception("Error validating loaded DICOM fields")
+            
+            # Update image info
         rows = getattr(ds, 'Rows', None)
         cols = getattr(ds, 'Columns', None)
         if rows and cols:
@@ -1288,6 +1527,11 @@ class DicomCreatorApp(tk.Tk):
                 "Do you want to continue sending anyway?"
             ):
                 return
+        
+        # Validate fields before sending
+        if not self._validate_form_fields(action="send"):
+            self.logger.info("Send cancelled due to validation")
+            return
         
         # Always create dataset from current form values to ensure modifications are sent
         grouped_to_send = self._create_in_memory_dataset(patient_id)
@@ -2303,3 +2547,229 @@ See: doc/WHERE_TO_RUN_TESTS.md
             else:
                 var.set(True)
         self._update_tab_visibility()
+
+
+class VRViewerDialog(tk.Toplevel):
+    """Dialog for viewing DICOM Value Representations from VR.xml."""
+    
+    def __init__(self, parent, logger):
+        super().__init__(parent)
+        self.logger = logger
+        self.title("DICOM Value Representations (VR) Viewer")
+        self.geometry("1000x600")
+        self.resizable(True, True)
+        
+        # Make dialog modal
+        self.transient(parent)
+        self.grab_set()
+        
+        self._build_ui()
+        self._load_vr_data()
+    
+    def _build_ui(self):
+        """Build the dialog UI."""
+        # Title
+        title_frame = ttk.Frame(self)
+        title_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(title_frame, text="DICOM Data Dictionary - Value Representations", 
+                 font=("Arial", 12, "bold")).pack()
+        
+        # Search frame
+        search_frame = ttk.Frame(self)
+        search_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(search_frame, text="Search:").pack(side=tk.LEFT, padx=5)
+        self.search_var = tk.StringVar()
+        self.search_var.trace('w', self._on_search_changed)
+        search_entry = ttk.Entry(search_frame, textvariable=self.search_var, width=40)
+        search_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Button(search_frame, text="Clear", command=self._clear_search).pack(side=tk.LEFT, padx=5)
+        
+        # Info label
+        self.info_label = ttk.Label(self, text="Loading VR data...")
+        self.info_label.pack(fill=tk.X, padx=10, pady=5)
+        
+        # Tree frame with scrollbars
+        tree_frame = ttk.Frame(self)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        tree_frame.rowconfigure(0, weight=1)
+        tree_frame.columnconfigure(0, weight=1)
+        
+        # Create treeview with columns
+        columns = ("Tag", "Name", "Keyword", "VR", "VM", "Status")
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=20)
+        
+        # Configure column headings and widths
+        self.tree.heading("Tag", text="Tag", command=lambda: self._sort_by_column("Tag", False))
+        self.tree.heading("Name", text="Name", command=lambda: self._sort_by_column("Name", False))
+        self.tree.heading("Keyword", text="Keyword", command=lambda: self._sort_by_column("Keyword", False))
+        self.tree.heading("VR", text="VR", command=lambda: self._sort_by_column("VR", False))
+        self.tree.heading("VM", text="VM", command=lambda: self._sort_by_column("VM", False))
+        self.tree.heading("Status", text="Status", command=lambda: self._sort_by_column("Status", False))
+        
+        self.tree.column("Tag", width=120, anchor="center")
+        self.tree.column("Name", width=300, anchor="w")
+        self.tree.column("Keyword", width=250, anchor="w")
+        self.tree.column("VR", width=60, anchor="center")
+        self.tree.column("VM", width=60, anchor="center")
+        self.tree.column("Status", width=100, anchor="center")
+        
+        # Add scrollbars
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+        
+        # Buttons
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(fill=tk.X, padx=10, pady=10)
+        ttk.Button(btn_frame, text="Close", command=self.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Refresh", command=self._load_vr_data).pack(side=tk.RIGHT, padx=5)
+        
+        # Store all items for search filtering
+        self.all_items = []
+    
+    def _load_vr_data(self):
+        """Load and parse VR data from VR.xml file."""
+        try:
+            import os
+            
+            # Look for VR.xml in src directory
+            vr_file = os.path.join(os.path.dirname(__file__), "VR.xml")
+            
+            if not os.path.exists(vr_file):
+                self.info_label.config(text="Error: VR.xml not found in src directory")
+                self.logger.error(f"VR.xml not found at: {vr_file}")
+                return
+            
+            self.info_label.config(text="Parsing VR.xml...")
+            self.update_idletasks()
+            
+            # Use logic handler to parse XML
+            if DicomLogicHandler is not None:
+                logic = DicomLogicHandler(self.logger)
+                success, result = logic.parse_vr_xml(vr_file)
+                
+                if not success:
+                    # result is error message
+                    self.info_label.config(text=result)
+                    messagebox.showerror("VR Viewer Error", result)
+                    return
+                
+                # result is list of VR data dicts
+                vr_data = result
+            else:
+                # Fallback if logic handler not available
+                self.info_label.config(text="Error: Logic handler not available")
+                return
+            
+            # Clear existing items
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+            self.all_items.clear()
+            
+            # Populate tree with parsed data
+            count = 0
+            for vr_item in vr_data:
+                # Add to tree
+                item_id = self.tree.insert("", "end", values=(
+                    vr_item['tag'],
+                    vr_item['name'],
+                    vr_item['keyword'],
+                    vr_item['vr'],
+                    vr_item['vm'],
+                    vr_item['status']
+                ))
+                
+                # Style retired items differently
+                if vr_item['is_retired']:
+                    self.tree.item(item_id, tags=("retired",))
+                
+                # Store for search
+                self.all_items.append({
+                    "id": item_id,
+                    "tag": vr_item['tag'],
+                    "name": vr_item['name'],
+                    "keyword": vr_item['keyword'],
+                    "vr": vr_item['vr'],
+                    "vm": vr_item['vm'],
+                    "status": vr_item['status']
+                })
+                
+                count += 1
+            
+            # Configure retired item styling
+            self.tree.tag_configure("retired", foreground="gray")
+            
+            self.info_label.config(text=f"Loaded {count} DICOM data elements from PS3.6 Data Dictionary")
+            self.logger.info(f"Loaded {count} VR entries from VR.xml")
+            
+        except Exception as e:
+            error_msg = f"Failed to load VR data: {e}"
+            self.info_label.config(text=error_msg)
+            self.logger.exception("Failed to load VR.xml")
+            messagebox.showerror("VR Viewer Error", error_msg)
+
+    
+    def _on_search_changed(self, *args):
+        """Handle search text changes."""
+        search_text = self.search_var.get().lower()
+        
+        # Clear current view
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # If empty search, show all items
+        if not search_text:
+            for item_data in self.all_items:
+                item_id = self.tree.insert("", "end", values=(
+                    item_data["tag"], item_data["name"], item_data["keyword"],
+                    item_data["vr"], item_data["vm"], item_data["status"]
+                ))
+                if "RET" in item_data["status"]:
+                    self.tree.item(item_id, tags=("retired",))
+            self.info_label.config(text=f"Showing all {len(self.all_items)} data elements")
+            return
+        
+        # Filter items
+        matches = 0
+        for item_data in self.all_items:
+            # Search in tag, name, and keyword
+            if (search_text in item_data["tag"].lower() or
+                search_text in item_data["name"].lower() or
+                search_text in item_data["keyword"].lower()):
+                
+                item_id = self.tree.insert("", "end", values=(
+                    item_data["tag"], item_data["name"], item_data["keyword"],
+                    item_data["vr"], item_data["vm"], item_data["status"]
+                ))
+                if "RET" in item_data["status"]:
+                    self.tree.item(item_id, tags=("retired",))
+                matches += 1
+        
+        self.info_label.config(text=f"Found {matches} matching data elements")
+    
+    def _clear_search(self):
+        """Clear search text."""
+        self.search_var.set("")
+    
+    def _sort_by_column(self, col, reverse):
+        """Sort treeview by column."""
+        try:
+            # Get all items
+            items = [(self.tree.set(item, col), item) for item in self.tree.get_children("")]
+            
+            # Sort items
+            items.sort(reverse=reverse)
+            
+            # Rearrange items in sorted positions
+            for index, (val, item) in enumerate(items):
+                self.tree.move(item, "", index)
+            
+            # Reverse sort next time
+            self.tree.heading(col, command=lambda: self._sort_by_column(col, not reverse))
+        except Exception as e:
+            self.logger.debug(f"Sort error: {e}")
+

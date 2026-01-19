@@ -116,13 +116,55 @@ def send_grouped_dicom(
     # Associate
     if on_message:
         on_message(f"Connecting to {server}:{port} as {calling_ae} -> {called_ae} ...")
-    assoc = ae.associate(server, port, ae_title=called_ae.encode("ascii", errors="ignore"))
-    if not assoc.is_established:
+    
+    try:
+        assoc = ae.associate(server, port, ae_title=called_ae.encode("ascii", errors="ignore"))
+    except Exception as e:
+        # Network/connection error before association could be attempted
+        error_msg = f"Connection error to {server}:{port}: {e}"
         if logger:
-            logger.error("Association to %s:%s as %s -> %s failed", server, port, calling_ae, called_ae)
+            logger.error(error_msg)
         if on_message:
-            on_message("Association failed")
-        raise RuntimeError("Association failed")
+            on_message(f"? {error_msg}")
+        raise RuntimeError(error_msg) from e
+    
+    if not assoc.is_established:
+        # Association was rejected or failed
+        # Try to get more details about why
+        reject_reason = "Unknown reason"
+        
+        try:
+            # Get rejection details if available
+            if hasattr(assoc, 'rejected'):
+                reject_reason = f"Association rejected by server"
+            elif hasattr(assoc, 'aborted'):
+                reject_reason = f"Association aborted"
+            else:
+                # Check for common issues
+                import socket
+                try:
+                    # Quick test if server is reachable
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(2)
+                    result = sock.connect_ex((server, port))
+                    sock.close()
+                    if result != 0:
+                        reject_reason = f"Cannot connect to server (connection refused or timeout)"
+                    else:
+                        reject_reason = f"Server rejected association (check AE titles)"
+                except:
+                    reject_reason = f"Network error or server not reachable"
+        except:
+            pass
+        
+        error_msg = f"Association failed to {server}:{port} ({calling_ae} ? {called_ae}): {reject_reason}"
+        
+        if logger:
+            logger.error(error_msg)
+        if on_message:
+            on_message(f"? {error_msg}")
+        
+        raise RuntimeError(error_msg)
     if on_message:
         try:
             accepted = getattr(assoc, 'accepted_contexts', [])
