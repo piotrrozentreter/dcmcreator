@@ -12,10 +12,15 @@ This guide explains how to build a standalone executable (.exe) file that can ru
 
 ## Version 0.4.0+ Changes
 
-Starting with v0.4.0, the build now includes **additional optional modules** for testing and performance analysis:
+Starting with v0.4.0, the build now includes **new validation and viewer modules**:
 
 | Module | Features |
 |--------|----------|
+| **vr_validator** | DICOM VR validation against PS3.6 standard |
+| **validation_dialog** | Interactive validation reports with warnings/errors |
+| **tag** | DICOM tag parsing and statistics |
+| **tag_dialog** | Tag viewer for displaying all DICOM tags |
+| **VR.xml** | Complete DICOM data dictionary (PS3.6) |
 | **connection_validator** | Network connectivity testing |
 | **stress_tester** | Load testing and stress simulation |
 | **transmission_history** | Transmission tracking and statistics |
@@ -86,13 +91,20 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 - Server preset management
 
 ### New in v0.4.0+ (Now Bundled)
+- **VR Validation**: DICOM value representation validation against PS3.6 standard
+- **Validation Dialog**: Interactive validation reports with detailed warnings/errors
+- **Tag Viewer**: View all DICOM tags from files (including private tags)
+- **VR Dictionary**: Complete DICOM data dictionary (VR.xml - 7MB)
 - **Connection Testing**: TCP connection verification, latency testing
 - **Stress Testing**: Load testing with configurable parameters
 - **Transmission History**: Track and analyze past transmissions
 - **Performance Benchmarking**: Measure throughput and latency
 - **Parallel Transmission**: Multi-threaded file sending (1-10 workers)
 
-All test features are available via the **View** menu ? **Test Tabs**.
+Access features via:
+- **DICOM** menu: VR Viewer, Tag Viewer
+- **File** menu: Validate (Ctrl+Shift+V)
+- **View** menu: Test Tabs (for advanced testing features)
 
 ## Distribution
 

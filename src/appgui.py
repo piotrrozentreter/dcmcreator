@@ -24,6 +24,23 @@ except Exception:
     from dcmlogger import setup_logging, LOGGER_NAME
 
 # ============================================================================
+# RESOURCE PATH HELPER - For PyInstaller compatibility
+# ============================================================================
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    import sys
+    import os
+    
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Not running in PyInstaller bundle - use script directory
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    
+    return os.path.join(base_path, relative_path)
+
+# ============================================================================
 # LAZY IMPORTS - Import modules only when actually needed
 # ============================================================================
 try:
@@ -2642,12 +2659,18 @@ class VRViewerDialog(tk.Toplevel):
         try:
             import os
             
-            # Look for VR.xml in src directory
-            vr_file = os.path.join(os.path.dirname(__file__), "VR.xml")
+            # Use resource path helper for PyInstaller compatibility
+            vr_file = get_resource_path("VR.xml")
+            
+            # Fallback: try in src subdirectory
+            if not os.path.exists(vr_file):
+                vr_file = get_resource_path(os.path.join("src", "VR.xml"))
             
             if not os.path.exists(vr_file):
-                self.info_label.config(text="Error: VR.xml not found in src directory")
-                self.logger.error(f"VR.xml not found at: {vr_file}")
+                self.info_label.config(text="Error: VR.xml not found")
+                self.logger.error(f"VR.xml not found. Tried paths:")
+                self.logger.error(f"  1. {get_resource_path('VR.xml')}")
+                self.logger.error(f"  2. {get_resource_path(os.path.join('src', 'VR.xml'))}")
                 return
             
             self.info_label.config(text="Parsing VR.xml...")
