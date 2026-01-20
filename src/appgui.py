@@ -55,6 +55,15 @@ except ImportError:
     except ImportError:
         ValidationDialog = None
 
+# Import TagViewerDialog for tag viewing
+try:
+    from .tag_dialog import TagViewerDialog
+except ImportError:
+    try:
+        from tag_dialog import TagViewerDialog
+    except ImportError:
+        TagViewerDialog = None
+
 # Logic handler
 DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
@@ -188,7 +197,8 @@ class DicomCreatorApp(tk.Tk):
         # VR menu
         vr_menu = tk.Menu(menubar, tearoff=False)
         vr_menu.add_command(label="View VRs", command=self.show_vr_viewer)
-        menubar.add_cascade(label="VR", menu=vr_menu)
+        vr_menu.add_command(label="View All Tags", command=self.show_tag_viewer)
+        menubar.add_cascade(label="DICOM", menu=vr_menu)
 
         # About menu
         about_menu = tk.Menu(menubar, tearoff=False)
@@ -754,6 +764,52 @@ class DicomCreatorApp(tk.Tk):
     def show_vr_viewer(self):
         """Show DICOM Value Representation viewer dialog."""
         VRViewerDialog(self, self.logger)
+
+    def show_tag_viewer(self):
+        """Show DICOM Tag viewer dialog for viewing all tags from loaded file or dataset."""
+        if TagViewerDialog is None:
+            messagebox.showerror(
+                APP_TITLE,
+                "Tag Viewer is not available.\n\n"
+                "The tag_dialog module could not be loaded."
+            )
+            return
+        
+        # Determine what to show
+        # Priority: 1. Selected series, 2. First series in grouped_dicom, 3. Ask user to select file
+        dataset = None
+        filepath = None
+        
+        # Try to get dataset from selected series
+        if self.selected_study_uid and self.selected_series_uid:
+            instances = self.grouped_dicom.get(self.selected_study_uid, {}).get(self.selected_series_uid, [])
+            if instances:
+                dataset, _ = instances[0]
+        # Try to get first available dataset
+        elif self.grouped_dicom:
+            for study_uid, series_map in self.grouped_dicom.items():
+                for series_uid, instances in series_map.items():
+                    if instances:
+                        dataset, _ = instances[0]
+                        break
+                if dataset:
+                    break
+        
+        # If we have a dataset, show it
+        if dataset:
+            TagViewerDialog(self, self.logger, dataset=dataset)
+        else:
+            # No dataset loaded, ask user to select a file
+            if messagebox.askyesno(
+                APP_TITLE,
+                "No DICOM loaded. Would you like to select a DICOM file to view tags?"
+            ):
+                filepath = filedialog.askopenfilename(
+                    title="Select DICOM file to view tags",
+                    filetypes=[("DICOM Files", "*.dcm;*.dicom;*"), ("All Files", "*.*")]
+                )
+                if filepath:
+                    TagViewerDialog(self, self.logger, filepath=filepath)
 
     def validate_current_data(self):
         """Validate current form data and show validation report."""
