@@ -161,7 +161,7 @@ class DicomCreatorApp(tk.Tk):
         file_menu.add_command(label="Load Folder", command=self.load_dicom_folder, accelerator="Ctrl+Shift+O")
         file_menu.add_command(label="Save", command=self.save_dicom, accelerator="Ctrl+S")
         file_menu.add_separator()
-        file_menu.add_command(label="Validate", command=self.validate_current_data, accelerator="Ctrl+V")
+        file_menu.add_command(label="Validate", command=self.validate_current_data, accelerator="Ctrl+Shift+V")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.on_quit)
         menubar.add_cascade(label="File", menu=file_menu)
@@ -215,9 +215,9 @@ class DicomCreatorApp(tk.Tk):
             
         self.bind_all("<Control-n>", lambda e: self.new_file())
         self.bind_all("<Control-o>", lambda e: self.load_dicom_file())
-        self.bind_all("<Control-Shift-o>", lambda e: self.load_dicom_folder())
+        self.bind_all("<Control-O>", lambda e: self.load_dicom_folder())
         self.bind_all("<Control-s>", lambda e: self.save_dicom())
-        self.bind_all("<Control-v>", lambda e: self.validate_current_data())
+        self.bind_all("<Control-V>", lambda e: self.validate_current_data())
         self.bind_all("<Control-r>", lambda e: self.send_remote())
 
         # Tabbed container for different sections
@@ -309,11 +309,6 @@ class DicomCreatorApp(tk.Tk):
         """Build patient metadata form fields."""
         self.patient_vars = {
             "PatientName": tk.StringVar(),
-            "PatientFamilyNameComplex": tk.StringVar(),
-            "PatientPrefix": tk.StringVar(),
-            "PatientGivenName": tk.StringVar(),
-            "PatientMiddleName": tk.StringVar(),
-            "PatientSuffix": tk.StringVar(),
             "PatientID": tk.StringVar(),
             "PatientBirthDate": tk.StringVar(),
             "PatientSex": tk.StringVar(),
@@ -325,20 +320,15 @@ class DicomCreatorApp(tk.Tk):
             "PatientDeathDateTime": tk.StringVar(),
         }
         self._add_labeled_entry(self.patient_frame, "Patient Name", self.patient_vars["PatientName"], 0)
-        self._add_labeled_entry(self.patient_frame, "Family Name Complex", self.patient_vars["PatientFamilyNameComplex"], 1)
-        self._add_labeled_entry(self.patient_frame, "Prefix", self.patient_vars["PatientPrefix"], 2)
-        self._add_labeled_entry(self.patient_frame, "Given Name", self.patient_vars["PatientGivenName"], 3)
-        self._add_labeled_entry(self.patient_frame, "Middle Name", self.patient_vars["PatientMiddleName"], 4)
-        self._add_labeled_entry(self.patient_frame, "Suffix", self.patient_vars["PatientSuffix"], 5)
-        self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 6)
-        self._add_labeled_entry(self.patient_frame, "Birth Date (YYYYMMDD)", self.patient_vars["PatientBirthDate"], 7)
-        self._add_labeled_entry(self.patient_frame, "Sex (M/F/O)", self.patient_vars["PatientSex"], 8)
-        self._add_labeled_entry(self.patient_frame, "Patient Age (e.g., 032Y)", self.patient_vars["PatientAge"], 9)
-        self._add_labeled_entry(self.patient_frame, "Patient Weight (kg)", self.patient_vars["PatientWeight"], 10)
-        self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 11)
-        self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 12)
-        self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 13)
-        self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 14)
+        self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 1)
+        self._add_labeled_entry(self.patient_frame, "Birth Date (YYYYMMDD)", self.patient_vars["PatientBirthDate"], 2)
+        self._add_labeled_entry(self.patient_frame, "Sex (M/F/O)", self.patient_vars["PatientSex"], 3)
+        self._add_labeled_entry(self.patient_frame, "Patient Age (e.g., 032Y)", self.patient_vars["PatientAge"], 4)
+        self._add_labeled_entry(self.patient_frame, "Patient Weight (kg)", self.patient_vars["PatientWeight"], 5)
+        self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 6)
+        self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 7)
+        self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 8)
+        self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 9)
 
     def _build_study_fields(self):
         """Build study metadata form fields."""
@@ -758,7 +748,7 @@ class DicomCreatorApp(tk.Tk):
         messagebox.showinfo(
             APP_TITLE,
             f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
-            "Simple tool to create and edit DICOM metadata and images."
+            "A tool to create, edit, test and sendingDICOM metadata and images."
         )
 
     def show_vr_viewer(self):
@@ -827,19 +817,12 @@ class DicomCreatorApp(tk.Tk):
             return
         
         try:
-            # Helper fields that aren't actual DICOM tags (used internally to build PatientName)
-            skip_fields = {
-                'PatientFamilyNameComplex', 'PatientPrefix', 'PatientGivenName',
-                'PatientMiddleName', 'PatientSuffix'
-            }
-            
             # Collect all form fields
             all_fields = {}
             
-            # Patient fields (skip helper fields)
+            # Patient fields
             for field_name, var in self.patient_vars.items():
-                if field_name not in skip_fields:
-                    all_fields[field_name] = var
+                all_fields[field_name] = var
             
             # Study fields
             for field_name, var in self.study_vars.items():
@@ -1042,19 +1025,12 @@ class DicomCreatorApp(tk.Tk):
         if self.vr_validator is None:
             return True  # Skip validation if validator not available
         
-        # Helper fields that aren't actual DICOM tags (used internally to build PatientName)
-        skip_fields = {
-            'PatientFamilyNameComplex', 'PatientPrefix', 'PatientGivenName',
-            'PatientMiddleName', 'PatientSuffix'
-        }
-        
         # Collect all form fields
         all_fields = {}
         
-        # Patient fields (skip helper fields)
+        # Patient fields
         for field_name, var in self.patient_vars.items():
-            if field_name not in skip_fields:
-                all_fields[field_name] = var
+            all_fields[field_name] = var
         
         # Study fields
         for field_name, var in self.study_vars.items():
@@ -1124,11 +1100,6 @@ class DicomCreatorApp(tk.Tk):
                 save_path=save_path,
                 patient={
                     "PatientName": self.patient_vars["PatientName"].get().strip(),
-                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
-                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
-                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
-                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
-                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
                     "PatientID": self.patient_vars["PatientID"].get().strip(),
                     "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
                     "PatientSex": self.patient_vars["PatientSex"].get().strip(),
@@ -1475,22 +1446,6 @@ class DicomCreatorApp(tk.Tk):
     def _populate_patient_fields(self, ds):
         """Populate patient form fields from DICOM dataset."""
         self.patient_vars["PatientName"].set(str(getattr(ds, 'PatientName', '') or ''))
-        
-        try:
-            pn = getattr(ds, 'PatientName', '')
-            fam = getattr(pn, 'family_name', '') if pn else ''
-            giv = getattr(pn, 'given_name', '') if pn else ''
-            mid = getattr(pn, 'middle_name', '') if pn else ''
-            pref = getattr(pn, 'name_prefix', '') if pn else ''
-            suf = getattr(pn, 'name_suffix', '') if pn else ''
-            self.patient_vars["PatientFamilyNameComplex"].set(str(fam or ''))
-            self.patient_vars["PatientGivenName"].set(str(giv or ''))
-            self.patient_vars["PatientMiddleName"].set(str(mid or ''))
-            self.patient_vars["PatientPrefix"].set(str(pref or ''))
-            self.patient_vars["PatientSuffix"].set(str(suf or ''))
-        except Exception:
-            pass
-            
         self.patient_vars["PatientID"].set(str(getattr(ds, 'PatientID', '') or ''))
         self.patient_vars["PatientBirthDate"].set(str(getattr(ds, 'PatientBirthDate', '') or ''))
         self.patient_vars["PatientSex"].set(str(getattr(ds, 'PatientSex', '') or ''))
@@ -1663,11 +1618,6 @@ class DicomCreatorApp(tk.Tk):
                 save_path="in-memory",
                 patient={
                     "PatientName": self.patient_vars["PatientName"].get().strip(),
-                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
-                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
-                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
-                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
-                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
                     "PatientID": patient_id,
                     "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
                     "PatientSex": self.patient_vars["PatientSex"].get().strip(),

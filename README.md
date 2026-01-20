@@ -10,6 +10,8 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **DICOM File Operations** - Load, save, and organize DICOM files and folders
 - **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
 - **Server Presets** - Save and manage server connection profiles
+- **DICOM Tag Viewer** - View all DICOM tags including private tags with search and export
+- **VR Validator** - Validate DICOM data against Value Representation specifications
 
 ### Advanced Features (v0.3+)
 
@@ -179,6 +181,16 @@ All optional test modules are automatically included in the build - no extra con
 
 ### Testing & Validation
 
+#### DICOM Data Validation & Inspection
+- Go to "File" menu ? "Validate" to check current form data
+- Go to "DICOM" menu ? "View VRs" to browse DICOM Value Representations
+- Go to "DICOM" menu ? "View All Tags" to inspect all tags in a DICOM file:
+  - View all public and private tags
+  - Search and filter tags
+  - Export tags to text file
+  - View tag statistics
+  - Color-coded private tags
+
 #### Connection Testing
 - Go to "Connection Test" tab
 - Enter server details
@@ -231,6 +243,8 @@ All optional test modules are automatically included in the build - no extra con
 
 ### User Documentation
 - **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index and navigation
+- **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer quick start guide
+- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
 - **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start guide
 - **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Comprehensive Server Presets documentation
 - **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - Random DICOM generator quick start
@@ -251,6 +265,9 @@ All optional test modules are automatically included in the build - no extra con
 
 ### Additional Resources
 - **[examples/](examples/)** - Example scripts for common tasks
+- **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer 5-minute guide
+- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
+- **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Release notes for v0.4.0
 - **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
 
 ## Project Structure
