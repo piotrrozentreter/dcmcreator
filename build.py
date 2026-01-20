@@ -88,6 +88,18 @@ def main():
     else:
         print("? Icon created successfully")
     
+    # Step 3.5: Verify VR.xml exists
+    print("\nStep 3.5: Verifying DICOM data dictionary...")
+    vr_xml_path = Path("src/VR.xml")
+    if not vr_xml_path.exists():
+        print(f"ERROR: VR.xml not found at {vr_xml_path}")
+        print("The VR validator and tag viewer require this file.")
+        print("Please ensure VR.xml is present in the src/ directory.")
+        return False
+    else:
+        vr_size = vr_xml_path.stat().st_size / (1024 * 1024)
+        print(f"? VR.xml found ({vr_size:.1f} MB)")
+    
     # Step 4: Clean previous builds
     print("\nStep 4: Cleaning previous builds...")
     for folder in ['build', 'dist', '__pycache__', '.pytest_cache']:
@@ -133,6 +145,16 @@ def main():
     print("Build completed successfully!")
     print("="*50)
     print("\n? Your application is ready for distribution:")
+    print("\nFeatures included in this build:")
+    print("  ? DICOM creation and editing")
+    print("  ? VR validation with PS3.6 data dictionary")
+    print("  ? Tag viewer for all DICOM tags")
+    print("  ? Validation dialog with detailed reports")
+    print("  ? Remote DICOM transmission (C-STORE)")
+    print("  ? Connection testing and stress testing")
+    print("  ? Transmission history tracking")
+    print("  ? Performance benchmarking")
+    print("  ? Parallel transmission support")
     print("\nOptions:")
     print("  1. Share the ZIP file:")
     print(f"     ? DICOM Creator.zip (~{zip_size:.0f} MB)")

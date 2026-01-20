@@ -1,23 +1,42 @@
 # ?? Distribution Guide
 
+## Version 0.4.0+ Update
+
+Starting with v0.4.0, the application includes additional optional modules:
+- Connection Testing & Validation
+- Stress Testing capabilities
+- Transmission History tracking
+- Performance Benchmarking
+- Parallel Transmission support
+
+**These are automatically bundled** - nothing extra to do for distribution!
+
+File sizes have increased:
+- **Old (v0.3.x)**: ~53 MB uncompressed, ~15-20 MB ZIP
+- **New (v0.4.0+)**: ~150-200 MB uncompressed, ~60-70 MB ZIP
+
+All test features are available in the ZIP distribution automatically.
+
+---
+
 ## What to Distribute
 
 ### ? CORRECT: Distribute the entire folder
 
 ```
-dist\DICOM Creator\                    ? Package THIS entire folder (53.49 MB)
+dist\DICOM Creator\                    ? Package THIS entire folder (150-200 MB)
 ?
-??? DICOM Creator.exe                 ? Users run this
-??? _internal\                        ? MUST include (all Python libraries)
-?   ??? pydicom\
-?   ??? pynetdicom\
-?   ??? PIL\
-?   ??? numpy\
-?   ??? tcl8\, tk8\
-?   ??? api-ms-win-core-*.dll
-?   ??? [~100+ other library files]
-??? src\                              ? Application source
-??? [other support files]
+?? DICOM Creator.exe                 ? Users run this
+?? _internal\                        ? MUST include (all Python libraries)
+?  ?? pydicom\                       ? DICOM file handling
+?  ?? pynetdicom\                    ? Network DICOM C-STORE
+?  ?? PIL\                           ? Image processing
+?  ?? numpy\                         ? Array processing
+?  ?? tcl8\, tk8\                    ? Tkinter GUI libraries
+?  ?? api-ms-win-core-*.dll          ? Windows runtime libraries
+?  ?? [~150+ other library files]
+?? src\                              ? Application source
+?? [other support files]
 ```
 
 ### ? WRONG: Don't distribute just the EXE
@@ -36,198 +55,174 @@ DICOM Creator.exe                      ? ALONE: Won't work!
 **Steps:**
 1. Right-click `dist\DICOM Creator\` folder
 2. Select "Send to" ? "Compressed (zipped) folder"
-3. Creates `DICOM Creator.zip` (~15-20 MB)
+3. Creates `DICOM Creator.zip` (~60-70 MB)
+
+OR use the auto-created ZIP from the build process (recommended!)
 
 **Pros:**
-- ? Smaller file size (compression)
+- ? Smaller file size (compression 55-65%)
 - ? Easy to email or upload
 - ? Users just extract and run
 - ? Standard format
+- ? Includes all test features automatically
+
+**File sizes:**
+- ZIP: 60-70 MB
+- Uncompressed: 150-200 MB after extraction
 
 **Distribution:**
 - Email as attachment
 - Upload to cloud storage
 - GitHub release download
-- Website download
+- Website download link
 
----
+```bash
+# The build process creates this automatically:
+python build.py
+# ? Generates: DICOM Creator.zip (60-70 MB)
+# ? Use this for distribution!
+```
 
-### Method 2: Direct Folder Copy
+### Method 2: Direct Folder Distribution
+
+**Best for:**
+- USB drives
+- Network shares
+- Internal IT distribution
+- Direct copying
 
 **Steps:**
-1. Copy `dist\DICOM Creator\` folder
-2. Share via USB drive, cloud storage, or network share
+1. Copy entire `dist\DICOM Creator\` folder
+2. Paste to destination
+3. Users double-click `DICOM Creator.exe`
 
-**Pros:**
-- ? No compression overhead
-- ? Works on slow internet
-- ? Simple to understand
-- ? Users can run immediately after copy
+**Considerations:**
+- Larger transfer (~150-200 MB)
+- No compression overhead
+- Useful for local deployment
 
-**Distribution:**
-- USB drive
-- Network share
-- Cloud storage (Google Drive, OneDrive, Dropbox)
+### Method 3: Professional Installer
 
----
+For enterprise deployments, create an NSIS installer:
+- Uninstall functionality
+- Start Menu shortcuts
+- File associations
+- Professional appearance
 
-### Method 3: Professional Installer (Optional)
-
-**Steps:**
-1. Install NSIS (Nullsoft Scriptable Install System)
-2. Create `.nsi` installer script
-3. Build installer EXE
-
-**Pros:**
-- ? Professional appearance
-- ? Uninstall support
-- ? Start Menu shortcuts
-- ? File associations
-- ? Better user experience
-
-**For enterprise deployment**
+See [NSIS Documentation](https://nsis.sourceforge.io/) for details.
 
 ---
 
-## Quick Distribution Checklist
+## Pre-Distribution Checklist
 
-Before sending to users:
+Before distributing, verify:
 
-- [ ] Confirm entire folder is included (53.49 MB)
-- [ ] `_internal\` folder exists and has libraries
-- [ ] `DICOM Creator.exe` is present
-- [ ] `src\` folder is included
-- [ ] Test on clean Windows machine
-- [ ] Create compressed archive if emailing
-- [ ] Document system requirements (Windows 7+, 64-bit)
-- [ ] Include README or QUICK_START guide
+- [ ] Built with `python build.py` (v0.4.0+ process)
+- [ ] `DICOM Creator.zip` file created (60-70 MB)
+- [ ] All test tabs visible (View menu ? Show All)
+- [ ] Connection Test tab loads
+- [ ] Stress Test tab loads
+- [ ] Transmission History tab loads
+- [ ] Benchmarking tab loads
+- [ ] Parallel Send tab loads
+- [ ] Core features work (load, save, remote)
+- [ ] No error messages or missing modules
 
----
-
-## User Instructions Template
-
-Share this with end users:
-
-```
-DICOM Creator - Installation & Running
-
-1. Extract the DICOM Creator folder anywhere
-2. Open the folder
-3. Double-click DICOM Creator.exe
-4. Application will start!
-
-No installation needed. No Python required.
-
-System Requirements:
-- Windows 7 or newer (64-bit)
-- ~100 MB disk space
-- ~300 MB RAM
-
-For help, see QUICK_START.md or README.md
+If any test tab shows "not available", rebuild:
+```bash
+python build.py
 ```
 
 ---
 
-## Folder Size Reference
+## User Instructions
 
-| Component | Size |
-|-----------|------|
-| `DICOM Creator.exe` | 18.19 MB |
-| `_internal\` (libraries) | ~35 MB |
-| `src\` (source code) | ~1 MB |
-| **Total** | **53.49 MB** |
-| **Compressed (ZIP)** | **15-20 MB** |
+### For ZIP Distribution
 
----
+**Instructions to give users:**
 
-## Distribution Scenarios
+1. **Download and Extract**
+   - Download `DICOM Creator.zip`
+   - Right-click ? Extract all
+   - Choose destination folder
 
-### Scenario 1: Email Distribution
-```
-1. Create: DICOM Creator.zip (~15-20 MB)
-2. Send via email
-3. User extracts zip file
-4. User runs DICOM Creator.exe
-5. Works perfectly!
-```
+2. **Run**
+   - Open extracted folder
+   - Double-click `DICOM Creator.exe`
+   - Application launches!
 
-### Scenario 2: GitHub Release
-```
-1. Create: DICOM Creator.zip
-2. Upload as GitHub Release asset
-3. Users download and extract
-4. Users run DICOM Creator.exe
-5. Works perfectly!
-```
+3. **No Installation**
+   - No admin rights needed
+   - No system changes
+   - Can run from USB drive
+   - Can delete folder to uninstall
 
-### Scenario 3: Website Download
-```
-1. Upload: DICOM Creator.zip to web server
-2. Users download from website
-3. Users extract zip file
-4. Users run DICOM Creator.exe
-5. Works perfectly!
-```
+### For Folder Distribution
 
-### Scenario 4: USB Drive
-```
-1. Copy: dist\DICOM Creator\ folder to USB
-2. Give USB to user
-3. User copies folder to their computer
-4. User runs DICOM Creator.exe
-5. Works perfectly!
-```
+**Instructions to give users:**
 
-### Scenario 5: Network Share
-```
-1. Copy: dist\DICOM Creator\ folder to network share
-2. Users access shared folder
-3. Users copy folder locally (or run from share)
-4. Users run DICOM Creator.exe
-5. Works perfectly!
-```
+1. **Copy Folder**
+   - Copy `DICOM Creator` folder
+   - Paste to desired location
+
+2. **Run**
+   - Open folder
+   - Double-click `DICOM Creator.exe`
+
+3. **Done**
+   - Application launches immediately
+   - Can move folder anytime
 
 ---
 
-## What NOT to Do
+## Size Reference
 
-### ? DON'T: Send only the EXE
-**Result**: Won't work! Missing libraries.
+| Version | Uncompressed | ZIP | Increase |
+|---------|-------------|-----|----------|
+| v0.3.x | ~53 MB | ~15-20 MB | - |
+| v0.4.0+ | ~150-200 MB | ~60-70 MB | +3x (includes new test modules) |
 
-### ? DON'T: Delete _internal\ folder
-**Result**: Won't work! Missing libraries.
+**Note**: Size increase is due to:
+- PyNetDICOM library (+30 MB)
+- Additional test modules (+20-30 MB)
+- Expanded PyDICOM (+10 MB)
 
-### ? DON'T: Modify files in _internal\ folder
-**Result**: May crash or behave unexpectedly.
-
-### ? DON'T: Distribute from build\ folder
-**Result**: Incomplete and won't work.
-
-### ? DON'T: Rename _internal\ folder
-**Result**: Won't work! Application looks for this exact folder name.
+All are required for the new testing and performance features.
 
 ---
 
-## Common Issues & Solutions
+## Troubleshooting Distribution Issues
 
-### Issue: User says "File not found" or "Missing DLL"
-**Cause**: They probably have just the EXE without the `_internal\` folder
-**Solution**: Re-send the entire `dist\DICOM Creator\` folder
+### Problem: User gets "DLL not found" error
 
-### Issue: User says "Slow to start"
-**Cause**: Normal - first run unpacks files (~15-30 sec)
-**Solution**: Subsequent runs are faster (5-10 sec)
+**Solution:**
+- Verify they extracted the ENTIRE ZIP file
+- The `_internal\` folder must be present
+- All library DLLs are in `_internal\`
 
-### Issue: User says "Antivirus is blocking it"
-**Cause**: Unsigned executables trigger warnings
-**Solution**: 
-- Option A: Sign the EXE (code signing certificate needed)
-- Option B: User approves "Unknown Publisher" warning
-- Option C: Add exception to antivirus
+### Problem: Application crashes on startup
 
-### Issue: User on Windows 7 says "Can't run"
-**Cause**: May need Windows API updates
-**Solution**: User updates Windows or uses Windows 10+
+**Solution:**
+- Ensure full folder was distributed (not just EXE)
+- Check all files extracted correctly
+- Try re-extracting the ZIP
+- Verify Windows has required runtime (Windows 7+)
+
+### Problem: ZIP file is too large
+
+**Solution:**
+- This is normal for v0.4.0+ (60-70 MB)
+- Compression is already applied
+- Use 7-Zip or WinRAR for slight additional compression
+- Alternative: Distribute uncompressed folder (150-200 MB)
+
+### Problem: Test tabs not working in distributed version
+
+**Solution:**
+- Verify you built with `python build.py` (v0.4.0+ process)
+- Check that all test tabs show in View menu
+- Rebuild if needed and re-distribute
+- Ensure `dcmcreator.spec` has new modules (auto-updated)
 
 ---
 
@@ -242,7 +237,7 @@ cd dist\DICOM Creator
 dir DICOM*.exe
 
 # Check _internal folder exists with many files
-dir _internal | find /c /v ""    (should show 100+ items)
+dir _internal | find /c /v ""    (should show 150+ items)
 
 # Check src folder exists
 dir src

@@ -5,7 +5,7 @@ import threading
 
 try:
     import pydicom
-except Exception as e:
+except Exception:
     pydicom = None
 
 try:
@@ -16,86 +16,73 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.3.1\n"
+APP_TITLE = "DICOM Creator v0.4.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
 except Exception:
     from dcmlogger import setup_logging, LOGGER_NAME
 
-try:
-    from .presets import ServerPresetsManager
-except Exception:
+# ============================================================================
+# RESOURCE PATH HELPER - For PyInstaller compatibility
+# ============================================================================
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller."""
+    import sys
+    import os
+    
     try:
-        from presets import ServerPresetsManager
-    except Exception:
-        ServerPresetsManager = None
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Not running in PyInstaller bundle - use script directory
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    
+    return os.path.join(base_path, relative_path)
 
+# ============================================================================
+# LAZY IMPORTS - Import modules only when actually needed
+# ============================================================================
 try:
-    from .random_dicom import RandomDicomGenerator
+    from .import_helper import LazyImport
 except Exception:
-    try:
-        from random_dicom import RandomDicomGenerator
-    except Exception:
-        RandomDicomGenerator = None
+    from import_helper import LazyImport
 
+# Feature modules (optional)
+ServerPresetsManager = LazyImport(".presets", "presets")
+RandomDicomGenerator = LazyImport(".random_dicom", "random_dicom")
+TestRunner = LazyImport(".test_runner", "test_runner")
+
+# Test-related modules (optional)
+ConnectionValidator = LazyImport(".connection_validator", "connection_validator")
+StressTestRunner = LazyImport(".stress_tester", "stress_tester")
+TransmissionHistory = LazyImport(".transmission_history", "transmission_history")
+PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
+ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
+
+# Validator
+VRValidator = LazyImport(".vr_validator", "vr_validator")
+
+# Import ValidationDialog directly from its own module
 try:
-    from .test_runner import TestRunner
-except Exception:
+    from .validation_dialog import ValidationDialog
+except ImportError:
     try:
-        from test_runner import TestRunner
-    except Exception:
-        TestRunner = None
+        from validation_dialog import ValidationDialog
+    except ImportError:
+        ValidationDialog = None
 
-# New test modules imports
+# Import TagViewerDialog for tag viewing
 try:
-    from .connection_validator import ConnectionValidator
-except Exception:
+    from .tag_dialog import TagViewerDialog
+except ImportError:
     try:
-        from connection_validator import ConnectionValidator
-    except Exception:
-        ConnectionValidator = None
+        from tag_dialog import TagViewerDialog
+    except ImportError:
+        TagViewerDialog = None
 
-try:
-    from .stress_tester import StressTestRunner
-except Exception:
-    try:
-        from stress_tester import StressTestRunner
-    except Exception:
-        StressTestRunner = None
-
-try:
-    from .transmission_history import TransmissionHistory
-except Exception:
-    try:
-        from transmission_history import TransmissionHistory
-    except Exception:
-        TransmissionHistory = None
-
-try:
-    from .performance_benchmarking import PerformanceBenchmark
-except Exception:
-    try:
-        from performance_benchmarking import PerformanceBenchmark
-    except Exception:
-        PerformanceBenchmark = None
-
-try:
-    from .parallel_transmission import ParallelTransmissionManager
-except Exception:
-    try:
-        from parallel_transmission import ParallelTransmissionManager
-    except Exception:
-        ParallelTransmissionManager = None
-
-try:
-    from .app_logic import DicomLogicHandler
-except Exception:
-    try:
-        from app_logic import DicomLogicHandler
-    except Exception:
-        DicomLogicHandler = None
-
+# Logic handler
+DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
@@ -123,16 +110,41 @@ class DicomCreatorApp(tk.Tk):
         self.selected_series_uid = None
         
         # Server presets
-        if ServerPresetsManager:
-            self.presets_manager = ServerPresetsManager()
-        else:
+        try:
+            presets_cls = ServerPresetsManager._load_class()
+            self.presets_manager = presets_cls() if presets_cls else None
+        except Exception:
             self.presets_manager = None
 
         # Transmission history
-        if TransmissionHistory:
-            self.transmission_history = TransmissionHistory(logger=self.logger)
-        else:
+        try:
+            history_cls = TransmissionHistory._load_class()
+            self.transmission_history = history_cls(logger=self.logger) if history_cls else None
+            self.history = self.transmission_history  # Also set as self.history for convenience
+        except Exception:
             self.transmission_history = None
+            self.history = None
+
+        # VR Validator
+        self.vr_validator = None
+        self.vr_validator_error = None
+        try:
+            validator_cls = VRValidator._load_class()
+            if validator_cls is None:
+                # LazyImport returned None - try to get more details
+                try:
+                    # Try to import directly to get the actual error
+                    from .vr_validator import VRValidator as DirectImport
+                    self.vr_validator = DirectImport(logger=self.logger)
+                except Exception as direct_error:
+                    self.vr_validator_error = f"VRValidator class could not be loaded: {direct_error}"
+                    self.logger.exception("Direct import of VRValidator failed")
+            else:
+                self.vr_validator = validator_cls(logger=self.logger)
+        except Exception as e:
+            self.vr_validator_error = str(e)
+            self.logger.exception("VR Validator not available")
+            self.vr_validator = None
 
         # Tab visibility state
         self.tab_visibility = {
@@ -166,6 +178,8 @@ class DicomCreatorApp(tk.Tk):
         file_menu.add_command(label="Load Folder", command=self.load_dicom_folder, accelerator="Ctrl+Shift+O")
         file_menu.add_command(label="Save", command=self.save_dicom, accelerator="Ctrl+S")
         file_menu.add_separator()
+        file_menu.add_command(label="Validate", command=self.validate_current_data, accelerator="Ctrl+Shift+V")
+        file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.on_quit)
         menubar.add_cascade(label="File", menu=file_menu)
 
@@ -197,6 +211,12 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_command(label="Hide Test Tabs", command=self._hide_test_tabs)
         menubar.add_cascade(label="View", menu=view_menu)
 
+        # VR menu
+        vr_menu = tk.Menu(menubar, tearoff=False)
+        vr_menu.add_command(label="View VRs", command=self.show_vr_viewer)
+        vr_menu.add_command(label="View All Tags", command=self.show_tag_viewer)
+        menubar.add_cascade(label="DICOM", menu=vr_menu)
+
         # About menu
         about_menu = tk.Menu(menubar, tearoff=False)
         about_menu.add_command(label="About", command=self.show_about)
@@ -212,8 +232,9 @@ class DicomCreatorApp(tk.Tk):
             
         self.bind_all("<Control-n>", lambda e: self.new_file())
         self.bind_all("<Control-o>", lambda e: self.load_dicom_file())
-        self.bind_all("<Control-Shift-o>", lambda e: self.load_dicom_folder())
+        self.bind_all("<Control-O>", lambda e: self.load_dicom_folder())
         self.bind_all("<Control-s>", lambda e: self.save_dicom())
+        self.bind_all("<Control-V>", lambda e: self.validate_current_data())
         self.bind_all("<Control-r>", lambda e: self.send_remote())
 
         # Tabbed container for different sections
@@ -305,11 +326,6 @@ class DicomCreatorApp(tk.Tk):
         """Build patient metadata form fields."""
         self.patient_vars = {
             "PatientName": tk.StringVar(),
-            "PatientFamilyNameComplex": tk.StringVar(),
-            "PatientPrefix": tk.StringVar(),
-            "PatientGivenName": tk.StringVar(),
-            "PatientMiddleName": tk.StringVar(),
-            "PatientSuffix": tk.StringVar(),
             "PatientID": tk.StringVar(),
             "PatientBirthDate": tk.StringVar(),
             "PatientSex": tk.StringVar(),
@@ -321,20 +337,15 @@ class DicomCreatorApp(tk.Tk):
             "PatientDeathDateTime": tk.StringVar(),
         }
         self._add_labeled_entry(self.patient_frame, "Patient Name", self.patient_vars["PatientName"], 0)
-        self._add_labeled_entry(self.patient_frame, "Family Name Complex", self.patient_vars["PatientFamilyNameComplex"], 1)
-        self._add_labeled_entry(self.patient_frame, "Prefix", self.patient_vars["PatientPrefix"], 2)
-        self._add_labeled_entry(self.patient_frame, "Given Name", self.patient_vars["PatientGivenName"], 3)
-        self._add_labeled_entry(self.patient_frame, "Middle Name", self.patient_vars["PatientMiddleName"], 4)
-        self._add_labeled_entry(self.patient_frame, "Suffix", self.patient_vars["PatientSuffix"], 5)
-        self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 6)
-        self._add_labeled_entry(self.patient_frame, "Birth Date (YYYYMMDD)", self.patient_vars["PatientBirthDate"], 7)
-        self._add_labeled_entry(self.patient_frame, "Sex (M/F/O)", self.patient_vars["PatientSex"], 8)
-        self._add_labeled_entry(self.patient_frame, "Patient Age (e.g., 032Y)", self.patient_vars["PatientAge"], 9)
-        self._add_labeled_entry(self.patient_frame, "Patient Weight (kg)", self.patient_vars["PatientWeight"], 10)
-        self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 11)
-        self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 12)
-        self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 13)
-        self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 14)
+        self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 1)
+        self._add_labeled_entry(self.patient_frame, "Birth Date (YYYYMMDD)", self.patient_vars["PatientBirthDate"], 2)
+        self._add_labeled_entry(self.patient_frame, "Sex (M/F/O)", self.patient_vars["PatientSex"], 3)
+        self._add_labeled_entry(self.patient_frame, "Patient Age (e.g., 032Y)", self.patient_vars["PatientAge"], 4)
+        self._add_labeled_entry(self.patient_frame, "Patient Weight (kg)", self.patient_vars["PatientWeight"], 5)
+        self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 6)
+        self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 7)
+        self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 8)
+        self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 9)
 
     def _build_study_fields(self):
         """Build study metadata form fields."""
@@ -431,6 +442,11 @@ class DicomCreatorApp(tk.Tk):
         tree_container.grid_columnconfigure(0, weight=1)
 
         self.series_tree.bind("<<TreeviewSelect>>", self.on_tree_select)
+        self.series_tree.bind("<Button-3>", self._show_instance_context_menu)
+    
+        # CREATE CONTEXT MENU:
+        self.instance_context_menu = tk.Menu(self, tearoff=0)
+        self.instance_context_menu.add_command(label="Show Image", command=self._show_instance_image)
 
     def _add_labeled_entry(self, parent, label, var, row):
         """Helper: create a label + entry bound to a StringVar, aligned in a grid row."""
@@ -749,8 +765,141 @@ class DicomCreatorApp(tk.Tk):
         messagebox.showinfo(
             APP_TITLE,
             f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
-            "Simple tool to create and edit DICOM metadata and images."
+            "A tool to create, edit, test and sendingDICOM metadata and images."
         )
+
+    def show_vr_viewer(self):
+        """Show DICOM Value Representation viewer dialog."""
+        VRViewerDialog(self, self.logger)
+
+    def show_tag_viewer(self):
+        """Show DICOM Tag viewer dialog for viewing all tags from loaded file or dataset."""
+        if TagViewerDialog is None:
+            messagebox.showerror(
+                APP_TITLE,
+                "Tag Viewer is not available.\n\n"
+                "The tag_dialog module could not be loaded."
+            )
+            return
+        
+        # Determine what to show
+        # Priority: 1. Selected series, 2. First series in grouped_dicom, 3. Ask user to select file
+        dataset = None
+        filepath = None
+        
+        # Try to get dataset from selected series
+        if self.selected_study_uid and self.selected_series_uid:
+            instances = self.grouped_dicom.get(self.selected_study_uid, {}).get(self.selected_series_uid, [])
+            if instances:
+                dataset, _ = instances[0]
+        # Try to get first available dataset
+        elif self.grouped_dicom:
+            for study_uid, series_map in self.grouped_dicom.items():
+                for series_uid, instances in series_map.items():
+                    if instances:
+                        dataset, _ = instances[0]
+                        break
+                if dataset:
+                    break
+        
+        # If we have a dataset, show it
+        if dataset:
+            TagViewerDialog(self, self.logger, dataset=dataset)
+        else:
+            # No dataset loaded, ask user to select a file
+            if messagebox.askyesno(
+                APP_TITLE,
+                "No DICOM loaded. Would you like to select a DICOM file to view tags?"
+            ):
+                filepath = filedialog.askopenfilename(
+                    title="Select DICOM file to view tags",
+                    filetypes=[("DICOM Files", "*.dcm;*.dicom;*"), ("All Files", "*.*")]
+                )
+                if filepath:
+                    TagViewerDialog(self, self.logger, filepath=filepath)
+
+    def validate_current_data(self):
+        """Validate current form data and show validation report."""
+        if self.vr_validator is None:
+            error_details = ""
+            if self.vr_validator_error:
+                error_details = f"\n\nError details:\n{self.vr_validator_error}"
+            
+            messagebox.showerror(
+                APP_TITLE,
+                f"VR Validator is not available.{error_details}\n\n"
+                "The validator module could not be loaded.\n"
+                "Check the log for more details."
+            )
+            return
+        
+        try:
+            # Collect all form fields
+            all_fields = {}
+            
+            # Patient fields
+            for field_name, var in self.patient_vars.items():
+                all_fields[field_name] = var
+            
+            # Study fields
+            for field_name, var in self.study_vars.items():
+                all_fields[field_name] = var
+            
+            # Series fields
+            for field_name, var in self.series_vars.items():
+                all_fields[field_name] = var
+            
+            # Validate
+            validation_result = self.vr_validator.validate_form_fields(all_fields)
+            
+            # Check if all valid
+            if validation_result['valid'] and not validation_result['has_warnings']:
+                field_count = validation_result.get('field_count', len(all_fields))
+                messagebox.showinfo(
+                    APP_TITLE,
+                    "? Validation Passed\n\n"
+                    f"All {field_count} fields are valid.\n"
+                    "No errors or warnings found."
+                )
+                self.logger.info("Manual validation passed - all fields valid")
+                return
+            
+            # Show validation report dialog
+            try:
+                if ValidationDialog is None:
+                    # Fallback: show simple text report
+                    report = self.vr_validator.format_validation_report(validation_result)
+                    messagebox.showwarning(
+                        APP_TITLE,
+                        f"Validation Report:\n\n{report}\n\n"
+                        "(ValidationDialog not available for detailed view)"
+                    )
+                    return
+                
+                # Show full dialog without action buttons (just for viewing)
+                ValidationDialog.show_validation_report(
+                    self,
+                    validation_result,
+                    self.vr_validator,
+                    "validate"  # Special action to indicate this is manual validation
+                )
+            except Exception as e:
+                self.logger.exception("Error showing validation dialog")
+                # Fallback: show simple text report
+                report = self.vr_validator.format_validation_report(validation_result)
+                messagebox.showwarning(
+                    APP_TITLE,
+                    f"Validation Report:\n\n{report}\n\n"
+                    f"(Error displaying full dialog: {e})"
+                )
+        
+        except Exception as e:
+            self.logger.exception("Error during validation")
+            messagebox.showerror(
+                APP_TITLE,
+                f"Validation error occurred:\n\n{e}\n\n"
+                "Check the log for details."
+            )
 
     def on_quit(self):
         """Ask for confirmation before quitting the application."""
@@ -880,11 +1029,70 @@ class DicomCreatorApp(tk.Tk):
             a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
         return a.astype(np.uint8)
 
+    def _validate_form_fields(self, action="save"):
+        """
+        Validate all form fields against VR specifications.
+        
+        Args:
+            action: Action being performed ("save", "send", "load")
+            
+        Returns:
+            bool: True if validation passed or user wants to continue anyway
+        """
+        if self.vr_validator is None:
+            return True  # Skip validation if validator not available
+        
+        # Collect all form fields
+        all_fields = {}
+        
+        # Patient fields
+        for field_name, var in self.patient_vars.items():
+            all_fields[field_name] = var
+        
+        # Study fields
+        for field_name, var in self.study_vars.items():
+            all_fields[field_name] = var
+        
+        # Series fields
+        for field_name, var in self.series_vars.items():
+            all_fields[field_name] = var
+        
+        # Validate
+        validation_result = self.vr_validator.validate_form_fields(all_fields)
+        
+        # If all valid, return True
+        if validation_result['valid'] and not validation_result['has_warnings']:
+            return True
+        
+        # Show validation report and ask for confirmation
+        try:
+            if ValidationDialog is None:
+                return True
+            
+            return ValidationDialog.show_validation_report(
+                self,
+                validation_result,
+                self.vr_validator,
+                action
+            )
+        except Exception as e:
+            self.logger.exception("Error showing validation dialog")
+            # On error, ask user if they want to continue
+            return messagebox.askyesno(
+                APP_TITLE,
+                f"Validation error occurred: {e}\n\nContinue anyway?"
+            )
+    
     def save_dicom(self):
         """Save the current metadata and pixel data into a DICOM file."""
         if pydicom is None:
             self.logger.warning("pydicom not available; cannot save DICOM")
             messagebox.showerror(APP_TITLE, "pydicom is required to save DICOM files.")
+            return
+        
+        # Validate fields before saving
+        if not self._validate_form_fields(action="save"):
+            self.logger.info("Save cancelled due to validation")
             return
 
         save_path = filedialog.asksaveasfilename(
@@ -909,11 +1117,6 @@ class DicomCreatorApp(tk.Tk):
                 save_path=save_path,
                 patient={
                     "PatientName": self.patient_vars["PatientName"].get().strip(),
-                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
-                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
-                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
-                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
-                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
                     "PatientID": self.patient_vars["PatientID"].get().strip(),
                     "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
                     "PatientSex": self.patient_vars["PatientSex"].get().strip(),
@@ -1035,6 +1238,71 @@ class DicomCreatorApp(tk.Tk):
             self.logger.exception("Failed to load DICOM folder: %s", folder)
             messagebox.showerror(APP_TITLE, f"Failed to load DICOM folder: {e}")
 
+    def _show_instance_context_menu(self, event):
+        """Show context menu for instance nodes on right-click."""
+        try:
+            item_id = self.series_tree.identify_row(event.y)
+        
+            if not item_id or not item_id.startswith("instance:"):
+                return
+        
+            self.series_tree.selection_set(item_id)
+            self.selected_instance_id = item_id
+            self.instance_context_menu.post(event.x_root, event.y_root)
+        except Exception as e:
+            self.logger.exception("Failed to show instance context menu")
+
+    def _show_instance_image(self):
+        """Show the image for the selected instance in the Image tab."""
+        try:
+            if not hasattr(self, 'selected_instance_id') or not self.selected_instance_id:
+                return
+        
+            parts = self.selected_instance_id.split(":", 3)
+            if len(parts) != 4 or parts[0] != "instance":
+                return
+        
+            _, study_uid, series_uid, idx_str = parts
+            idx = int(idx_str)
+        
+            instances = self.grouped_dicom.get(study_uid, {}).get(series_uid, [])
+        
+            if idx < 0 or idx >= len(instances):
+                messagebox.showerror(APP_TITLE, "Instance not found")
+                return
+        
+            ds, arr = instances[idx]
+        
+            if arr is None:
+                messagebox.showwarning(APP_TITLE, "No pixel data available for this instance")
+                return
+        
+            self.pixel_array = arr
+            self.image_source = "dicom"
+        
+            rows = getattr(ds, 'Rows', None)
+            cols = getattr(ds, 'Columns', None)
+            sop_uid = getattr(ds, 'SOPInstanceUID', 'N/A')
+        
+            if rows and cols:
+                self.image_label.config(text=f"Instance: {sop_uid} | {cols}x{rows}")
+            else:
+                self.image_label.config(text=f"Instance: {sop_uid}")
+        
+            self._update_image_preview(arr)
+        
+            # Switch to Image tab
+            for i, tab_id in enumerate(self.container.tabs()):
+                if self.container.tab(tab_id, "text") == "Image":
+                    self.container.select(i)
+                    break
+        
+            self.logger.info(f"Displayed image for instance: {sop_uid}")
+        
+        except Exception as e:
+            self.logger.exception("Failed to show instance image")
+            messagebox.showerror(APP_TITLE, f"Failed to show image: {e}")
+        
     def _populate_dicom_tree(self, grouped):
         """Populate the tree view with loaded DICOM data."""
         self.grouped_dicom = grouped
@@ -1056,7 +1324,8 @@ class DicomCreatorApp(tk.Tk):
                     
                 for idx, (ds, arr) in enumerate(instances):
                     inst_text = f"Instance {idx+1}: {getattr(ds, 'SOPInstanceUID', '')}"
-                    self.series_tree.insert(series_node, "end", text=inst_text)
+                    inst_id = f"instance:{study_uid}:{series_uid}:{idx}"
+                    self.series_tree.insert(series_node, "end", iid=inst_id, text=inst_text)
                     total_instances += 1
 
         self.dcm_info_label.config(
@@ -1133,16 +1402,54 @@ class DicomCreatorApp(tk.Tk):
         if self.image_source != "file":
             self.pixel_array = arr if arr is not None else self.pixel_array
         
-        # Populate patient fields
-        self._populate_patient_fields(ds)
-        
-        # Populate study fields
-        self._populate_study_fields(ds)
-        
-        # Populate series fields
-        self._populate_series_fields(ds)
-        
-        # Update image info
+            # Populate patient fields
+            self._populate_patient_fields(ds)
+            
+            # Populate study fields
+            self._populate_study_fields(ds)
+            
+            # Populate series fields
+            self._populate_series_fields(ds)
+            
+            # Validate loaded fields
+            if self.vr_validator is not None:
+                try:
+                    # Collect all fields
+                    all_fields = {}
+                    all_fields.update(self.patient_vars)
+                    all_fields.update(self.study_vars)
+                    all_fields.update(self.series_vars)
+                    
+                    # Validate
+                    validation_result = self.vr_validator.validate_form_fields(all_fields)
+                    
+                    # Show warnings if any
+                    if validation_result['error_count'] > 0 or validation_result['warning_count'] > 0:
+                        report = self.vr_validator.format_validation_report(validation_result)
+                        self.logger.warning(f"Validation issues in loaded DICOM:\n{report}")
+                        
+                        # Only show dialog if there are errors (not just warnings)
+                        if validation_result['error_count'] > 0:
+                            if messagebox.askyesno(
+                                APP_TITLE,
+                                f"Loaded DICOM has {validation_result['error_count']} validation error(s).\n\n"
+                                "View validation report?",
+                                icon=messagebox.WARNING
+                            ):
+                                try:
+                                    if ValidationDialog:
+                                        ValidationDialog.show_validation_report(
+                                            self,
+                                            validation_result,
+                                            self.vr_validator,
+                                            "load"
+                                        )
+                                except Exception as e:
+                                    self.logger.exception("Error showing validation dialog")
+                except Exception as e:
+                    self.logger.exception("Error validating loaded DICOM fields")
+            
+            # Update image info
         rows = getattr(ds, 'Rows', None)
         cols = getattr(ds, 'Columns', None)
         if rows and cols:
@@ -1156,22 +1463,6 @@ class DicomCreatorApp(tk.Tk):
     def _populate_patient_fields(self, ds):
         """Populate patient form fields from DICOM dataset."""
         self.patient_vars["PatientName"].set(str(getattr(ds, 'PatientName', '') or ''))
-        
-        try:
-            pn = getattr(ds, 'PatientName', '')
-            fam = getattr(pn, 'family_name', '') if pn else ''
-            giv = getattr(pn, 'given_name', '') if pn else ''
-            mid = getattr(pn, 'middle_name', '') if pn else ''
-            pref = getattr(pn, 'name_prefix', '') if pn else ''
-            suf = getattr(pn, 'name_suffix', '') if pn else ''
-            self.patient_vars["PatientFamilyNameComplex"].set(str(fam or ''))
-            self.patient_vars["PatientGivenName"].set(str(giv or ''))
-            self.patient_vars["PatientMiddleName"].set(str(mid or ''))
-            self.patient_vars["PatientPrefix"].set(str(pref or ''))
-            self.patient_vars["PatientSuffix"].set(str(suf or ''))
-        except Exception:
-            pass
-            
         self.patient_vars["PatientID"].set(str(getattr(ds, 'PatientID', '') or ''))
         self.patient_vars["PatientBirthDate"].set(str(getattr(ds, 'PatientBirthDate', '') or ''))
         self.patient_vars["PatientSex"].set(str(getattr(ds, 'PatientSex', '') or ''))
@@ -1265,6 +1556,11 @@ class DicomCreatorApp(tk.Tk):
             ):
                 return
         
+        # Validate fields before sending
+        if not self._validate_form_fields(action="send"):
+            self.logger.info("Send cancelled due to validation")
+            return
+        
         # Always create dataset from current form values to ensure modifications are sent
         grouped_to_send = self._create_in_memory_dataset(patient_id)
         if not grouped_to_send:
@@ -1339,11 +1635,6 @@ class DicomCreatorApp(tk.Tk):
                 save_path="in-memory",
                 patient={
                     "PatientName": self.patient_vars["PatientName"].get().strip(),
-                    "PatientFamilyNameComplex": self.patient_vars["PatientFamilyNameComplex"].get().strip(),
-                    "PatientPrefix": self.patient_vars["PatientPrefix"].get().strip(),
-                    "PatientGivenName": self.patient_vars["PatientGivenName"].get().strip(),
-                    "PatientMiddleName": self.patient_vars["PatientMiddleName"].get().strip(),
-                    "PatientSuffix": self.patient_vars["PatientSuffix"].get().strip(),
                     "PatientID": patient_id,
                     "PatientBirthDate": self.patient_vars["PatientBirthDate"].get().strip(),
                     "PatientSex": self.patient_vars["PatientSex"].get().strip(),
@@ -1618,9 +1909,9 @@ class DicomCreatorApp(tk.Tk):
         self.connection_results = tk.Text(results_frame, height=15, width=70, state=tk.DISABLED)
         scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.connection_results.yview)
         self.connection_results.config(yscrollcommand=scrollbar.set)
-        
-        self.connection_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.connection_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def _test_tcp(self):
         """Test TCP connection."""
@@ -1800,11 +2091,11 @@ class DicomCreatorApp(tk.Tk):
         results_frame = ttk.LabelFrame(self.stress_test_frame, text="Results", padding=10)
         results_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
-        self.stress_results = tk.Text(results_frame, height=15, width=70, state=tk.DISABLED)
-        scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.stress_results.yview)
-        self.stress_results.config(yscrollcommand=scrollbar.set)
+        self.stress_results = tk.Text(results_frame, height=15, wrap="word")
+        self.stress_results.pack(fill=tk.BOTH, expand=True)
         
-        self.stress_results.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=self.stress_results.yview)
+        self.stress_results.config(yscrollcommand=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
         self.stress_runner = None
@@ -1929,9 +2220,7 @@ class DicomCreatorApp(tk.Tk):
         
         self.history_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self.history = TransmissionHistory(logger=self.logger) if TransmissionHistory else None
-    
+
     def _refresh_history(self):
         """Refresh transmission history."""
         if self.history is None:
@@ -2281,3 +2570,235 @@ See: doc/WHERE_TO_RUN_TESTS.md
             else:
                 var.set(True)
         self._update_tab_visibility()
+
+
+class VRViewerDialog(tk.Toplevel):
+    """Dialog for viewing DICOM Value Representations from VR.xml."""
+    
+    def __init__(self, parent, logger):
+        super().__init__(parent)
+        self.logger = logger
+        self.title("DICOM Value Representations (VR) Viewer")
+        self.geometry("1000x600")
+        self.resizable(True, True)
+        
+        # Make dialog modal
+        self.transient(parent)
+        self.grab_set()
+        
+        self._build_ui()
+        self._load_vr_data()
+    
+    def _build_ui(self):
+        """Build the dialog UI."""
+        # Title
+        title_frame = ttk.Frame(self)
+        title_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(title_frame, text="DICOM Data Dictionary - Value Representations", 
+                 font=("Arial", 12, "bold")).pack()
+        
+        # Search frame
+        search_frame = ttk.Frame(self)
+        search_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(search_frame, text="Search:").pack(side=tk.LEFT, padx=5)
+        self.search_var = tk.StringVar()
+        self.search_var.trace('w', self._on_search_changed)
+        search_entry = ttk.Entry(search_frame, textvariable=self.search_var, width=40)
+        search_entry.pack(side=tk.LEFT, padx=5)
+        ttk.Button(search_frame, text="Clear", command=self._clear_search).pack(side=tk.LEFT, padx=5)
+        
+        # Info label
+        self.info_label = ttk.Label(self, text="Loading VR data...")
+        self.info_label.pack(fill=tk.X, padx=10, pady=5)
+        
+        # Tree frame with scrollbars
+        tree_frame = ttk.Frame(self)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        tree_frame.rowconfigure(0, weight=1)
+        tree_frame.columnconfigure(0, weight=1)
+        
+        # Create treeview with columns
+        columns = ("Tag", "Name", "Keyword", "VR", "VM", "Status")
+        self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=20)
+        
+        # Configure column headings and widths
+        self.tree.heading("Tag", text="Tag", command=lambda: self._sort_by_column("Tag", False))
+        self.tree.heading("Name", text="Name", command=lambda: self._sort_by_column("Name", False))
+        self.tree.heading("Keyword", text="Keyword", command=lambda: self._sort_by_column("Keyword", False))
+        self.tree.heading("VR", text="VR", command=lambda: self._sort_by_column("VR", False))
+        self.tree.heading("VM", text="VM", command=lambda: self._sort_by_column("VM", False))
+        self.tree.heading("Status", text="Status", command=lambda: self._sort_by_column("Status", False))
+        
+        self.tree.column("Tag", width=120, anchor="center")
+        self.tree.column("Name", width=300, anchor="w")
+        self.tree.column("Keyword", width=250, anchor="w")
+        self.tree.column("VR", width=60, anchor="center")
+        self.tree.column("VM", width=60, anchor="center")
+        self.tree.column("Status", width=100, anchor="center")
+        
+        # Add scrollbars
+        vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=self.tree.yview)
+        hsb = ttk.Scrollbar(tree_frame, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        
+        self.tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+        
+        # Buttons
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(fill=tk.X, padx=10, pady=10)
+        ttk.Button(btn_frame, text="Close", command=self.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="Refresh", command=self._load_vr_data).pack(side=tk.RIGHT, padx=5)
+        
+        # Store all items for search filtering
+        self.all_items = []
+    
+    def _load_vr_data(self):
+        """Load and parse VR data from VR.xml file."""
+        try:
+            import os
+            
+            # Use resource path helper for PyInstaller compatibility
+            vr_file = get_resource_path("VR.xml")
+            
+            # Fallback: try in src subdirectory
+            if not os.path.exists(vr_file):
+                vr_file = get_resource_path(os.path.join("src", "VR.xml"))
+            
+            if not os.path.exists(vr_file):
+                self.info_label.config(text="Error: VR.xml not found")
+                self.logger.error(f"VR.xml not found. Tried paths:")
+                self.logger.error(f"  1. {get_resource_path('VR.xml')}")
+                self.logger.error(f"  2. {get_resource_path(os.path.join('src', 'VR.xml'))}")
+                return
+            
+            self.info_label.config(text="Parsing VR.xml...")
+            self.update_idletasks()
+            
+            # Use logic handler to parse XML
+            if DicomLogicHandler is not None:
+                logic = DicomLogicHandler(self.logger)
+                success, result = logic.parse_vr_xml(vr_file)
+                
+                if not success:
+                    # result is error message
+                    self.info_label.config(text=result)
+                    messagebox.showerror("VR Viewer Error", result)
+                    return
+                
+                # result is list of VR data dicts
+                vr_data = result
+            else:
+                # Fallback if logic handler not available
+                self.info_label.config(text="Error: Logic handler not available")
+                return
+            
+            # Clear existing items
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+            self.all_items.clear()
+            
+            # Populate tree with parsed data
+            count = 0
+            for vr_item in vr_data:
+                # Add to tree
+                item_id = self.tree.insert("", "end", values=(
+                    vr_item['tag'],
+                    vr_item['name'],
+                    vr_item['keyword'],
+                    vr_item['vr'],
+                    vr_item['vm'],
+                    vr_item['status']
+                ))
+                
+                # Style retired items differently
+                if vr_item['is_retired']:
+                    self.tree.item(item_id, tags=("retired",))
+                
+                # Store for search
+                self.all_items.append({
+                    "id": item_id,
+                    "tag": vr_item['tag'],
+                    "name": vr_item['name'],
+                    "keyword": vr_item['keyword'],
+                    "vr": vr_item['vr'],
+                    "vm": vr_item['vm'],
+                    "status": vr_item['status']
+                })
+                
+                count += 1
+            
+            # Configure retired item styling
+            self.tree.tag_configure("retired", foreground="gray")
+            
+            self.info_label.config(text=f"Loaded {count} DICOM data elements from PS3.6 Data Dictionary")
+            self.logger.info(f"Loaded {count} VR entries from VR.xml")
+            
+        except Exception as e:
+            error_msg = f"Failed to load VR data: {e}"
+            self.info_label.config(text=error_msg)
+            self.logger.exception("Failed to load VR.xml")
+            messagebox.showerror("VR Viewer Error", error_msg)
+
+    
+    def _on_search_changed(self, *args):
+        """Handle search text changes."""
+        search_text = self.search_var.get().lower()
+        
+        # Clear current view
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # If empty search, show all items
+        if not search_text:
+            for item_data in self.all_items:
+                item_id = self.tree.insert("", "end", values=(
+                    item_data["tag"], item_data["name"], item_data["keyword"],
+                    item_data["vr"], item_data["vm"], item_data["status"]
+                ))
+                if "RET" in item_data["status"]:
+                    self.tree.item(item_id, tags=("retired",))
+            self.info_label.config(text=f"Showing all {len(self.all_items)} data elements")
+            return
+        
+        # Filter items
+        matches = 0
+        for item_data in self.all_items:
+            # Search in tag, name, and keyword
+            if (search_text in item_data["tag"].lower() or
+                search_text in item_data["name"].lower() or
+                search_text in item_data["keyword"].lower()):
+                
+                item_id = self.tree.insert("", "end", values=(
+                    item_data["tag"], item_data["name"], item_data["keyword"],
+                    item_data["vr"], item_data["vm"], item_data["status"]
+                ))
+                if "RET" in item_data["status"]:
+                    self.tree.item(item_id, tags=("retired",))
+                matches += 1
+        
+        self.info_label.config(text=f"Found {matches} matching data elements")
+    
+    def _clear_search(self):
+        """Clear search text."""
+        self.search_var.set("")
+    
+    def _sort_by_column(self, col, reverse):
+        """Sort treeview by column."""
+        try:
+            # Get all items
+            items = [(self.tree.set(item, col), item) for item in self.tree.get_children("")]
+            
+            # Sort items
+            items.sort(reverse=reverse)
+            
+            # Rearrange items in sorted positions
+            for index, (val, item) in enumerate(items):
+                self.tree.move(item, "", index)
+            
+            # Reverse sort next time
+            self.tree.heading(col, command=lambda: self._sort_by_column(col, not reverse))
+        except Exception as e:
+            self.logger.debug(f"Sort error: {e}")
+

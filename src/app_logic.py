@@ -191,3 +191,97 @@ class DicomLogicHandler:
         import threading
         t = threading.Thread(target=test_worker, daemon=True)
         t.start()
+    
+    # ============ VR XML PARSING ============
+    
+    def parse_vr_xml(self, vr_file_path):
+        """Parse VR.xml file and return structured data.
+        
+        Args:
+            vr_file_path: Path to VR.xml file
+            
+        Returns:
+            tuple: (success, data_or_error_msg)
+                - success=True: data is list of dicts with keys: tag, name, keyword, vr, vm, status, is_retired
+                - success=False: data is error message string
+        """
+        try:
+            import xml.etree.ElementTree as ET
+            
+            if not os.path.exists(vr_file_path):
+                return False, f"VR.xml not found at: {vr_file_path}"
+            
+            # Parse XML
+            tree = ET.parse(vr_file_path)
+            root = tree.getroot()
+            
+            # Define namespaces (including xml namespace for xml:id attribute)
+            ns = {
+                'd': 'http://docbook.org/ns/docbook',
+                'xml': 'http://www.w3.org/XML/1998/namespace'
+            }
+            
+            # Helper function to extract cell text
+            def get_cell_text(cell):
+                if cell is None:
+                    return ""
+                # Try to find emphasis first
+                emphasis = cell.find('.//d:emphasis', ns)
+                if emphasis is not None and emphasis.text:
+                    return emphasis.text.strip()
+                # Otherwise get direct text
+                para = cell.find('.//d:para', ns)
+                if para is not None:
+                    return (para.text or "").strip()
+                return (cell.text or "").strip()
+            
+            # Extract data from table
+            vr_data = []
+            for table in root.findall('.//d:table[@xml:id="table_6-1"]', ns):
+                tbody = table.find('.//d:tbody', ns)
+                if tbody is not None:
+                    for row in tbody.findall('d:tr', ns):
+                        try:
+                            cells = row.findall('d:td', ns)
+                            if len(cells) >= 5:
+                                # Extract text from each cell
+                                tag = get_cell_text(cells[0])
+                                name = get_cell_text(cells[1])
+                                keyword = get_cell_text(cells[2])
+                                vr = get_cell_text(cells[3])
+                                vm = get_cell_text(cells[4])
+                                status = get_cell_text(cells[5]) if len(cells) > 5 else ""
+                                
+                                # Skip empty rows
+                                if not tag or not name:
+                                    continue
+                                
+                                # Determine if retired based on status or emphasis
+                                is_retired = "RET" in status or any(
+                                    cell.find('.//d:emphasis', ns) is not None 
+                                    for cell in cells[:5]
+                                )
+                                
+                                # Clean up status text
+                                if is_retired and not status:
+                                    status = "RET"
+                                
+                                vr_data.append({
+                                    'tag': tag,
+                                    'name': name,
+                                    'keyword': keyword,
+                                    'vr': vr,
+                                    'vm': vm,
+                                    'status': status,
+                                    'is_retired': is_retired
+                                })
+                        except Exception as e:
+                            self.logger.debug(f"Error parsing VR row: {e}")
+                            continue
+            
+            return True, vr_data
+            
+        except Exception as e:
+            error_msg = f"Failed to parse VR.xml: {e}"
+            self.logger.exception("VR XML parsing error")
+            return False, error_msg

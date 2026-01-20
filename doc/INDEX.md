@@ -15,6 +15,18 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Installation instructions
   - Usage overview
 
+### DICOM Inspection & Validation
+- **[QUICK_START_TAG_VIEWER.md](QUICK_START_TAG_VIEWER.md)** ? **QUICK START**
+  - 5-minute Tag Viewer guide
+  - Common use cases
+  - Pro tips and shortcuts
+
+- **[TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md)**
+  - Complete Tag Viewer documentation
+  - View all DICOM tags including private tags
+  - Search, filter, and export capabilities
+  - Usage examples and troubleshooting
+
 ### Server Presets Feature
 - **[SERVER_PRESETS.md](SERVER_PRESETS.md)**
   - Comprehensive Server Presets documentation
@@ -51,9 +63,15 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ## ?? Reference
 
+- **[CHANGELOG_v0.4.0.md](CHANGELOG_v0.4.0.md)** ??
+  - What's new in v0.4.0
+  - Tag Viewer feature
+  - VR Validator enhancements
+  - Bug fixes and improvements
+
 - **[CHANGELOG_v0.3.0.md](CHANGELOG_v0.3.0.md)**
   - What's new in v0.3.0
-  - Feature announcements
+  - Server Presets feature
   - Known limitations
   - Future enhancements
 
@@ -88,6 +106,12 @@ Welcome to DICOM Creator documentation! Find what you need below.
 ## ?? Quick Reference
 
 ### Common Tasks
+
+**How do I view all tags in a DICOM file?**
+? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "How to Use"
+
+**How do I export DICOM tags?**
+? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "Export to Text"
 
 **How do I save a preset?**
 ? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Save Your First Preset"
@@ -145,9 +169,10 @@ dcmcreator/
 
 ## ?? Version Info
 
-- **Current Version:** 0.3.0
-- **Release Date:** 2026
+- **Current Version:** 0.4.0
+- **Release Date:** 2025-2026
 - **Status:** Production Ready
+- **Latest Feature:** DICOM Tag Viewer
 
 ---
 
