@@ -254,6 +254,19 @@ All optional test modules are automatically included in the build - no extra con
 - **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup and tuning
 - **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow guide
 - **[doc/COMPLETE_TEST_EXECUTION_REFERENCE.md](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)** - Complete testing reference
+- **[doc/HIERARCHICAL_GENERATION.md](doc/HIERARCHICAL_GENERATION.md)** - Hierarchical DICOM generation guide
+- **[test/README.md](test/README.md)** - Test scripts documentation
+
+### Running Tests
+```bash
+# Run all tests
+python test/run_all_tests.py
+
+# Run individual tests
+python test/test_hierarchical_generation.py
+python test/test_build.py
+python test/verify_build.py
+```
 
 ### Developer Documentation
 - **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
@@ -289,6 +302,13 @@ dcmcreator/
 ?   ??? random_dicom.py             (Test DICOM generator)
 ?   ??? test_runner.py              (Testing framework)
 ?   ??? dcmlogger.py                (Logging setup)
+??? test/                           (Test scripts and verification)
+?   ??? test_build.py               (Build system test)
+?   ??? test_hierarchical_generation.py (Hierarchical DICOM test)
+?   ??? test_tag_viewer.py          (Tag viewer test)
+?   ??? verify_build.py             (Build verification)
+?   ??? run_all_tests.py            (Run all tests)
+?   ??? README.md                   (Test documentation)
 ??? examples/                       (Example scripts for features)
 ??? doc/                            (Comprehensive documentation)
 ??? dist/                           (Distribution EXE folder)

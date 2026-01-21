@@ -529,20 +529,43 @@ class DicomCreatorApp(tk.Tk):
         gen_inner = ttk.Frame(gen_frame)
         gen_inner.pack(fill=tk.X)
         gen_inner.columnconfigure(1, weight=1)
+        gen_inner.columnconfigure(3, weight=1)
         
-        ttk.Label(gen_inner, text="Count:").grid(row=0, column=0, sticky="w", padx=5)
+        # Hierarchy controls
+        ttk.Label(gen_inner, text="Studies/Patient:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
         self.test_vars = {}
-        self.test_vars["count"] = tk.StringVar(value="10")
-        ttk.Entry(gen_inner, textvariable=self.test_vars["count"], width=10).grid(row=0, column=1, sticky="w", padx=5)
+        self.test_vars["studies_per_patient"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["studies_per_patient"], width=10).grid(row=0, column=1, sticky="w", padx=5)
         
-        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=0, column=2, sticky="w", padx=5)
+        ttk.Label(gen_inner, text="Series/Study:").grid(row=0, column=2, sticky="w", padx=5, pady=2)
+        self.test_vars["series_per_study"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["series_per_study"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Instances/Series:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        self.test_vars["instances_per_series"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["instances_per_series"], width=10).grid(row=1, column=1, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=1, column=2, sticky="w", padx=5, pady=2)
         self.test_vars["size_mb"] = tk.StringVar(value="1.0")
-        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=1, column=3, sticky="w", padx=5)
         
-        ttk.Label(gen_inner, text="Output Dir:").grid(row=1, column=0, sticky="w", padx=5)
+        # Total count display (calculated)
+        ttk.Label(gen_inner, text="Total Files:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        self.test_vars["total_count_label"] = tk.StringVar(value="1")
+        total_label = ttk.Label(gen_inner, textvariable=self.test_vars["total_count_label"], 
+                               font=("Arial", 10, "bold"), foreground="blue")
+        total_label.grid(row=2, column=1, sticky="w", padx=5)
+        
+        # Bind calculation to input changes
+        self.test_vars["studies_per_patient"].trace('w', self._update_total_count)
+        self.test_vars["series_per_study"].trace('w', self._update_total_count)
+        self.test_vars["instances_per_series"].trace('w', self._update_total_count)
+        
+        # Output directory
+        ttk.Label(gen_inner, text="Output Dir:").grid(row=3, column=0, sticky="w", padx=5, pady=2)
         self.test_vars["output_dir"] = tk.StringVar()
-        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=1, column=1, columnspan=2, sticky="ew", padx=5)
-        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=1, column=3, padx=5)
+        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=3, column=1, columnspan=2, sticky="ew", padx=5)
+        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=3, column=3, padx=5)
         
         gen_buttons = ttk.Frame(gen_frame)
         gen_buttons.pack(fill=tk.X, pady=10)
@@ -576,31 +599,64 @@ class DicomCreatorApp(tk.Tk):
         folder = filedialog.askdirectory(title="Select output directory for test DICOMs")
         if folder:
             self.test_vars["output_dir"].set(folder)
+    
+    def _update_total_count(self, *args):
+        """Calculate and update the total file count based on hierarchy."""
+        try:
+            studies = int(self.test_vars["studies_per_patient"].get() or 1)
+            series = int(self.test_vars["series_per_study"].get() or 1)
+            instances = int(self.test_vars["instances_per_series"].get() or 1)
+            total = studies * series * instances
+            self.test_vars["total_count_label"].set(str(total))
+        except (ValueError, KeyError):
+            self.test_vars["total_count_label"].set("?")
 
     def _generate_test_dicoms(self):
-        """Generate test DICOM files."""
+        """Generate test DICOM files using hierarchical structure."""
         if RandomDicomGenerator is None:
             messagebox.showerror(APP_TITLE, "RandomDicomGenerator not available")
             return
 
         try:
-            count = int(self.test_vars["count"].get())
+            # Get hierarchy parameters
+            studies_per_patient = int(self.test_vars["studies_per_patient"].get())
+            series_per_study = int(self.test_vars["series_per_study"].get())
+            instances_per_series = int(self.test_vars["instances_per_series"].get())
             size_mb = float(self.test_vars["size_mb"].get())
             output_dir = self.test_vars["output_dir"].get()
+            
+            # Calculate total count
+            total_count = studies_per_patient * series_per_study * instances_per_series
 
             if not output_dir:
                 messagebox.showerror(APP_TITLE, "Please select an output directory")
                 return
+            
+            if total_count <= 0:
+                messagebox.showerror(APP_TITLE, "Invalid counts: all values must be positive")
+                return
 
-            self._append_test_status(f"Generating {count} test DICOMs ({size_mb}MB each)...")
+            self._append_test_status(f"Generating {total_count} test DICOMs ({size_mb}MB each)...")
+            self._append_test_status(f"  Hierarchy: {studies_per_patient} study(ies) x {series_per_study} series x {instances_per_series} instance(s)")
 
             generator = RandomDicomGenerator(logger=self.logger)
-            files = generator.generate_with_sizes(count=count, size_mb=size_mb, output_dir=output_dir)
+            
+            # Use hierarchical generation method
+            files = generator.generate_hierarchical(
+                studies_per_patient=studies_per_patient,
+                series_per_study=series_per_study,
+                instances_per_series=instances_per_series,
+                size_mb=size_mb,
+                output_dir=output_dir
+            )
 
-            self._append_test_status(f"? Generated {len(files)} test DICOM files")
+            self._append_test_status(f"? Generated {len(files)} hierarchical DICOM files")
             self._append_test_status(f"  Location: {output_dir}")
+            self._append_test_status(f"  Structure: Patient ? {studies_per_patient} Studies ? {series_per_study} Series ? {instances_per_series} Instances")
 
-            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} test DICOM files")
+            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} hierarchical DICOM files")
+        except ValueError as ve:
+            messagebox.showerror(APP_TITLE, f"Invalid input: {ve}")
         except Exception as e:
             self.logger.exception("Failed to generate test DICOMs")
             messagebox.showerror(APP_TITLE, f"Generation failed: {e}")
