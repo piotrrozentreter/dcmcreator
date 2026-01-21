@@ -251,7 +251,7 @@ class DicomCreatorApp(tk.Tk):
         self.remote_frame = ttk.Frame(container)
         self.test_frame = ttk.Frame(container)
         
-        # New test tabs
+        # Test tabs
         self.connection_test_frame = ttk.Frame(container)
         self.stress_test_frame = ttk.Frame(container)
         self.history_frame = ttk.Frame(container)
@@ -952,12 +952,15 @@ class DicomCreatorApp(tk.Tk):
             return
             
         try:
+            if DicomLogicHandler:
+                logic = DicomLogicHandler(self.logger)
+
             # Normalize to 8-bit if needed
             if arr.ndim == 2:
-                img = Image.fromarray(self._to_uint8(arr), mode="L")
+                img = Image.fromarray(logic.process_image_to_uint8(arr), mode="L")
             elif arr.ndim == 3 and arr.shape[2] in (3, 4):
                 if arr.dtype != np.uint8:
-                    arr = self._to_uint8(arr)
+                    arr = logic.process_image_to_uint8(arr)
                 mode = "RGBA" if arr.shape[2] == 4 else "RGB"
                 img = Image.fromarray(arr, mode=mode)
             else:
@@ -975,7 +978,7 @@ class DicomCreatorApp(tk.Tk):
                         self.logger.warning(f"Cannot preview image with shape {arr.shape}")
                         return
                         
-                    img = Image.fromarray(self._to_uint8(arr2), mode="L")
+                    img = Image.fromarray(logic.process_image_to_uint8(arr2), mode="L")
                 else:
                     self.logger.warning("Empty pixel array, cannot preview")
                     return
@@ -1015,24 +1018,6 @@ class DicomCreatorApp(tk.Tk):
         except Exception as e:
             self.logger.warning(f"Failed to update image preview: {e}", exc_info=True)
             self.preview_label.config(text="Failed to load image")
-
-    def _to_uint8(self, arr):
-        """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
-        if DicomLogicHandler is not None:
-            logic = DicomLogicHandler(self.logger)
-            return logic.process_image_to_uint8(arr)
-        
-        # Fallback if logic handler not available
-        if arr.dtype == np.uint8:
-            return arr
-        a = arr.astype(np.float32)
-        mn = np.min(a)
-        mx = np.max(a)
-        if mx - mn > 1e-5:
-            a = (a - mn) / (mx - mn) * 255.0
-        else:
-            a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
-        return a.astype(np.uint8)
 
     def _validate_form_fields(self, action="save"):
         """
@@ -1501,7 +1486,7 @@ class DicomCreatorApp(tk.Tk):
     def _populate_series_fields(self, ds):
         """Populate series form fields from DICOM dataset."""
         self.series_vars["SeriesInstanceUID"].set(str(getattr(ds, 'SeriesInstanceUID', '') or ''))
-        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'InstanceNumber', getattr(ds, 'SeriesNumber', '')) or ''))
+        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'SeriesNumber', '') or ''))
         self.series_vars["Modality"].set(str(getattr(ds, 'Modality', '') or ''))
         self.series_vars["SeriesDescription"].set(str(getattr(ds, 'SeriesDescription', '') or ''))
         self.series_vars["BodyPartExamined"].set(str(getattr(ds, 'BodyPartExamined', '') or ''))
