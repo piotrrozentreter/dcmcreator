@@ -16,7 +16,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.4.0\n"
+APP_TITLE = "DICOM Creator v0.5.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -29,7 +29,6 @@ except Exception:
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller."""
     import sys
-    import os
     
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -335,6 +334,9 @@ class DicomCreatorApp(tk.Tk):
             "PatientComments": tk.StringVar(),
             "PatientMothersBirthName": tk.StringVar(),
             "PatientDeathDateTime": tk.StringVar(),
+            "PatientBirthTime": tk.StringVar(),
+            "PatientAddress": tk.StringVar(),
+            "PatientTelephoneNumbers": tk.StringVar(),
         }
         self._add_labeled_entry(self.patient_frame, "Patient Name", self.patient_vars["PatientName"], 0)
         self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 1)
@@ -346,6 +348,9 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 7)
         self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 8)
         self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 9)
+        self._add_labeled_entry(self.patient_frame, "Birth Time (HHMMSS)", self.patient_vars["PatientBirthTime"], 10)
+        self._add_labeled_entry(self.patient_frame, "Address", self.patient_vars["PatientAddress"], 11)
+        self._add_labeled_entry(self.patient_frame, "Telephone Numbers", self.patient_vars["PatientTelephoneNumbers"], 12)
 
     def _build_study_fields(self):
         """Build study metadata form fields."""
@@ -1126,6 +1131,9 @@ class DicomCreatorApp(tk.Tk):
                     "PatientComments": self.patient_vars["PatientComments"].get().strip(),
                     "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
                     "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                    "PatientBirthTime": self.patient_vars["PatientBirthTime"].get().strip(),
+                    "PatientAddress": self.patient_vars["PatientAddress"].get().strip(),
+                    "PatientTelephoneNumbers": self.patient_vars["PatientTelephoneNumbers"].get().strip(),
                 },
                 study={
                     "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
@@ -1472,6 +1480,9 @@ class DicomCreatorApp(tk.Tk):
         self.patient_vars["PatientComments"].set(str(getattr(ds, 'PatientComments', '') or ''))
         self.patient_vars["PatientMothersBirthName"].set(str(getattr(ds, 'PatientMotherBirthName', '') or ''))
         self.patient_vars["PatientDeathDateTime"].set(str(getattr(ds, 'PatientDeathDateTime', '') or ''))
+        self.patient_vars["PatientBirthTime"].set(str(getattr(ds, 'PatientBirthTime', '') or ''))
+        self.patient_vars["PatientAddress"].set(str(getattr(ds, 'PatientAddress', '') or ''))
+        self.patient_vars["PatientTelephoneNumbers"].set(str(getattr(ds, 'PatientTelephoneNumbers', '') or ''))
 
     def _populate_study_fields(self, ds):
         """Populate study form fields from DICOM dataset."""
@@ -1644,6 +1655,9 @@ class DicomCreatorApp(tk.Tk):
                     "PatientComments": self.patient_vars["PatientComments"].get().strip(),
                     "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
                     "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                    "PatientBirthTime": self.patient_vars["PatientBirthTime"].get().strip(),
+                    "PatientAddress": self.patient_vars["PatientAddress"].get().strip(),
+                    "PatientTelephoneNumbers": self.patient_vars["PatientTelephoneNumbers"].get().strip(),
                 },
                 study={
                     "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
@@ -2217,7 +2231,8 @@ class DicomCreatorApp(tk.Tk):
         self.history_view = tk.Text(results_frame, height=20, width=80, state=tk.DISABLED)
         scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.history_view.yview)
         self.history_view.config(yscrollcommand=scrollbar.set)
-        
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
         self.history_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -2616,7 +2631,7 @@ class VRViewerDialog(tk.Toplevel):
         tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         tree_frame.rowconfigure(0, weight=1)
         tree_frame.columnconfigure(0, weight=1)
-        
+
         # Create treeview with columns
         columns = ("Tag", "Name", "Keyword", "VR", "VM", "Status")
         self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=20)
@@ -2657,8 +2672,6 @@ class VRViewerDialog(tk.Toplevel):
     def _load_vr_data(self):
         """Load and parse VR data from VR.xml file."""
         try:
-            import os
-            
             # Use resource path helper for PyInstaller compatibility
             vr_file = get_resource_path("VR.xml")
             

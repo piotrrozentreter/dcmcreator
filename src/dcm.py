@@ -90,6 +90,15 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     pddt = (patient.get("PatientDeathDateTime") or "").strip()
     if pddt:
         ds.PatientDeathDateTime = pddt
+    pbt = (patient.get("PatientBirthTime") or "").strip()
+    if pbt:
+        ds.PatientBirthTime = pbt
+    padd = (patient.get("PatientAddress") or "").strip()
+    if padd:
+        ds.PatientAddress = padd
+    ptel = (patient.get("PatientTelephoneNumbers") or "").strip()
+    if ptel:
+        ds.PatientTelephoneNumbers = ptel
 
     # Study fields
     # Default to generated UID/date/time if missing.
