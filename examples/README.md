@@ -256,7 +256,7 @@ python examples/view_history.py
 
 ---
 
-## ?? Customization Guide
+## ??? Customization Guide
 
 ### Test Connection with Different Server
 
@@ -349,7 +349,7 @@ python examples/view_history.py
 
 ---
 
-## ??? Troubleshooting
+## ?? Troubleshooting
 
 ### Script Won't Run: "Module not found"
 
@@ -425,4 +425,4 @@ Performance: PASS
 
 ---
 
-**Everything is ready to use!** Just pick a script, edit the configuration, and run it! ??
+**Everything is ready to use!** Just pick a script, edit the configuration, and run it!

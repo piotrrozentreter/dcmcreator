@@ -54,11 +54,6 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Extension points
   - Testing guidance
 
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)**
-  - Technical implementation details
-  - File structure
-  - Feature breakdown
-
 ---
 
 ## ?? Reference
