@@ -9,13 +9,13 @@
 ### Organized (Moved to `doc/`)
 Documentation files moved to new location:
 ```
-??? QUICK_START_PRESETS.md      - User quick start guide
-??? SERVER_PRESETS.md           - Feature documentation
-??? DEVELOPER_GUIDE_PRESETS.md  - Developer guide
-??? IMPLEMENTATION_SUMMARY.md   - Technical details
-??? CHANGELOG_v0.3.0.md         - Release notes
-??? BUILD_INSTRUCTIONS.md       - Build guide
-??? DISTRIBUTION_GUIDE.md       - Distribution guide
+? QUICK_START_PRESETS.md      - User quick start guide
+? SERVER_PRESETS.md           - Feature documentation
+? DEVELOPER_GUIDE_PRESETS.md  - Developer guide
+? IMPLEMENTATION_SUMMARY.md   - Technical details
+? CHANGELOG_v0.3.0.md         - Release notes
+? BUILD_INSTRUCTIONS.md       - Build guide
+? DISTRIBUTION_GUIDE.md       - Distribution guide
 ```
 
 ### Cleaned Up (Removed)
@@ -58,7 +58,7 @@ dcmcreator/
 
 ---
 
-## ? Benefits
+## ?? Benefits
 
 ? **Cleaner Root Directory** - Documentation consolidated  
 ? **Better Organization** - Related docs grouped together  

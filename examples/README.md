@@ -256,7 +256,7 @@ python examples/view_history.py
 
 ---
 
-## ??? Customization Guide
+## ?? Customization Guide
 
 ### Test Connection with Different Server
 
@@ -295,7 +295,7 @@ Edit `parallel_send.py` (after setting in GUI):
 
 ---
 
-## ? Common Use Cases
+## ?? Common Use Cases
 
 ### Use Case 1: Validate Server Before Production
 
