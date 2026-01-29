@@ -261,7 +261,7 @@ ServerPresetsManager.__init__()
     ?
 _load_presets()
     ?
-Check if ~/. dcmcreator/server_presets.json exists
+Check if ~/.dcmcreator/server_presets.json exists
     ?
 If exists: json.load(file)
 If not: Create empty presets dict
@@ -273,7 +273,7 @@ presets dict loaded into memory
 ```
 _save_presets()
     ?
-Open ~/ .dcmcreator/server_presets.json for writing
+Open ~/.dcmcreator/server_presets.json for writing
     ?
 json.dump(presets, file) with indent=2
     ?

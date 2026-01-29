@@ -114,14 +114,14 @@ files = g.generate_with_sizes(10, 1.0, "./output")
 |---------|-----|---------|-----------|
 | Connection Test | ? | ? | ? |
 | Generate DICOMs | ? | ? | ? |
-| Send DICOMs | ? | ?? | ? |
+| Send DICOMs | ? | ??? | ? |
 | Stress Test | ? | ? | ? |
 | View History | ? | ? | ? |
 | Export Results | ? | ? | ? |
-| Parallel Send | ?? Config | ? | ? |
+| Parallel Send | ??? Config | ? | ? |
 | Automation | ? | ? | ? |
 
-Legend: ? Direct, ?? Configuration required, ? Not available
+Legend: ? Direct, ??? Configuration required, ? Not available
 
 ---
 
@@ -262,7 +262,7 @@ python examples/generate_test_dicoms.py
 
 ---
 
-## ? What's New in v0.3.1
+## ?? What's New in v0.3.1
 
 ? **6 New Test Tabs** - Connection, Stress, History, Benchmarking, Parallel  
 ? **View Menu** - Hide/show tabs dynamically  

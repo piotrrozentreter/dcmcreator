@@ -285,6 +285,198 @@ class RandomDicomGenerator:
             randomize_patient=True
         )
     
+    def generate_hierarchical(self,
+                             studies_per_patient=1,
+                             series_per_study=1,
+                             instances_per_series=1,
+                             size_mb=1.0,
+                             output_dir=None,
+                             patient_name=None,
+                             patient_id=None):
+        """Generate DICOM files with proper hierarchical structure.
+        
+        This creates a realistic DICOM hierarchy where:
+        - All instances in a series share the same SeriesInstanceUID
+        - All series in a study share the same StudyInstanceUID
+        - All studies for a patient share the same PatientID and PatientName
+        
+        Args:
+            studies_per_patient: Number of studies to generate (default: 1)
+            series_per_study: Number of series per study (default: 1)
+            instances_per_series: Number of instances per series (default: 1)
+            size_mb: Target size per file in MB (default: 1.0)
+            output_dir: Output directory (if None, returns in-memory datasets)
+            patient_name: Patient name (if None, generates random)
+            patient_id: Patient ID (if None, generates random)
+            
+        Returns:
+            List of file paths (if output_dir provided) or datasets
+        """
+        if pydicom is None or np is None:
+            if self.logger:
+                self.logger.error("pydicom and numpy are required")
+            return []
+        
+        # Estimate dimensions for target size
+        target_pixels = int(size_mb * 1024 * 1024 / 2)
+        dim = int(np.sqrt(target_pixels))
+        dim = (dim // 16) * 16  # Round to nearest 16
+        dim = max(256, min(4096, dim))  # Clamp between 256 and 4096
+        
+        total_files = studies_per_patient * series_per_study * instances_per_series
+        
+        if self.logger:
+            self.logger.info(f"Generating hierarchical DICOM structure:")
+            self.logger.info(f"  Studies: {studies_per_patient}")
+            self.logger.info(f"  Series per study: {series_per_study}")
+            self.logger.info(f"  Instances per series: {instances_per_series}")
+            self.logger.info(f"  Total files: {total_files}")
+            self.logger.info(f"  Size per file: ~{size_mb}MB ({dim}x{dim})")
+        
+        # Generate patient info if not provided
+        if patient_name is None:
+            first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia']
+            last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
+            patient_name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        
+        if patient_id is None:
+            patient_id = f"TEST{random.randint(100000, 999999)}"
+        
+        # Create output directory if needed
+        if output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+        
+        dicoms = []
+        file_counter = 1
+        
+        try:
+            # Generate studies
+            for study_num in range(1, studies_per_patient + 1):
+                study_uid = generate_uid()
+                study_date = (datetime.now() - timedelta(days=random.randint(1, 365))).strftime('%Y%m%d')
+                study_time = f"{random.randint(0, 23):02d}{random.randint(0, 59):02d}{random.randint(0, 59):02d}"
+                study_id = f"STUDY{random.randint(1000, 9999)}"
+                study_description = random.choice([
+                    f'Test Study {study_num} - Chest X-Ray',
+                    f'Test Study {study_num} - Abdomen',
+                    f'Test Study {study_num} - Head CT',
+                    f'Test Study {study_num} - Extremity',
+                    f'Test Study {study_num} - Cardiac',
+                ])
+                accession_number = f"ACC{random.randint(100000, 999999)}"
+                
+                # Generate series within this study
+                for series_num in range(1, series_per_study + 1):
+                    series_uid = generate_uid()
+                    series_description = f"Test Series {series_num}"
+                    modality = random.choice(['CR', 'DX', 'CT', 'MR', 'XC', 'SC'])
+                    
+                    # Generate instances within this series
+                    for instance_num in range(1, instances_per_series + 1):
+                        filename = None
+                        if output_dir:
+                            filename = os.path.join(
+                                output_dir, 
+                                f"patient_{patient_id}_study_{study_num:02d}_series_{series_num:02d}_inst_{instance_num:03d}.dcm"
+                            )
+                        
+                        # Create file metadata
+                        file_meta = Dataset()
+                        file_meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.7'  # Secondary Capture
+                        file_meta.MediaStorageSOPInstanceUID = generate_uid()
+                        file_meta.ImplementationClassUID = generate_uid()
+                        file_meta.TransferSyntaxUID = pydicom.uid.ImplicitVRLittleEndian
+                        
+                        # Create main dataset
+                        ds = FileDataset(
+                            filename if filename else "in-memory",
+                            {},
+                            file_meta=file_meta,
+                            preamble=b"\0" * 128
+                        )
+                        
+                        # Set timestamps
+                        now = datetime.now()
+                        ds.ContentDate = now.strftime('%Y%m%d')
+                        ds.ContentTime = now.strftime('%H%M%S.%f')
+                        
+                        # Patient info (same for all)
+                        ds.PatientName = patient_name
+                        ds.PatientID = patient_id
+                        ds.PatientBirthDate = (now - timedelta(days=random.randint(365*18, 365*80))).strftime('%Y%m%d')
+                        ds.PatientSex = random.choice(['M', 'F', 'O'])
+                        ds.PatientAge = f"{random.randint(18, 90):03d}Y"
+                        ds.PatientWeight = str(random.randint(50, 120))
+                        ds.PatientSize = f"{random.uniform(1.5, 2.0):.2f}"
+                        
+                        # Study info (same for all series in this study)
+                        ds.StudyInstanceUID = study_uid
+                        ds.StudyDate = study_date
+                        ds.StudyTime = study_time
+                        ds.StudyID = study_id
+                        ds.StudyDescription = study_description
+                        ds.AccessionNumber = accession_number
+                        
+                        # Series info (same for all instances in this series)
+                        ds.SeriesInstanceUID = series_uid
+                        ds.SeriesNumber = series_num
+                        ds.SeriesDate = study_date
+                        ds.SeriesTime = study_time
+                        ds.Modality = modality
+                        ds.SeriesDescription = series_description
+                        ds.BodyPartExamined = random.choice(['CHEST', 'ABDOMEN', 'HEAD', 'EXTREMITY'])
+                        ds.ProtocolName = f"Protocol {series_num}"
+                        
+                        # Instance-specific info
+                        ds.InstanceNumber = instance_num
+                        ds.SOPInstanceUID = generate_uid()
+                        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.7'
+                        
+                        # Operator/Physician info
+                        ds.OperatorsName = f"Test^Operator{random.randint(1, 10)}"
+                        ds.PerformingPhysicianName = f"Test^Physician{random.randint(1, 10)}"
+                        ds.ReferringPhysicianName = f"Test^Referring{random.randint(1, 10)}"
+                        
+                        # Image info
+                        ds.SamplesPerPixel = 1
+                        ds.PhotometricInterpretation = "MONOCHROME2"
+                        ds.Rows = dim
+                        ds.Columns = dim
+                        ds.BitsAllocated = 16
+                        ds.BitsStored = 16
+                        ds.HighBit = 15
+                        ds.PixelRepresentation = 0
+                        
+                        # Generate random pixel data
+                        pixel_array = np.random.randint(0, 65535, size=(dim, dim), dtype=np.uint16)
+                        ds.PixelData = pixel_array.tobytes()
+                        
+                        # Save or append
+                        if output_dir:
+                            try:
+                                ds.save_as(filename, write_like_original=False)
+                                dicoms.append(filename)
+                                if self.logger:
+                                    self.logger.debug(f"Generated [{file_counter}/{total_files}]: {os.path.basename(filename)}")
+                            except Exception as e:
+                                if self.logger:
+                                    self.logger.exception(f"Failed to save {filename}: {e}")
+                        else:
+                            dicoms.append(ds)
+                        
+                        file_counter += 1
+            
+            if self.logger:
+                self.logger.info(f"Successfully generated {len(dicoms)} hierarchical DICOM files")
+            
+            self.generated_dicoms = dicoms
+            return dicoms
+            
+        except Exception as e:
+            if self.logger:
+                self.logger.exception(f"Hierarchical generation failed: {e}")
+            return []
+    
     def get_generated_files(self):
         """Get list of generated DICOM files or datasets."""
         return self.generated_dicoms

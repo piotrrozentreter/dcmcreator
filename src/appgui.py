@@ -16,7 +16,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.4.0\n"
+APP_TITLE = "DICOM Creator v0.5.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -29,7 +29,6 @@ except Exception:
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller."""
     import sys
-    import os
     
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
@@ -252,7 +251,7 @@ class DicomCreatorApp(tk.Tk):
         self.remote_frame = ttk.Frame(container)
         self.test_frame = ttk.Frame(container)
         
-        # New test tabs
+        # Test tabs
         self.connection_test_frame = ttk.Frame(container)
         self.stress_test_frame = ttk.Frame(container)
         self.history_frame = ttk.Frame(container)
@@ -335,6 +334,9 @@ class DicomCreatorApp(tk.Tk):
             "PatientComments": tk.StringVar(),
             "PatientMothersBirthName": tk.StringVar(),
             "PatientDeathDateTime": tk.StringVar(),
+            "PatientBirthTime": tk.StringVar(),
+            "PatientAddress": tk.StringVar(),
+            "PatientTelephoneNumbers": tk.StringVar(),
         }
         self._add_labeled_entry(self.patient_frame, "Patient Name", self.patient_vars["PatientName"], 0)
         self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 1)
@@ -346,6 +348,9 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.patient_frame, "Patient Comments", self.patient_vars["PatientComments"], 7)
         self._add_labeled_entry(self.patient_frame, "Mother's Birth Name", self.patient_vars["PatientMothersBirthName"], 8)
         self._add_labeled_entry(self.patient_frame, "Datetime of death\n(YYYYMMDDHHMMSS)", self.patient_vars["PatientDeathDateTime"], 9)
+        self._add_labeled_entry(self.patient_frame, "Birth Time (HHMMSS)", self.patient_vars["PatientBirthTime"], 10)
+        self._add_labeled_entry(self.patient_frame, "Address", self.patient_vars["PatientAddress"], 11)
+        self._add_labeled_entry(self.patient_frame, "Telephone Numbers", self.patient_vars["PatientTelephoneNumbers"], 12)
 
     def _build_study_fields(self):
         """Build study metadata form fields."""
@@ -524,20 +529,43 @@ class DicomCreatorApp(tk.Tk):
         gen_inner = ttk.Frame(gen_frame)
         gen_inner.pack(fill=tk.X)
         gen_inner.columnconfigure(1, weight=1)
+        gen_inner.columnconfigure(3, weight=1)
         
-        ttk.Label(gen_inner, text="Count:").grid(row=0, column=0, sticky="w", padx=5)
+        # Hierarchy controls
+        ttk.Label(gen_inner, text="Studies/Patient:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
         self.test_vars = {}
-        self.test_vars["count"] = tk.StringVar(value="10")
-        ttk.Entry(gen_inner, textvariable=self.test_vars["count"], width=10).grid(row=0, column=1, sticky="w", padx=5)
+        self.test_vars["studies_per_patient"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["studies_per_patient"], width=10).grid(row=0, column=1, sticky="w", padx=5)
         
-        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=0, column=2, sticky="w", padx=5)
+        ttk.Label(gen_inner, text="Series/Study:").grid(row=0, column=2, sticky="w", padx=5, pady=2)
+        self.test_vars["series_per_study"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["series_per_study"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Instances/Series:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        self.test_vars["instances_per_series"] = tk.StringVar(value="1")
+        ttk.Entry(gen_inner, textvariable=self.test_vars["instances_per_series"], width=10).grid(row=1, column=1, sticky="w", padx=5)
+        
+        ttk.Label(gen_inner, text="Size/File (MB):").grid(row=1, column=2, sticky="w", padx=5, pady=2)
         self.test_vars["size_mb"] = tk.StringVar(value="1.0")
-        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=0, column=3, sticky="w", padx=5)
+        ttk.Entry(gen_inner, textvariable=self.test_vars["size_mb"], width=10).grid(row=1, column=3, sticky="w", padx=5)
         
-        ttk.Label(gen_inner, text="Output Dir:").grid(row=1, column=0, sticky="w", padx=5)
+        # Total count display (calculated)
+        ttk.Label(gen_inner, text="Total Files:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        self.test_vars["total_count_label"] = tk.StringVar(value="1")
+        total_label = ttk.Label(gen_inner, textvariable=self.test_vars["total_count_label"], 
+                               font=("Arial", 10, "bold"), foreground="blue")
+        total_label.grid(row=2, column=1, sticky="w", padx=5)
+        
+        # Bind calculation to input changes
+        self.test_vars["studies_per_patient"].trace('w', self._update_total_count)
+        self.test_vars["series_per_study"].trace('w', self._update_total_count)
+        self.test_vars["instances_per_series"].trace('w', self._update_total_count)
+        
+        # Output directory
+        ttk.Label(gen_inner, text="Output Dir:").grid(row=3, column=0, sticky="w", padx=5, pady=2)
         self.test_vars["output_dir"] = tk.StringVar()
-        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=1, column=1, columnspan=2, sticky="ew", padx=5)
-        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=1, column=3, padx=5)
+        ttk.Entry(gen_inner, textvariable=self.test_vars["output_dir"]).grid(row=3, column=1, columnspan=2, sticky="ew", padx=5)
+        ttk.Button(gen_inner, text="Browse", command=self._select_test_output_dir, width=8).grid(row=3, column=3, padx=5)
         
         gen_buttons = ttk.Frame(gen_frame)
         gen_buttons.pack(fill=tk.X, pady=10)
@@ -571,31 +599,64 @@ class DicomCreatorApp(tk.Tk):
         folder = filedialog.askdirectory(title="Select output directory for test DICOMs")
         if folder:
             self.test_vars["output_dir"].set(folder)
+    
+    def _update_total_count(self, *args):
+        """Calculate and update the total file count based on hierarchy."""
+        try:
+            studies = int(self.test_vars["studies_per_patient"].get() or 1)
+            series = int(self.test_vars["series_per_study"].get() or 1)
+            instances = int(self.test_vars["instances_per_series"].get() or 1)
+            total = studies * series * instances
+            self.test_vars["total_count_label"].set(str(total))
+        except (ValueError, KeyError):
+            self.test_vars["total_count_label"].set("?")
 
     def _generate_test_dicoms(self):
-        """Generate test DICOM files."""
+        """Generate test DICOM files using hierarchical structure."""
         if RandomDicomGenerator is None:
             messagebox.showerror(APP_TITLE, "RandomDicomGenerator not available")
             return
 
         try:
-            count = int(self.test_vars["count"].get())
+            # Get hierarchy parameters
+            studies_per_patient = int(self.test_vars["studies_per_patient"].get())
+            series_per_study = int(self.test_vars["series_per_study"].get())
+            instances_per_series = int(self.test_vars["instances_per_series"].get())
             size_mb = float(self.test_vars["size_mb"].get())
             output_dir = self.test_vars["output_dir"].get()
+            
+            # Calculate total count
+            total_count = studies_per_patient * series_per_study * instances_per_series
 
             if not output_dir:
                 messagebox.showerror(APP_TITLE, "Please select an output directory")
                 return
+            
+            if total_count <= 0:
+                messagebox.showerror(APP_TITLE, "Invalid counts: all values must be positive")
+                return
 
-            self._append_test_status(f"Generating {count} test DICOMs ({size_mb}MB each)...")
+            self._append_test_status(f"Generating {total_count} test DICOMs ({size_mb}MB each)...")
+            self._append_test_status(f"  Hierarchy: {studies_per_patient} study(ies) x {series_per_study} series x {instances_per_series} instance(s)")
 
             generator = RandomDicomGenerator(logger=self.logger)
-            files = generator.generate_with_sizes(count=count, size_mb=size_mb, output_dir=output_dir)
+            
+            # Use hierarchical generation method
+            files = generator.generate_hierarchical(
+                studies_per_patient=studies_per_patient,
+                series_per_study=series_per_study,
+                instances_per_series=instances_per_series,
+                size_mb=size_mb,
+                output_dir=output_dir
+            )
 
-            self._append_test_status(f"? Generated {len(files)} test DICOM files")
+            self._append_test_status(f"? Generated {len(files)} hierarchical DICOM files")
             self._append_test_status(f"  Location: {output_dir}")
+            self._append_test_status(f"  Structure: Patient ? {studies_per_patient} Studies ? {series_per_study} Series ? {instances_per_series} Instances")
 
-            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} test DICOM files")
+            messagebox.showinfo(APP_TITLE, f"Generated {len(files)} hierarchical DICOM files")
+        except ValueError as ve:
+            messagebox.showerror(APP_TITLE, f"Invalid input: {ve}")
         except Exception as e:
             self.logger.exception("Failed to generate test DICOMs")
             messagebox.showerror(APP_TITLE, f"Generation failed: {e}")
@@ -947,12 +1008,15 @@ class DicomCreatorApp(tk.Tk):
             return
             
         try:
+            if DicomLogicHandler:
+                logic = DicomLogicHandler(self.logger)
+
             # Normalize to 8-bit if needed
             if arr.ndim == 2:
-                img = Image.fromarray(self._to_uint8(arr), mode="L")
+                img = Image.fromarray(logic.process_image_to_uint8(arr), mode="L")
             elif arr.ndim == 3 and arr.shape[2] in (3, 4):
                 if arr.dtype != np.uint8:
-                    arr = self._to_uint8(arr)
+                    arr = logic.process_image_to_uint8(arr)
                 mode = "RGBA" if arr.shape[2] == 4 else "RGB"
                 img = Image.fromarray(arr, mode=mode)
             else:
@@ -970,7 +1034,7 @@ class DicomCreatorApp(tk.Tk):
                         self.logger.warning(f"Cannot preview image with shape {arr.shape}")
                         return
                         
-                    img = Image.fromarray(self._to_uint8(arr2), mode="L")
+                    img = Image.fromarray(logic.process_image_to_uint8(arr2), mode="L")
                 else:
                     self.logger.warning("Empty pixel array, cannot preview")
                     return
@@ -1010,24 +1074,6 @@ class DicomCreatorApp(tk.Tk):
         except Exception as e:
             self.logger.warning(f"Failed to update image preview: {e}", exc_info=True)
             self.preview_label.config(text="Failed to load image")
-
-    def _to_uint8(self, arr):
-        """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
-        if DicomLogicHandler is not None:
-            logic = DicomLogicHandler(self.logger)
-            return logic.process_image_to_uint8(arr)
-        
-        # Fallback if logic handler not available
-        if arr.dtype == np.uint8:
-            return arr
-        a = arr.astype(np.float32)
-        mn = np.min(a)
-        mx = np.max(a)
-        if mx - mn > 1e-5:
-            a = (a - mn) / (mx - mn) * 255.0
-        else:
-            a = np.zeros_like(a) if not np.any(a) else np.full_like(a, 255)
-        return a.astype(np.uint8)
 
     def _validate_form_fields(self, action="save"):
         """
@@ -1126,6 +1172,9 @@ class DicomCreatorApp(tk.Tk):
                     "PatientComments": self.patient_vars["PatientComments"].get().strip(),
                     "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
                     "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                    "PatientBirthTime": self.patient_vars["PatientBirthTime"].get().strip(),
+                    "PatientAddress": self.patient_vars["PatientAddress"].get().strip(),
+                    "PatientTelephoneNumbers": self.patient_vars["PatientTelephoneNumbers"].get().strip(),
                 },
                 study={
                     "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
@@ -1472,6 +1521,9 @@ class DicomCreatorApp(tk.Tk):
         self.patient_vars["PatientComments"].set(str(getattr(ds, 'PatientComments', '') or ''))
         self.patient_vars["PatientMothersBirthName"].set(str(getattr(ds, 'PatientMotherBirthName', '') or ''))
         self.patient_vars["PatientDeathDateTime"].set(str(getattr(ds, 'PatientDeathDateTime', '') or ''))
+        self.patient_vars["PatientBirthTime"].set(str(getattr(ds, 'PatientBirthTime', '') or ''))
+        self.patient_vars["PatientAddress"].set(str(getattr(ds, 'PatientAddress', '') or ''))
+        self.patient_vars["PatientTelephoneNumbers"].set(str(getattr(ds, 'PatientTelephoneNumbers', '') or ''))
 
     def _populate_study_fields(self, ds):
         """Populate study form fields from DICOM dataset."""
@@ -1490,7 +1542,7 @@ class DicomCreatorApp(tk.Tk):
     def _populate_series_fields(self, ds):
         """Populate series form fields from DICOM dataset."""
         self.series_vars["SeriesInstanceUID"].set(str(getattr(ds, 'SeriesInstanceUID', '') or ''))
-        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'InstanceNumber', getattr(ds, 'SeriesNumber', '')) or ''))
+        self.series_vars["SeriesNumber"].set(str(getattr(ds, 'SeriesNumber', '') or ''))
         self.series_vars["Modality"].set(str(getattr(ds, 'Modality', '') or ''))
         self.series_vars["SeriesDescription"].set(str(getattr(ds, 'SeriesDescription', '') or ''))
         self.series_vars["BodyPartExamined"].set(str(getattr(ds, 'BodyPartExamined', '') or ''))
@@ -1644,6 +1696,9 @@ class DicomCreatorApp(tk.Tk):
                     "PatientComments": self.patient_vars["PatientComments"].get().strip(),
                     "PatientMotherBirthName": self.patient_vars["PatientMothersBirthName"].get().strip(),
                     "PatientDeathDateTime": self.patient_vars["PatientDeathDateTime"].get().strip(),
+                    "PatientBirthTime": self.patient_vars["PatientBirthTime"].get().strip(),
+                    "PatientAddress": self.patient_vars["PatientAddress"].get().strip(),
+                    "PatientTelephoneNumbers": self.patient_vars["PatientTelephoneNumbers"].get().strip(),
                 },
                 study={
                     "StudyInstanceUID": self.study_vars["StudyInstanceUID"].get().strip(),
@@ -2217,7 +2272,8 @@ class DicomCreatorApp(tk.Tk):
         self.history_view = tk.Text(results_frame, height=20, width=80, state=tk.DISABLED)
         scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.history_view.yview)
         self.history_view.config(yscrollcommand=scrollbar.set)
-        
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
         self.history_view.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
@@ -2616,7 +2672,7 @@ class VRViewerDialog(tk.Toplevel):
         tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         tree_frame.rowconfigure(0, weight=1)
         tree_frame.columnconfigure(0, weight=1)
-        
+
         # Create treeview with columns
         columns = ("Tag", "Name", "Keyword", "VR", "VM", "Status")
         self.tree = ttk.Treeview(tree_frame, columns=columns, show="headings", height=20)
@@ -2657,8 +2713,6 @@ class VRViewerDialog(tk.Toplevel):
     def _load_vr_data(self):
         """Load and parse VR data from VR.xml file."""
         try:
-            import os
-            
             # Use resource path helper for PyInstaller compatibility
             vr_file = get_resource_path("VR.xml")
             

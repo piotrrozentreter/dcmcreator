@@ -46,7 +46,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ????? Developer Guides
+## ???? Developer Guides
 
 - **[DEVELOPER_GUIDE_PRESETS.md](DEVELOPER_GUIDE_PRESETS.md)**
   - Architecture and design
@@ -54,17 +54,12 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Extension points
   - Testing guidance
 
-- **[IMPLEMENTATION_SUMMARY.md](IMPLEMENTATION_SUMMARY.md)**
-  - Technical implementation details
-  - File structure
-  - Feature breakdown
-
 ---
 
 ## ?? Reference
 
 - **[CHANGELOG_v0.4.0.md](CHANGELOG_v0.4.0.md)** ??
-  - What's new in v0.4.0
+- What's new in v0.4.0
   - Tag Viewer feature
   - VR Validator enhancements
   - Bug fixes and improvements
@@ -158,7 +153,7 @@ dcmcreator/
 
 ---
 
-## ?? Need Help?
+## ? Need Help?
 
 1. **Check the documentation** - Most questions are answered in the guides
 2. **Review examples** - See how features work

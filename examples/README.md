@@ -295,7 +295,7 @@ Edit `parallel_send.py` (after setting in GUI):
 
 ---
 
-## ? Common Use Cases
+## ?? Common Use Cases
 
 ### Use Case 1: Validate Server Before Production
 
@@ -349,7 +349,7 @@ python examples/view_history.py
 
 ---
 
-## ??? Troubleshooting
+## ?? Troubleshooting
 
 ### Script Won't Run: "Module not found"
 
@@ -425,4 +425,4 @@ Performance: PASS
 
 ---
 
-**Everything is ready to use!** Just pick a script, edit the configuration, and run it! ??
+**Everything is ready to use!** Just pick a script, edit the configuration, and run it!
