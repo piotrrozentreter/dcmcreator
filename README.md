@@ -24,18 +24,14 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 ### Main Application Interface
 
 ![Main Interface - Patient and Study Tabs](pic1.png)
-*Patient and study metadata management with comprehensive form fields*
 
 ![DICOM Tree View and Remote Transmission](pic2.png)
-*Hierarchical DICOM organization and remote server configuration*
 
 ### Advanced Testing Features
 
 ![Test Generation and Validation](pic3.png)
-*Generate hierarchical test DICOM files with configurable parameters*
 
 ![Connection Testing and Performance](pic4.png)
-*Network connectivity testing and transmission history tracking*
 
 ## Features
 
