@@ -2,6 +2,41 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
+![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![Python](https://img.shields.io/badge/python-3.9+-green.svg)
+![License](https://img.shields.io/badge/license-Proprietary-red.svg)
+![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
+
+## Table of Contents
+
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Building Your Own EXE](#building-your-own-exe)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [System Requirements](#system-requirements)
+- [Version History](#version-history)
+- [Troubleshooting](#troubleshooting)
+
+## Screenshots
+
+### Main Application Interface
+
+![Main Interface - Patient and Study Tabs](pic1.png)
+*Patient and study metadata management with comprehensive form fields*
+
+![DICOM Tree View and Remote Transmission](pic2.png)
+*Hierarchical DICOM organization and remote server configuration*
+
+### Advanced Testing Features
+
+![Test Generation and Validation](pic3.png)
+*Generate hierarchical test DICOM files with configurable parameters*
+
+![Connection Testing and Performance](pic4.png)
+*Network connectivity testing and transmission history tracking*
+
 ## Features
 
 ### Core Features
@@ -53,13 +88,34 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 #### **Test Data Generation**
 - Random DICOM Generator - Create test files with random metadata
+- Hierarchical generation (Patient ? Study ? Series ? Instances)
 - Bulk generation with configurable sizes
 - Integrated testing workflow
 - Immediate test and send capabilities
 
+### What's New in v0.5.0
+
+? **Enhanced Features:**
+- Improved LazyImport system for better module loading
+- Enhanced class detection for modules with multiple classes
+- Better error handling and diagnostics
+- Performance optimizations for large DICOM datasets
+
+?? **Bug Fixes:**
+- Fixed ConnectionValidator class loading issue
+- Improved module import reliability
+- Better handling of missing optional dependencies
+
+?? **Documentation:**
+- Updated Copilot instructions for LazyImport
+- Enhanced troubleshooting guides
+- Improved code documentation
+
 ## Quick Start
 
 ### Option 1: Run as EXE (Windows, No Python Required)
+
+![Download Badge](https://img.shields.io/badge/download-Windows%20EXE-blue.svg)
 
 **Download & Extract:**
 1. Get the `DICOM Creator` folder from `dist/`
@@ -77,7 +133,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 **Installation:**
 ```bash
 # Clone the repository
-git clone https://github.com/piotrrozentreter/dcmcreator
+git clone https://github.com/HylandSoftware/dcmcreator
 cd dcmcreator
 
 # Create virtual environment (optional but recommended)
@@ -106,7 +162,7 @@ Want to build a standalone executable yourself?
 Starting with **v0.4.0+**, the build includes additional optional modules for testing. Make sure you have all dependencies:
 
 ```bash
-# Install build dependencies (updated for v0.4.0+)
+# Install build dependencies (updated for v0.5.0)
 pip install -r build-requirements.txt
 ```
 
@@ -129,15 +185,16 @@ python build.py
 
 Your standalone EXE will be created in `dist/DICOM Creator/` with:
 - ? All core DICOM features
-- ? All connection testing features (NEW in v0.4.0+)
-- ? All stress testing features (NEW in v0.4.0+)
-- ? All transmission history features (NEW in v0.4.0+)
-- ? All performance benchmarking features (NEW in v0.4.0+)
-- ? All parallel transmission features (NEW in v0.4.0+)
+- ? All connection testing features
+- ? All stress testing features
+- ? All transmission history features
+- ? All performance benchmarking features
+- ? All parallel transmission features
+- ? Enhanced LazyImport system (v0.5.0)
 
 **See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
 
-### What's Bundled (v0.4.0+)
+### What's Bundled (v0.5.0)
 
 The build now automatically includes:
 
@@ -156,17 +213,20 @@ All optional test modules are automatically included in the build - no extra con
 ## Usage
 
 ### Creating DICOM Files
+
 1. Fill in Patient, Study, Series metadata
 2. (Optional) Load an image via Image tab
 3. Click "Save" to save as DICOM
 
 ### Loading DICOM Files
+
 1. Go to "Load DICOM" tab
 2. Click "Load DICOM File(s)" or "Load DICOM Folder"
 3. Select studies/series from the tree
 4. Metadata auto-populates in the forms
 
 ### Sending to Remote Server
+
 1. Fill in Server IP/hostname and Port
 2. Optionally adjust AE Titles
 3. Click "Send All Loaded DICOM"
@@ -278,8 +338,7 @@ python test/verify_build.py
 
 ### Additional Resources
 - **[examples/](examples/)** - Example scripts for common tasks
-- **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer 5-minute guide
-- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
+- **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - Release notes for v0.5.0
 - **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Release notes for v0.4.0
 - **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
 
@@ -289,8 +348,9 @@ python test/verify_build.py
 dcmcreator/
 ??? src/
 ?   ??? app.py                      (Entry point)
-?   ??? appgui.py                   (Main GUI application)
+?   ??? appgui.py                   (Main GUI application - v0.5.0)
 ?   ??? app_logic.py                (Core application logic)
+?   ??? import_helper.py            (Enhanced LazyImport - v0.5.0)
 ?   ??? dcm.py                      (DICOM creation/loading)
 ?   ??? remote.py                   (DICOM C-STORE sending)
 ?   ??? presets.py                  (Server Presets management)
@@ -301,6 +361,9 @@ dcmcreator/
 ?   ??? parallel_transmission.py    (Multi-threaded sending)
 ?   ??? random_dicom.py             (Test DICOM generator)
 ?   ??? test_runner.py              (Testing framework)
+?   ??? vr_validator.py             (VR validation)
+?   ??? validation_dialog.py        (Validation UI)
+?   ??? tag_dialog.py               (Tag viewer UI)
 ?   ??? dcmlogger.py                (Logging setup)
 ??? test/                           (Test scripts and verification)
 ?   ??? test_build.py               (Build system test)
@@ -318,39 +381,99 @@ dcmcreator/
 ??? create_icon.py                  (Icon generator)
 ??? requirements.txt                (Runtime dependencies)
 ??? build-requirements.txt          (Build dependencies)
+??? .github/copilot-instructions.md (Development guidelines)
+??? pic1.png                        (Screenshot - Main interface)
+??? pic2.png                        (Screenshot - DICOM tree/remote)
+??? pic3.png                        (Screenshot - Test generation)
+??? pic4.png                        (Screenshot - Connection testing)
 ??? README.md                       (This file)
 ```
 
-## Version
+## Version History
 
-- **Current Version**: 0.4.0
-- **Release Date**: 2025-2026
-- **Status**: Active Development
+### Version 0.5.0 (Current)
+**Release Date**: January 2025
+
+**New Features:**
+- Enhanced LazyImport system with improved class detection
+- Better handling of modules with multiple classes
+- Improved module loading reliability
+
+**Improvements:**
+- Better error diagnostics for module loading
+- Enhanced logging for troubleshooting
+- Performance optimizations
+
+**Bug Fixes:**
+- Fixed ConnectionValidator class loading issue
+- Improved import error handling
+- Better fallback mechanisms for missing dependencies
+
+### Version 0.4.0
+**Release Date**: December 2024
+
+**Major Features:**
+- Connection testing and validation
+- Stress testing capabilities
+- Transmission history tracking
+- Performance benchmarking
+- Parallel transmission manager
+
+### Version 0.3.0
+**Release Date**: November 2024
+
+**Major Features:**
+- Server Presets management
+- Tag Viewer with search and export
+- VR Validator
+- Random DICOM Generator
+
+### Version 0.2.0
+**Release Date**: October 2024
+
+**Major Features:**
+- Remote DICOM transmission (C-STORE)
+- DICOM file loading and organization
+- Image loading and preview
+
+### Version 0.1.0
+**Release Date**: September 2024
+
+**Initial Release:**
+- Basic DICOM creation
+- Patient/Study/Series metadata management
+- Save DICOM files
 
 ## Author
 
-Written by **Piotr Rozentreter** for **Hyland**
+Written by **Piotr Rozentreter** for **Hyland Software**
+
+**Copyright** © 2024-2025 Hyland Software, Inc.
 
 ## License
 
-[Insert License Information Here]
+Proprietary software. All rights reserved.
+
+This software is the property of Hyland Software, Inc. and is protected by copyright law.
+Unauthorized copying, distribution, or modification is strictly prohibited.
 
 ## Support & Contributing
 
-- **GitHub**: https://github.com/piotrrozentreter/dcmcreator
+- **GitHub**: https://github.com/HylandSoftware/dcmcreator
 - **Issues**: Report bugs via GitHub Issues
-- **Discussions**: GitHub Discussions for questions
+- **Internal Support**: Contact Hyland development team
 
 ## Troubleshooting
 
 ### EXE Won't Start
 - Windows may block unsigned executables - click "More info" -> "Run anyway"
 - Check antivirus software settings
-- Run from command line for error messages
+- Run from command line for error messages: `"DICOM Creator.exe"`
 
 ### Slow Startup
 - First run takes 15-30 seconds (unpacking files)
 - Subsequent runs are faster (5-10 seconds)
+- Normal behavior for PyInstaller executables
 
 ### Dependencies Missing
 - Ensure Python 3.9+ is installed
@@ -362,3 +485,31 @@ Written by **Piotr Rozentreter** for **Hyland**
 - Check firewall and network settings
 - Verify server IP and port are correct
 - Try saving and loading a Server Preset
+
+### Module Loading Issues (v0.5.0)
+- Check log files for detailed error messages
+- Verify all dependencies are installed
+- Try reinstalling with `pip install -r requirements.txt --force-reinstall`
+- Contact support if LazyImport errors persist
+
+### Common Error Messages
+
+#### "VRValidator not available"
+- VR.xml file missing from installation
+- Check that `src/VR.xml` exists
+- Rebuild or reinstall the application
+
+#### "Connection Validator could not be loaded"
+- Fixed in v0.5.0 with enhanced LazyImport
+- Update to latest version
+- Check that `connection_validator.py` is present
+
+#### "Remote unavailable: pynetdicom not installed"
+- Install with: `pip install pynetdicom>=2.0.0`
+- Verify installation: `python -c "import pynetdicom; print(pynetdicom.__version__)"`
+
+---
+
+**Need Help?** Check the [documentation](doc/INDEX.md) or open an [issue](https://github.com/HylandSoftware/dcmcreator/issues).
+
+**Quick Links:** [Quick Start](#quick-start) | [Features](#features) | [Documentation](#documentation) | [Screenshots](#screenshots)
