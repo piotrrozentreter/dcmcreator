@@ -2,6 +2,24 @@
 
 This directory contains test and verification scripts for the DICOM Creator application.
 
+## ?? Screenshots
+
+Visual overview of test execution and results:
+
+### Test Execution Overview
+![Test Execution Overview](../pic1.png)
+
+### Hierarchical Generation Test
+![Hierarchical Generation Test](../pic2.png)
+
+### Build Verification
+![Build Verification](../pic3.png)
+
+### Test Results Summary
+![Test Results Summary](../pic4.png)
+
+---
+
 ## Test Scripts
 
 ### test_build.py
