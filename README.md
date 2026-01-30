@@ -27,8 +27,6 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ![Pic2](pic2.png)
 
-### Advanced Testing Features
-
 ![Pic 3](pic3.png)
 
 ![Pic 4](pic4.png)
@@ -91,18 +89,18 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ### What's New in v0.5.0
 
-? **Enhanced Features:**
+**Enhanced Features:**
 - Improved LazyImport system for better module loading
 - Enhanced class detection for modules with multiple classes
 - Better error handling and diagnostics
 - Performance optimizations for large DICOM datasets
 
-?? **Bug Fixes:**
+**Bug Fixes:**
 - Fixed ConnectionValidator class loading issue
 - Improved module import reliability
 - Better handling of missing optional dependencies
 
-?? **Documentation:**
+**Documentation:**
 - Updated Copilot instructions for LazyImport
 - Enhanced troubleshooting guides
 - Improved code documentation
@@ -184,13 +182,13 @@ build.bat
 ```
 
 Your standalone EXE will be created in `dist/DICOM Creator/` with:
-- ? All core DICOM features
-- ? All connection testing features
-- ? All stress testing features
-- ? All transmission history features
-- ? All performance benchmarking features
-- ? All parallel transmission features
-- ? Enhanced LazyImport system (v0.5.0)
+- All core DICOM features
+- All connection testing features
+- All stress testing features
+- All transmission history features
+- All performance benchmarking features
+- All parallel transmission features
+- Enhanced LazyImport system (v0.5.0)
 
 **See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
 
@@ -242,14 +240,14 @@ All optional test modules are automatically included in the build - no extra con
 ### Testing & Validation
 
 #### DICOM Data Validation & Inspection
-- Go to "File" menu ? "Validate" to check current form data
-- Go to "DICOM" menu ? "View VRs" to browse DICOM Value Representations
-- Go to "DICOM" menu ? "View All Tags" to inspect all tags in a DICOM file:
-  - View all public and private tags
-  - Search and filter tags
-  - Export tags to text file
-  - View tag statistics
-  - Color-coded private tags
+- Go to "File" menu  "Validate" to check current form data
+- Go to "DICOM" menu  "View VRs" to browse DICOM Value Representations
+- Go to "DICOM" menu  "View All Tags" to inspect all tags in a DICOM file:
+- View all public and private tags
+- Search and filter tags
+- Export tags to text file
+- View tag statistics
+- Color-coded private tags
 
 #### Connection Testing
 - Go to "Connection Test" tab
