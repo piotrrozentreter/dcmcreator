@@ -6,8 +6,14 @@ All-or-nothing: aborts on first error.
 """
 from typing import Callable, Dict, Any
 
+try:
+    from .sop_utils import get_sop_name
+except ImportError:
+    from sop_utils import get_sop_name
+
 _pynetdicom_import_error = None
 _pydicom_import_error = None
+
 # Try to use pynetdicom if available
 try:
     from pynetdicom import AE
@@ -70,6 +76,7 @@ def send_grouped_dicom(
 
     Raises on first error, enforcing all-or-nothing semantics.
     """
+    import time
     _ensure_dependencies()
 
     server = config.get("server")
@@ -92,21 +99,58 @@ def send_grouped_dicom(
     except Exception:
         common_ts = []
 
-    sop_uids = set()
+    # Collect SOP Class UIDs and their Transfer Syntaxes from datasets
+    sop_contexts = {}  # {sop_uid: set(transfer_syntaxes)}
     for series_map in grouped.values():
         for instances in series_map.values():
             for ds, _ in instances:
-                uid = getattr(ds, 'SOPClassUID', None)
-                if uid:
-                    sop_uids.add(uid)
+                sop_uid = getattr(ds, 'SOPClassUID', None)
+                if sop_uid:
+                    sop_uid_str = str(sop_uid)
+                    if sop_uid_str not in sop_contexts:
+                        sop_contexts[sop_uid_str] = set()
+                    
+                    # Get the dataset's transfer syntax
+                    try:
+                        # Check file_meta first (standard location)
+                        if hasattr(ds, 'file_meta') and hasattr(ds.file_meta, 'TransferSyntaxUID'):
+                            ts_uid = str(ds.file_meta.TransferSyntaxUID)
+                            sop_contexts[sop_uid_str].add(ts_uid)
+                        # Fallback: check if dataset itself has it
+                        elif hasattr(ds, 'TransferSyntaxUID'):
+                            ts_uid = str(ds.TransferSyntaxUID)
+                            sop_contexts[sop_uid_str].add(ts_uid)
+                        else:
+                            # No transfer syntax found, will use common_ts fallback
+                            pass
+                    except Exception:
+                        # If we can't get transfer syntax, fallback to common ones
+                        pass
 
-    # Report and request contexts for each SOP Class UID present in datasets
+    # Report and request contexts for each SOP Class UID with its transfer syntaxes
     if on_message:
-        on_message(f"Preparing presentation contexts for {len(sop_uids)} SOP classes")
-    for sop_uid in sop_uids:
-        if common_ts:
+        on_message(f"Preparing presentation contexts for {len(sop_contexts)} SOP classes")
+    
+    for sop_uid, ts_set in sop_contexts.items():
+        sop_name = get_sop_name(sop_uid)
+        if on_message:
+            on_message(f"  - {sop_name}")
+        
+        # If we found specific transfer syntaxes, use them; otherwise use common ones
+        if ts_set:
+            # Add the dataset's actual transfer syntaxes
+            transfer_syntaxes = list(ts_set)
+            # Also add common uncompressed transfer syntaxes as fallback
+            if common_ts:
+                transfer_syntaxes.extend(common_ts)
+            ae.add_requested_context(sop_uid, transfer_syntax=transfer_syntaxes)
+            if on_message and len(ts_set) > 0:
+                on_message(f"    Transfer syntaxes: {len(ts_set)} from dataset + {len(common_ts)} fallback")
+        elif common_ts:
+            # No specific transfer syntax found, use common ones
             ae.add_requested_context(sop_uid, transfer_syntax=common_ts)
         else:
+            # No transfer syntaxes available at all
             ae.add_requested_context(sop_uid)
 
     # Optionally add Verification SOP for echo
@@ -169,51 +213,77 @@ def send_grouped_dicom(
         try:
             accepted = getattr(assoc, 'accepted_contexts', [])
             on_message(f"Association established, {len(accepted)} presentation contexts accepted")
+            # Log which SOPs were accepted
+            for ctx in accepted:
+                try:
+                    sop_uid = str(ctx.abstract_syntax)
+                    sop_name = get_sop_name(sop_uid)
+                    on_message(f"  ? {sop_name}")
+                except Exception:
+                    pass
         except Exception:
             on_message("Association established")
 
     try:
         # Send a C-ECHO first (optional health check)
+        # Note: Some servers may close association after C-ECHO, skip if needed
         if VerificationSOPClass is not None:
             if on_message:
                 on_message("Verifying connectivity (C-ECHO)...")
-            status = assoc.send_c_echo()
-            # Safely get status code
-            status_code = getattr(status, 'Status', None) if status else None
-            if status and status_code and status_code != 0x0000:
-                msg = f"C-ECHO failed: 0x{status_code:04X}"
+            try:
+                status = assoc.send_c_echo()
+                # Safely get status code
+                status_code = getattr(status, 'Status', None) if status else None
+                if status and status_code and status_code != 0x0000:
+                    msg = f"C-ECHO failed: 0x{status_code:04X}"
+                    if logger:
+                        logger.error(msg)
+                    if on_message:
+                        on_message(msg)
+                    raise RuntimeError(msg)
+                else:
+                    if on_message:
+                        on_message("C-ECHO OK")
+            except Exception as e:
+                # If C-ECHO fails but we can still send, log and continue
+                if on_message:
+                    on_message(f"C-ECHO skipped or failed (continuing with C-STORE): {e}")
                 if logger:
-                    logger.error(msg)
-                if on_message:
-                    on_message(msg)
-                raise RuntimeError(msg)
-            else:
-                if on_message:
-                    on_message("C-ECHO OK")
+                    logger.warning(f"C-ECHO issue, continuing: {e}")
 
         # Iterate through grouped datasets and send each via C-STORE
         total = 0
         # Pre-compute total count for nicer progress messages
         total_count = sum(len(instances) for series_map in grouped.values() for instances in series_map.values())
         sent_count = 0
-        import time
         for study_uid, series_map in grouped.items():
             for series_uid, instances in series_map.items():
                 for ds, _ in instances:
                     # Ensure dataset has file meta and SOP UIDs; if not, try to fix minimally
                     if not hasattr(ds, 'SOPClassUID') or not hasattr(ds, 'SOPInstanceUID'):
                         raise RuntimeError("Dataset missing SOP UIDs")
-                    # Estimate bytes to send (best effort)
-                    size_bytes = _estimate_dataset_bytes(ds)
+                    
                     sent_count += 1
+                    sop_class_uid = str(getattr(ds, 'SOPClassUID', ''))
+                    sop_name = get_sop_name(sop_class_uid)
+                    
                     if on_message:
                         uid = getattr(ds, 'SOPInstanceUID', '')
-                        on_message(f"Sending {sent_count}/{total_count} SOPInstanceUID={uid} (~{size_bytes} bytes)...")
-                    # Send with timing
+                        on_message(f"Sending {sent_count}/{total_count} {sop_name} SOPInstanceUID={uid}...")
+                    
+                    # Check association is still active before sending
+                    if not assoc.is_established:
+                        raise RuntimeError("Association was closed by server before C-STORE")
+                    
+                    # Send with timing (avoid calling _estimate_dataset_bytes before send)
                     start_time = time.time()
                     status = assoc.send_c_store(ds)
                     duration = time.time() - start_time
+                    
+                    # Estimate size after successful send (for logging)
+                    size_bytes = _estimate_dataset_bytes(ds)
                     total += 1
+                    
                     if status is None:
                         raise RuntimeError("No response to C-STORE")
                     # Safely get status code
@@ -247,7 +317,7 @@ def send_grouped_dicom(
                         # Safely format success message
                         status_code_str = f"0x{status_code:04X}" if status_code is not None else "OK"
                         if on_message:
-                            on_message(f"OK {status_code_str}")
+                            on_message(f"OK {status_code_str} (~{size_bytes} bytes, {duration:.2f}s)")
                         # Record successful transmission
                         if transmission_history:
                             transmission_history.record_transmission(

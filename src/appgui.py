@@ -16,6 +16,15 @@ except Exception:
     ImageTk = None
     np = None
 
+try:
+    from .sop_utils import get_sop_name_only
+except ImportError:
+    try:
+        from sop_utils import get_sop_name_only
+    except ImportError:
+        def get_sop_name_only(sop_uid):
+            return "Unknown SOP"
+
 APP_TITLE = "DICOM Creator v0.6.0\n"
 
 try:
@@ -650,9 +659,9 @@ class DicomCreatorApp(tk.Tk):
                 output_dir=output_dir
             )
 
-            self._append_test_status(f"? Generated {len(files)} hierarchical DICOM files")
+            self._append_test_status(f"  Generated {len(files)} hierarchical DICOM files")
             self._append_test_status(f"  Location: {output_dir}")
-            self._append_test_status(f"  Structure: Patient ? {studies_per_patient} Studies ? {series_per_study} Series ? {instances_per_series} Instances")
+            self._append_test_status(f"  Structure: Patient: {studies_per_patient} Studies -> {series_per_study} Series -> {instances_per_series} Instances")
 
             messagebox.showinfo(APP_TITLE, f"Generated {len(files)} hierarchical DICOM files")
         except ValueError as ve:
@@ -1426,6 +1435,8 @@ class DicomCreatorApp(tk.Tk):
             cols = getattr(ds, 'Columns', None)
             if rows and cols:
                 self.image_label.config(text=f"Selected Study: {study_uid} | {cols}x{rows}")
+            else:
+                self.image_label.config(text=f"Selected Study: {study_uid}")
             
             # Update preview if no user-loaded image is active
             if self.image_source != "file" and arr is not None:
@@ -1503,6 +1514,8 @@ class DicomCreatorApp(tk.Tk):
         cols = getattr(ds, 'Columns', None)
         if rows and cols:
             self.image_label.config(text=f"Selected Series: {series_uid} | {cols}x{rows}")
+        else:
+            self.image_label.config(text=f"Selected Series: {series_uid}")
             
         # Only update preview if no user-loaded image is active
         if self.image_source != "file" and arr is not None:
@@ -1613,8 +1626,14 @@ class DicomCreatorApp(tk.Tk):
             self.logger.info("Send cancelled due to validation")
             return
         
-        # Always create dataset from current form values to ensure modifications are sent
-        grouped_to_send = self._create_in_memory_dataset(patient_id)
+        # Use loaded studies if available, otherwise create from form values
+        if self.grouped_dicom:
+            grouped_to_send = self.grouped_dicom
+            self._append_remote_message(f"Sending {len(grouped_to_send)} loaded studies")
+        else:
+            # No studies loaded, create dataset from current form values
+            grouped_to_send = self._create_in_memory_dataset(patient_id)
+        
         if not grouped_to_send:
             return
 
@@ -2445,6 +2464,18 @@ result = bench.run_file_size_benchmark(
 
 # Get report
 print(bench.get_benchmark_report(0))
+print(bench.get_all_benchmarks_summary())
+
+BENEFITS:
+- 5 workers = ~5x faster than sequential
+- Automatic load balancing
+- Real-time progress tracking
+- Detailed performance report
+
+Tips:
+- For large files, increase memory limits
+- Monitor CPU/memory usage during tests
+- Adjust worker count based on system capability
 """
         messagebox.showinfo(APP_TITLE, example)
     
@@ -2466,7 +2497,7 @@ print(bench.get_benchmark_report(0))
         
         ttk.Label(config_frame, text="Worker Threads:").grid(row=0, column=0, sticky="w", padx=5)
         self.parallel_workers = tk.StringVar(value="5")
-        ttk.Spinbox(config_frame, from_=1, to=10, textvariable=self.parallel_workers, width=10).grid(row=0, column=1, sticky="w", padx=5)
+        ttk.Entry(config_frame, textvariable=self.parallel_workers, width=30).grid(row=0, column=1, sticky="ew", padx=5)
         
         ttk.Label(config_frame, text="Session Name:").grid(row=1, column=0, sticky="w", padx=5)
         self.parallel_session_name = tk.StringVar(value="Bulk Transmission")

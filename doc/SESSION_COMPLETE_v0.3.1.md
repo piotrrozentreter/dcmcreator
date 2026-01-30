@@ -123,7 +123,7 @@ if node_id.startswith("series:"):
 
 ---
 
-## ?? Feature Status Summary
+## ? Feature Status Summary
 
 ### Core Features (Always Visible)
 | Feature | Status | Location |
@@ -253,7 +253,7 @@ git push origin v0.3.1
 
 ---
 
-## ?? v0.3.1 Final Feature List
+## ? v0.3.1 Final Feature List
 
 ### Core Features
 - ? DICOM metadata editing (Patient, Study, Series)
