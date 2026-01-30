@@ -252,7 +252,7 @@ def main():
     
     for test_name, passed in results.items():
         is_critical = test_name in critical_tests
-        status = "? PASS" if passed else ("? FAIL" if is_critical else "??  WARN")
+        status = "? PASS" if passed else ("? FAIL" if is_critical else "? WARN")
         critical_marker = " [CRITICAL]" if is_critical else ""
         print(f"  {status} - {test_name}{critical_marker}")
         
@@ -272,27 +272,3 @@ def main():
         print("     - DICOM ? View VRs")
         print("     - DICOM ? View All Tags")
         print("     - File ? Validate (Ctrl+Shift+V)")
-        print("\n  3. Distribute:")
-        print("     - Share DICOM Creator.zip (recommended)")
-        print("     - Or share dist\\DICOM Creator\\ folder")
-    elif critical_passed:
-        print("??  Some warnings, but critical tests passed.")
-        print("Distribution should work, but verify features manually.")
-        print("\nTest the executable manually:")
-        print('  cd "dist\\DICOM Creator"')
-        print('  ".\\DICOM Creator.exe"')
-    else:
-        print("? Critical tests failed!")
-        print("\nPlease fix the issues and rebuild:")
-        print("  1. Check that build.py completed successfully")
-        print("  2. Verify src/VR.xml exists (7 MB)")
-        print("  3. Check dcmcreator.spec configuration")
-        print("  4. Re-run: python build.py")
-    
-    print("="*60 + "\n")
-    
-    return all_passed or critical_passed
-
-if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)

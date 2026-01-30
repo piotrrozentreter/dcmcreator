@@ -825,7 +825,7 @@ class DicomCreatorApp(tk.Tk):
         """Show About dialog."""
         messagebox.showinfo(
             APP_TITLE,
-            f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
+            f"{APP_TITLE}(c) 2025-2026 by Piotr Rozentreter\n\n"
             "A tool to create, edit, test and sendingDICOM metadata and images."
         )
 

@@ -1,8 +1,8 @@
-# DICOM Creator v0.3.1
+﻿# DICOM Creator v0.3.1
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing and validation capabilities.
 
-## ? Features
+## Features
 
 ### Core Features
 - **DICOM Metadata Management** - Create and edit patient, study, and series metadata
@@ -48,7 +48,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and immediately send test files
 
-## ?? Quick Start
+## Quick Start
 
 ### Installation
 ```bash
@@ -62,7 +62,7 @@ pip install -r requirements.txt
 python src/app.py
 ```
 
-## ?? 13 Application Tabs
+## 13 Application Tabs
 
 | Tab | Purpose |
 |-----|---------|
@@ -80,7 +80,7 @@ python src/app.py
 | **Benchmarking** | Performance analysis and reporting |
 | **Parallel Send** | Multi-threaded transmission management |
 
-## ?? Testing System
+## Testing System
 
 ### Test Execution Workflow
 
@@ -110,7 +110,7 @@ See `doc/QUICK_TEST_EXECUTION_GUIDE.md` for step-by-step testing procedures.
 
 See `doc/WHERE_TO_RUN_TESTS.md` for recommended test environments.
 
-## ?? Documentation
+## Documentation
 
 ### Getting Started
 - [Getting Started Guide](doc/GETTING_STARTED.md)
@@ -134,7 +134,7 @@ See `doc/WHERE_TO_RUN_TESTS.md` for recommended test environments.
 - [Changelog](doc/CHANGELOG_v0.3.0.md)
 - [Distribution Guide](doc/DISTRIBUTION_GUIDE.md)
 
-## ?? System Requirements
+## System Requirements
 
 - **Python** 3.7+
 - **pydicom** - DICOM file handling
@@ -142,28 +142,28 @@ See `doc/WHERE_TO_RUN_TESTS.md` for recommended test environments.
 - **numpy** - Numerical operations
 - **pynetdicom** - DICOM networking (optional, for remote send)
 
-## ?? Project Structure
+## Project Structure
 
 ```
 dcmcreator/
-??? src/
-?   ??? app.py                          # Main application entry point
-?   ??? appgui.py                       # GUI implementation (13 tabs)
-?   ??? dcm.py                          # DICOM operations
-?   ??? presets.py                      # Server presets manager
-?   ??? random_dicom.py                 # Test DICOM generator
-?   ??? connection_validator.py         # Connection testing
-?   ??? stress_tester.py                # Stress testing
-?   ??? transmission_history.py         # Transmission tracking
-?   ??? performance_benchmarking.py     # Performance testing
-?   ??? parallel_transmission.py        # Parallel sending
-?   ??? dcmlogger.py                    # Logging utilities
-??? doc/                                # Complete documentation
-??? requirements.txt                    # Dependencies
-??? README.md                           # This file
+├── src/
+│   ├── app.py                          # Main application entry point
+│   ├── appgui.py                       # GUI implementation (13 tabs)
+│   ├── dcm.py                          # DICOM operations
+│   ├── presets.py                      # Server presets manager
+│   ├── random_dicom.py                 # Test DICOM generator
+│   ├── connection_validator.py         # Connection testing
+│   ├── stress_tester.py                # Stress testing
+│   ├── transmission_history.py         # Transmission tracking
+│   ├── performance_benchmarking.py     # Performance testing
+│   ├── parallel_transmission.py        # Parallel sending
+│   └── dcmlogger.py                    # Logging utilities
+├── doc/                                # Complete documentation
+├── requirements.txt                    # Dependencies
+└── README.md                           # This file
 ```
 
-## ?? Use Cases
+## Use Cases
 
 ### Clinical Testing
 - Validate DICOM SCP server connectivity
@@ -180,14 +180,14 @@ dcmcreator/
 - Success rate monitoring
 - Latency and throughput analysis
 
-## ?? Key Metrics
+## Key Metrics
 
 - **Transmission Tracking** - Track all sent/received DICOMs
 - **Performance Analysis** - Measure latency, throughput, success rates
 - **Stress Testing** - Simulate up to 50 files/second
 - **Parallel Performance** - Up to 10x improvement with worker threads
 
-## ?? Version History
+## Version History
 
 ### v0.3.1 (Current)
 - ? Connection Testing System
@@ -203,22 +203,21 @@ dcmcreator/
 - Remote DICOM transmission
 - Random DICOM generator
 
-## ?? Contributing
+## Contributing
 
 For development guidelines, see `doc/DEVELOPER_GUIDE_PRESETS.md`.
 
-## ?? License
+## License
 
 See LICENSE file for details.
 
-## ?? Author
+## Author
 
 Written by Piotr Rozentreter  
-� 2025-2026 Hyland
 
 ---
 
-## ?? Next Steps
+## Next Steps
 
 1. **First Time Users** ? Read [Getting Started Guide](doc/GETTING_STARTED.md)
 2. **Test System Users** ? Read [Complete Test Execution Reference](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)

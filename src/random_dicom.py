@@ -204,12 +204,12 @@ class RandomDicomGenerator:
             last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Brzeszczyszczykiewicz',
                          'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Rozen', 'Rozsoft']
             
-            for i in range(count):
+            for _ in range(count):
                 first = random.choice(first_names)
                 last = random.choice(last_names)
-                patients.append((f"{first} {last}", f"TEST{1000+i}"))
+                patients.append((f"{first} {last}", f"TEST{random.randint(1000, 9999)}"))
         else:
-            patients = [(f"Test Patient {i}", f"TESTID{i}") for i in range(count)]
+            patients = [(f"Test Patient {i}", f"TEST{random.randint(1000, 9999)}") for i in range(count)]
         
         try:
             # Create output directory if needed

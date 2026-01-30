@@ -217,7 +217,7 @@ except Exception as e:
 
 ## Contributors
 
-- **Piotr Rozentreter** - Lead Developer, Hyland Software
+- **Piotr Rozentreter** - Lead Developer
 
 ## Special Thanks
 
@@ -244,9 +244,9 @@ except Exception as e:
 
 We welcome your feedback!
 
-- ?? **Report bugs**: [GitHub Issues](https://github.com/HylandSoftware/dcmcreator/issues)
-- ?? **Feature requests**: [GitHub Discussions](https://github.com/HylandSoftware/dcmcreator/discussions)
-- ?? **Internal support**: Contact Hyland development team
+- **Report bugs**: [GitHub Issues](https://github.com/HylandSoftware/dcmcreator/issues)
+- **Feature requests**: [GitHub Discussions](https://github.com/HylandSoftware/dcmcreator/discussions)
+- **Internal support**: Contact Hyland development team
 
 ---
 
