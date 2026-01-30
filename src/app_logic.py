@@ -8,6 +8,11 @@ import threading
 import socket
 import json
 
+try:
+    import numpy as np
+except Exception:
+    np = None
+
 
 class DicomLogicHandler:
     """Handles business logic, data processing, and test execution."""
@@ -22,7 +27,6 @@ class DicomLogicHandler:
     
     def process_image_to_uint8(self, arr):
         """Normalize arbitrary numeric array to uint8 [0,255] range for display."""
-        import numpy as np
         
         if arr.dtype == np.uint8:
             return arr

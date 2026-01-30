@@ -24,6 +24,11 @@ except Exception:
     MediaStorageDirectoryStorage = None
     PersonName = None
 
+try:
+    import numpy as np
+except Exception:
+    np = None
+
 
 def create_dicom(save_path, patient, study, series, pixel_array=None):
     """
@@ -177,7 +182,6 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     # Pixel data
     # Preserve original pixel data characteristics when available
     if pixel_array is not None:
-        import numpy as _np
         arr = pixel_array
         
         # Handle multi-dimensional arrays - flatten to 2D if needed
@@ -202,19 +206,19 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.SamplesPerPixel = 1
         
         # Determine appropriate bit depth based on data type
-        if arr.dtype == _np.uint8:
+        if arr.dtype == np.uint8:
             ds.BitsAllocated = 8
             ds.BitsStored = 8
             ds.HighBit = 7
             ds.PixelRepresentation = 0
             ds.PixelData = arr.tobytes()
-        elif arr.dtype == _np.uint16:
+        elif arr.dtype == np.uint16:
             ds.BitsAllocated = 16
             ds.BitsStored = 16
             ds.HighBit = 15
             ds.PixelRepresentation = 0
             ds.PixelData = arr.tobytes()
-        elif arr.dtype == _np.int16:
+        elif arr.dtype == np.int16:
             ds.BitsAllocated = 16
             ds.BitsStored = 16
             ds.HighBit = 15
@@ -223,17 +227,17 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         else:
             # Convert other types to uint16 to preserve data range
             _logger.warning("Converting pixel array from %s to uint16", arr.dtype)
-            if _np.issubdtype(arr.dtype, _np.integer):
+            if np.issubdtype(arr.dtype, np.integer):
                 # Integer type - preserve range
                 arr_min = arr.min()
                 arr_max = arr.max()
                 if arr_max - arr_min > 0:
-                    arr_normalized = ((arr.astype(_np.float64) - arr_min) / (arr_max - arr_min) * 65535).astype(_np.uint16)
+                    arr_normalized = ((arr.astype(np.float64) - arr_min) / (arr_max - arr_min) * 65535).astype(np.uint16)
                 else:
-                    arr_normalized = _np.zeros_like(arr, dtype=_np.uint16)
+                    arr_normalized = np.zeros_like(arr, dtype=np.uint16)
             else:
                 # Float type - normalize to 0-65535
-                arr_normalized = (arr.astype(_np.float64) * 65535).clip(0, 65535).astype(_np.uint16)
+                arr_normalized = (arr.astype(np.float64) * 65535).clip(0, 65535).astype(np.uint16)
             
             ds.BitsAllocated = 16
             ds.BitsStored = 16
@@ -242,7 +246,6 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
             ds.PixelData = arr_normalized.tobytes()
     else:
         # Include minimal image
-        import numpy as _np
         ds.Rows = 1
         ds.Columns = 1
         ds.PhotometricInterpretation = "MONOCHROME2"
@@ -251,7 +254,7 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.BitsStored = 8
         ds.HighBit = 7
         ds.PixelRepresentation = 0
-        ds.PixelData = _np.zeros((1, 1), dtype=_np.uint8).tobytes()
+        ds.PixelData = np.zeros((1, 1), dtype=np.uint8).tobytes()
 
     return ds
 
@@ -287,9 +290,8 @@ def load_dicom(path):
             pixel_array = ds.pixel_array
         elif hasattr(ds, "PixelData") and hasattr(ds, "Rows") and hasattr(ds, "Columns"):
             # Manual fallback for simple cases
-            import numpy as _np
-            dtype = _np.uint8 if getattr(ds, "BitsAllocated", 8) == 8 else _np.uint16
-            pixel_array = _np.frombuffer(ds.PixelData, dtype=dtype)
+            dtype = np.uint8 if getattr(ds, "BitsAllocated", 8) == 8 else np.uint16
+            pixel_array = np.frombuffer(ds.PixelData, dtype=dtype)
             expected = int(ds.Rows) * int(ds.Columns) * int(getattr(ds, "SamplesPerPixel", 1))
             if pixel_array.size >= expected:
                 pixel_array = pixel_array[:expected]

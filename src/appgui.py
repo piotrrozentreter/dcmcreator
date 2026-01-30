@@ -16,7 +16,7 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.5.0\n"
+APP_TITLE = "DICOM Creator v0.6.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
