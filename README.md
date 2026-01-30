@@ -1,4 +1,4 @@
-# DICOM Creator
+﻿# DICOM Creator
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
@@ -23,15 +23,15 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ### Main Application Interface
 
-![Main Interface - Patient and Study Tabs](pic1.png)
+![Main Interface](pic1.png)
 
-![DICOM Tree View and Remote Transmission](pic2.png)
+![Pic2](pic2.png)
 
 ### Advanced Testing Features
 
-![Test Generation and Validation](pic3.png)
+![Pic 3](pic3.png)
 
-![Connection Testing and Performance](pic4.png)
+![Pic 4](pic4.png)
 
 ## Features
 
@@ -111,7 +111,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ### Option 1: Run as EXE (Windows, No Python Required)
 
-![Download Badge](https://img.shields.io/badge/download-Windows%20EXE-blue.svg)
+[![Download Badge](https://img.shields.io/badge/download-Windows%20EXE-blue.svg)](https://github.com/piotrrozentreter/dcmcreator/releases)
 
 **Download & Extract:**
 1. Get the `DICOM Creator` folder from `dist/`
@@ -177,6 +177,10 @@ python create_icon.py
 
 # Build the executable (includes all optional modules)
 python build.py
+```
+For Windows, you can also run:
+```bat
+build.bat
 ```
 
 Your standalone EXE will be created in `dist/DICOM Creator/` with:
@@ -342,47 +346,47 @@ python test/verify_build.py
 
 ```
 dcmcreator/
-??? src/
-?   ??? app.py                      (Entry point)
-?   ??? appgui.py                   (Main GUI application - v0.5.0)
-?   ??? app_logic.py                (Core application logic)
-?   ??? import_helper.py            (Enhanced LazyImport - v0.5.0)
-?   ??? dcm.py                      (DICOM creation/loading)
-?   ??? remote.py                   (DICOM C-STORE sending)
-?   ??? presets.py                  (Server Presets management)
-?   ??? connection_validator.py     (Connection testing)
-?   ??? stress_tester.py            (Stress testing)
-?   ??? transmission_history.py     (Transmission tracking)
-?   ??? performance_benchmarking.py (Performance analysis)
-?   ??? parallel_transmission.py    (Multi-threaded sending)
-?   ??? random_dicom.py             (Test DICOM generator)
-?   ??? test_runner.py              (Testing framework)
-?   ??? vr_validator.py             (VR validation)
-?   ??? validation_dialog.py        (Validation UI)
-?   ??? tag_dialog.py               (Tag viewer UI)
-?   ??? dcmlogger.py                (Logging setup)
-??? test/                           (Test scripts and verification)
-?   ??? test_build.py               (Build system test)
-?   ??? test_hierarchical_generation.py (Hierarchical DICOM test)
-?   ??? test_tag_viewer.py          (Tag viewer test)
-?   ??? verify_build.py             (Build verification)
-?   ??? run_all_tests.py            (Run all tests)
-?   ??? README.md                   (Test documentation)
-??? examples/                       (Example scripts for features)
-??? doc/                            (Comprehensive documentation)
-??? dist/                           (Distribution EXE folder)
-??? build.py                        (Python build script)
-??? build.bat                       (Windows build script)
-??? dcmcreator.spec                 (PyInstaller configuration)
-??? create_icon.py                  (Icon generator)
-??? requirements.txt                (Runtime dependencies)
-??? build-requirements.txt          (Build dependencies)
-??? .github/copilot-instructions.md (Development guidelines)
-??? pic1.png                        (Screenshot - Main interface)
-??? pic2.png                        (Screenshot - DICOM tree/remote)
-??? pic3.png                        (Screenshot - Test generation)
-??? pic4.png                        (Screenshot - Connection testing)
-??? README.md                       (This file)
+├── src/
+│   ├── app.py                      (Entry point)
+│   ├── appgui.py                   (Main GUI application - v0.5.0)
+│   ├── app_logic.py                (Core application logic)
+│   ├── import_helper.py            (Enhanced LazyImport - v0.5.0)
+│   ├── dcm.py                      (DICOM creation/loading)
+│   ├── remote.py                   (DICOM C-STORE sending)
+│   ├── presets.py                  (Server Presets management)
+│   ├── connection_validator.py     (Connection testing)
+│   ├── stress_tester.py            (Stress testing)
+│   ├── transmission_history.py     (Transmission tracking)
+│   ├── performance_benchmarking.py (Performance analysis)
+│   ├── parallel_transmission.py    (Multi-threaded sending)
+│   ├── random_dicom.py             (Test DICOM generator)
+│   ├── test_runner.py              (Testing framework)
+│   ├── vr_validator.py             (VR validation)
+│   ├── validation_dialog.py        (Validation UI)
+│   ├── tag_dialog.py               (Tag viewer UI)
+│   └── dcmlogger.py                (Logging setup)
+├── test/                           (Test scripts and verification)
+│   ├── test_build.py               (Build system test)
+│   ├── test_hierarchical_generation.py (Hierarchical DICOM test)
+│   ├── test_tag_viewer.py          (Tag viewer test)
+│   ├── verify_build.py             (Build verification)
+│   ├── run_all_tests.py            (Run all tests)
+│   └── README.md                   (Test documentation)
+├── examples/                       (Example scripts for features)
+├── doc/                            (Comprehensive documentation)
+├── dist/                           (Distribution EXE folder)
+├── build.py                        (Python build script)
+├── build.bat                       (Windows build script)
+├── dcmcreator.spec                 (PyInstaller configuration)
+├── create_icon.py                  (Icon generator)
+├── requirements.txt                (Runtime dependencies)
+├── build-requirements.txt          (Build dependencies)
+├── .github/copilot-instructions.md (Development guidelines)
+├── pic1.png                        (Screenshot - Main interface)
+├── pic2.png                        (Screenshot - DICOM tree/remote)
+├── pic3.png                        (Screenshot - Test generation)
+├── pic4.png                        (Screenshot - Connection testing)
+└── README.md                       (This file)
 ```
 
 ## Version History
@@ -444,7 +448,7 @@ dcmcreator/
 
 Written by **Piotr Rozentreter** for **Hyland Software**
 
-**Copyright** � 2024-2025 Hyland Software, Inc.
+**Copyright** © 2024-2025 Hyland Software, Inc.
 
 ## License
 
