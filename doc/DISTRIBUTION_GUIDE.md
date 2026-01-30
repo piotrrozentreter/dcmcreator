@@ -26,17 +26,17 @@ All test features are available in the ZIP distribution automatically.
 ```
 dist\DICOM Creator\                    ? Package THIS entire folder (150-200 MB)
 ?
-?? DICOM Creator.exe                 ? Users run this
-?? _internal\                        ? MUST include (all Python libraries)
-?  ?? pydicom\                       ? DICOM file handling
-?  ?? pynetdicom\                    ? Network DICOM C-STORE
-?  ?? PIL\                           ? Image processing
-?  ?? numpy\                         ? Array processing
-?  ?? tcl8\, tk8\                    ? Tkinter GUI libraries
-?  ?? api-ms-win-core-*.dll          ? Windows runtime libraries
-?  ?? [~150+ other library files]
-?? src\                              ? Application source
-?? [other support files]
+??? DICOM Creator.exe                 ? Users run this
+??? _internal\                        ? MUST include (all Python libraries)
+?   ??? pydicom\                       ? DICOM file handling
+?   ??? pynetdicom\                    ? Network DICOM C-STORE
+?   ??? PIL\                           ? Image processing
+?   ??? numpy\                         ? Array processing
+?   ??? tcl8\, tk8\                    ? Tkinter GUI libraries
+?   ??? api-ms-win-core-*.dll          ? Windows runtime libraries
+?   ??? [~150+ other library files]
+??? src\                              ? Application source
+??? [other support files]
 ```
 
 ### ? WRONG: Don't distribute just the EXE

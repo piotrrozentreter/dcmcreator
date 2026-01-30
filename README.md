@@ -4,7 +4,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
-![License](https://img.shields.io/badge/license-Proprietary-red.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
 
 ## Table of Contents
@@ -18,6 +18,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - [System Requirements](#system-requirements)
 - [Version History](#version-history)
 - [Troubleshooting](#troubleshooting)
+- [License](#license)
 
 ## Screenshots
 
@@ -444,16 +445,11 @@ dcmcreator/
 
 ## Author
 
-Written by **Piotr Rozentreter** for **Hyland Software**
-
-**Copyright** © 2024-2025 Hyland Software, Inc.
+Written by **Piotr Rozentreter**
 
 ## License
 
-Proprietary software. All rights reserved.
-
-This software is the property of Hyland Software, Inc. and is protected by copyright law.
-Unauthorized copying, distribution, or modification is strictly prohibited.
+MIT License. See `LICENSE` for details.
 
 ## Support & Contributing
 

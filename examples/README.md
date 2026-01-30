@@ -389,7 +389,7 @@ python examples/test_connection.py
 
 ---
 
-## ?? Example Performance Results
+## Example Performance Results
 
 ### Connection Test Results
 ```
@@ -416,7 +416,7 @@ Performance: PASS
 
 ---
 
-## ?? Next Steps
+## Next Steps
 
 1. **Test connectivity:** `python examples/test_connection.py`
 2. **Generate test data:** `python examples/generate_test_dicoms.py`
