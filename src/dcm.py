@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+from copy import deepcopy
 
 try:
     from .dcmlogger import LOGGER_NAME
@@ -41,29 +42,36 @@ except Exception:
     np = None
 
 
-def create_dicom(save_path, patient, study, series, pixel_array=None):
+def create_dicom(save_path, patient, study, series, pixel_array=None, base_dataset=None):
     """
     Create a minimal but valid DICOM `FileDataset` using provided metadata and optional pixel data.
 
     - Uses Secondary Capture as SOP Class (generic image container).
     - Fills required attributes and some optional ones.
     - If `pixel_array` is None, creates a 1x1 black image as placeholder.
+    - If `base_dataset` is provided, uses it as a base to preserve existing tags (including private tags).
     - Returns an in-memory dataset; caller is responsible for `save_as`.
     """
     if pydicom is None:
         _logger.warning("pydicom not available; cannot create DICOM")
         raise RuntimeError("pydicom is required to create DICOM files")
 
-    # Create file meta
-    # File Meta Information contains UIDs for the storage class and instance, plus transfer syntax.
-    file_meta = Dataset()
-    file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
-    file_meta.MediaStorageSOPInstanceUID = generate_uid()
-    file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+    # Use base dataset if provided, otherwise create new
+    if base_dataset is not None:
+        # Copy the base dataset to preserve all tags including private tags
+        ds = deepcopy(base_dataset)
+        _logger.info("Using base dataset to preserve existing tags including private tags")
+    else:
+        # Create file meta
+        # File Meta Information contains UIDs for the storage class and instance, plus transfer syntax.
+        file_meta = Dataset()
+        file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
+        file_meta.MediaStorageSOPInstanceUID = generate_uid()
+        file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
 
-    # Create dataset
-    # The `FileDataset` uses a 128-byte preamble and the file meta above.
-    ds = FileDataset(save_path, {}, file_meta=file_meta, preamble=b"\0" * 128)
+        # Create dataset
+        # The `FileDataset` uses a 128-byte preamble and the file meta above.
+        ds = FileDataset(save_path, {}, file_meta=file_meta, preamble=b"\0" * 128)
 
     now = datetime.datetime.now()
     # Explicit VR Little Endian to match the file meta transfer syntax
