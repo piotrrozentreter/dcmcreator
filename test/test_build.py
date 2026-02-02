@@ -51,41 +51,41 @@ def test_distribution_exists():
     return True
 
 def test_vr_xml_present():
-"""Test that VR.xml is present in distribution."""
-print("\n" + "="*60)
-print("Testing VR.xml Presence...")
-print("="*60)
+    """Test that VR.xml is present in distribution."""
+    print("\n" + "="*60)
+    print("Testing VR.xml Presence...")
+    print("="*60)
     
-# Check both possible locations
-vr_xml_paths = [
-    Path("dist/DICOM Creator/src/VR.xml"),
-    Path("dist/DICOM Creator/VR.xml"),
-]
+    # Check both possible locations
+    vr_xml_paths = [
+        Path("dist/DICOM Creator/src/VR.xml"),
+        Path("dist/DICOM Creator/VR.xml"),
+    ]
     
-vr_xml_found = False
-for vr_xml_path in vr_xml_paths:
-    if vr_xml_path.exists():
-        size = vr_xml_path.stat().st_size / (1024 * 1024)
-        print(f"  ? VR.xml found at: {vr_xml_path}")
-        print(f"     Size: {size:.2f} MB")
+    vr_xml_found = False
+    for vr_xml_path in vr_xml_paths:
+        if vr_xml_path.exists():
+            size = vr_xml_path.stat().st_size / (1024 * 1024)
+            print(f"  ? VR.xml found at: {vr_xml_path}")
+            print(f"     Size: {size:.2f} MB")
             
-        if size < 5:
-            print(f"  ??  WARNING: VR.xml seems too small (expected 6-8 MB)")
-        else:
-            print(f"  ? VR.xml size is appropriate")
+            if size < 5:
+                print(f"  ??  WARNING: VR.xml seems too small (expected 6-8 MB)")
+            else:
+                print(f"  ? VR.xml size is appropriate")
             
-        vr_xml_found = True
-        break
+            vr_xml_found = True
+            break
     
-if not vr_xml_found:
-    print("  ? CRITICAL: VR.xml not found in distribution!")
-    print(f"  Expected at one of:")
-    for path in vr_xml_paths:
-        print(f"    - {path.absolute()}")
-    print("\n  VR validation and VR viewer will NOT work!")
-    return False
+    if not vr_xml_found:
+        print("  ? CRITICAL: VR.xml not found in distribution!")
+        print(f"  Expected at one of:")
+        for path in vr_xml_paths:
+            print(f"    - {path.absolute()}")
+        print("\n  VR validation and VR viewer will NOT work!")
+        return False
     
-return True
+    return True
 
 def test_module_files_present():
     """Test that all new module files are present."""
