@@ -89,7 +89,7 @@ UI:
 
 ---
 
-## ?? Capabilities Matrix
+## ? Capabilities Matrix
 
 | Capability | Phase 1 | Phase 2 | Phase 3 | Phase 4 |
 |-----------|---------|---------|---------|---------|
@@ -107,7 +107,7 @@ UI:
 
 ---
 
-## ?? Performance Improvements
+## ? Performance Improvements
 
 ### Transmission Speed
 - **Sequential:** ~1 MB/s (baseline)
@@ -126,7 +126,7 @@ UI:
 
 ---
 
-## ??? File Structure
+## ?? File Structure
 
 ```
 dcmcreator/
@@ -475,5 +475,5 @@ cd doc
 # Start with: GETTING_STARTED.md or INDEX.md
 ```
 
-**All systems go! Ready for production use!** ??
+**All systems go! Ready for production use!** ????
 

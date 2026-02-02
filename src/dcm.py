@@ -1,10 +1,22 @@
 import datetime
 import logging
+import os
+from copy import deepcopy
+
 try:
     from .dcmlogger import LOGGER_NAME
 except Exception:
     # Fallback if relative import not available (e.g., run as script)
     LOGGER_NAME = "dcmcreator"
+
+try:
+    from .sop_utils import get_sop_name_only
+except ImportError:
+    try:
+        from sop_utils import get_sop_name_only
+    except ImportError:
+        def get_sop_name_only(sop_uid):
+            return "Unknown SOP"
 
 # Initialize module-level logger
 _logger = logging.getLogger(LOGGER_NAME)
@@ -24,30 +36,42 @@ except Exception:
     MediaStorageDirectoryStorage = None
     PersonName = None
 
+try:
+    import numpy as np
+except Exception:
+    np = None
 
-def create_dicom(save_path, patient, study, series, pixel_array=None):
+
+def create_dicom(save_path, patient, study, series, pixel_array=None, base_dataset=None):
     """
     Create a minimal but valid DICOM `FileDataset` using provided metadata and optional pixel data.
 
     - Uses Secondary Capture as SOP Class (generic image container).
     - Fills required attributes and some optional ones.
     - If `pixel_array` is None, creates a 1x1 black image as placeholder.
+    - If `base_dataset` is provided, uses it as a base to preserve existing tags (including private tags).
     - Returns an in-memory dataset; caller is responsible for `save_as`.
     """
     if pydicom is None:
         _logger.warning("pydicom not available; cannot create DICOM")
         raise RuntimeError("pydicom is required to create DICOM files")
 
-    # Create file meta
-    # File Meta Information contains UIDs for the storage class and instance, plus transfer syntax.
-    file_meta = Dataset()
-    file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
-    file_meta.MediaStorageSOPInstanceUID = generate_uid()
-    file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
+    # Use base dataset if provided, otherwise create new
+    if base_dataset is not None:
+        # Copy the base dataset to preserve all tags including private tags
+        ds = deepcopy(base_dataset)
+        _logger.info("Using base dataset to preserve existing tags including private tags")
+    else:
+        # Create file meta
+        # File Meta Information contains UIDs for the storage class and instance, plus transfer syntax.
+        file_meta = Dataset()
+        file_meta.MediaStorageSOPClassUID = SecondaryCaptureImageStorage
+        file_meta.MediaStorageSOPInstanceUID = generate_uid()
+        file_meta.TransferSyntaxUID = ExplicitVRLittleEndian
 
-    # Create dataset
-    # The `FileDataset` uses a 128-byte preamble and the file meta above.
-    ds = FileDataset(save_path, {}, file_meta=file_meta, preamble=b"\0" * 128)
+        # Create dataset
+        # The `FileDataset` uses a 128-byte preamble and the file meta above.
+        ds = FileDataset(save_path, {}, file_meta=file_meta, preamble=b"\0" * 128)
 
     now = datetime.datetime.now()
     # Explicit VR Little Endian to match the file meta transfer syntax
@@ -177,7 +201,6 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
     # Pixel data
     # Preserve original pixel data characteristics when available
     if pixel_array is not None:
-        import numpy as _np
         arr = pixel_array
         
         # Handle multi-dimensional arrays - flatten to 2D if needed
@@ -202,19 +225,19 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.SamplesPerPixel = 1
         
         # Determine appropriate bit depth based on data type
-        if arr.dtype == _np.uint8:
+        if arr.dtype == np.uint8:
             ds.BitsAllocated = 8
             ds.BitsStored = 8
             ds.HighBit = 7
             ds.PixelRepresentation = 0
             ds.PixelData = arr.tobytes()
-        elif arr.dtype == _np.uint16:
+        elif arr.dtype == np.uint16:
             ds.BitsAllocated = 16
             ds.BitsStored = 16
             ds.HighBit = 15
             ds.PixelRepresentation = 0
             ds.PixelData = arr.tobytes()
-        elif arr.dtype == _np.int16:
+        elif arr.dtype == np.int16:
             ds.BitsAllocated = 16
             ds.BitsStored = 16
             ds.HighBit = 15
@@ -223,17 +246,17 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         else:
             # Convert other types to uint16 to preserve data range
             _logger.warning("Converting pixel array from %s to uint16", arr.dtype)
-            if _np.issubdtype(arr.dtype, _np.integer):
+            if np.issubdtype(arr.dtype, np.integer):
                 # Integer type - preserve range
                 arr_min = arr.min()
                 arr_max = arr.max()
                 if arr_max - arr_min > 0:
-                    arr_normalized = ((arr.astype(_np.float64) - arr_min) / (arr_max - arr_min) * 65535).astype(_np.uint16)
+                    arr_normalized = ((arr.astype(np.float64) - arr_min) / (arr_max - arr_min) * 65535).astype(np.uint16)
                 else:
-                    arr_normalized = _np.zeros_like(arr, dtype=_np.uint16)
+                    arr_normalized = np.zeros_like(arr, dtype=np.uint16)
             else:
                 # Float type - normalize to 0-65535
-                arr_normalized = (arr.astype(_np.float64) * 65535).clip(0, 65535).astype(_np.uint16)
+                arr_normalized = (arr.astype(np.float64) * 65535).clip(0, 65535).astype(np.uint16)
             
             ds.BitsAllocated = 16
             ds.BitsStored = 16
@@ -242,7 +265,6 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
             ds.PixelData = arr_normalized.tobytes()
     else:
         # Include minimal image
-        import numpy as _np
         ds.Rows = 1
         ds.Columns = 1
         ds.PhotometricInterpretation = "MONOCHROME2"
@@ -251,7 +273,7 @@ def create_dicom(save_path, patient, study, series, pixel_array=None):
         ds.BitsStored = 8
         ds.HighBit = 7
         ds.PixelRepresentation = 0
-        ds.PixelData = _np.zeros((1, 1), dtype=_np.uint8).tobytes()
+        ds.PixelData = np.zeros((1, 1), dtype=np.uint8).tobytes()
 
     return ds
 
@@ -287,9 +309,8 @@ def load_dicom(path):
             pixel_array = ds.pixel_array
         elif hasattr(ds, "PixelData") and hasattr(ds, "Rows") and hasattr(ds, "Columns"):
             # Manual fallback for simple cases
-            import numpy as _np
-            dtype = _np.uint8 if getattr(ds, "BitsAllocated", 8) == 8 else _np.uint16
-            pixel_array = _np.frombuffer(ds.PixelData, dtype=dtype)
+            dtype = np.uint8 if getattr(ds, "BitsAllocated", 8) == 8 else np.uint16
+            pixel_array = np.frombuffer(ds.PixelData, dtype=dtype)
             expected = int(ds.Rows) * int(ds.Columns) * int(getattr(ds, "SamplesPerPixel", 1))
             if pixel_array.size >= expected:
                 pixel_array = pixel_array[:expected]
@@ -310,7 +331,6 @@ def _iter_dicom_files(paths_or_dir):
     - For directories, walks recursively and yields files with DICOM-like characteristics.
     - For lists/tuples, yields existing files only.
     """
-    import os
     if isinstance(paths_or_dir, (list, tuple)):
         for p in paths_or_dir:
             if p and os.path.isfile(p):
@@ -329,7 +349,7 @@ def _iter_dicom_files(paths_or_dir):
                                       '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.tar', '.gz')
                     if any(lower_f.endswith(ext) for ext in skip_extensions):
                         continue
-                    
+                        
                     # Prefer files with DICOM extensions or no extension
                     yield os.path.join(root, f)
         elif os.path.isfile(paths_or_dir):
@@ -364,6 +384,11 @@ def load_dicom_grouped(paths_or_dir):
         study_bucket = grouped.setdefault(study_uid, {})
         series_bucket = study_bucket.setdefault(series_uid, [])
         series_bucket.append((ds, arr))
+        
+        sop_class_uid = getattr(ds, "SOPClassUID", None)
+        if sop_class_uid:
+            sop_name = get_sop_name_only(str(sop_class_uid))
+            _logger.debug("Loaded DICOM: %s - %s", sop_name, getattr(ds, "SOPInstanceUID", "unknown"))
 
     if skipped_count > 0:
         _logger.info("Skipped %d non-DICOM or unreadable files", skipped_count)
@@ -383,8 +408,7 @@ def is_dicomdir(path):
         return False
     
     # Quick check: if filename is DICOMDIR, likely a DICOMDIR
-    import os as _os
-    if _os.path.basename(path).upper() == 'DICOMDIR':
+    if os.path.basename(path).upper() == 'DICOMDIR':
         return True
     
     try:
@@ -420,8 +444,7 @@ def load_dicomdir_grouped(dicomdir_path):
         _logger.warning("pydicom not available; cannot load DICOMDIR: %s", dicomdir_path)
         raise RuntimeError("pydicom is required to load DICOMDIR files")
 
-    import os as _os
-    base = _os.path.dirname(dicomdir_path)
+    base = os.path.dirname(dicomdir_path)
     try:
         ddir = pydicom.dcmread(dicomdir_path)
     except Exception as e:
@@ -438,10 +461,10 @@ def load_dicomdir_grouped(dicomdir_path):
                 ref = getattr(record, 'ReferencedFileID', None)
                 if ref:
                     if isinstance(ref, (list, tuple)):
-                        rel = _os.path.join(*ref)
+                        rel = os.path.join(*ref)
                     else:
                         rel = str(ref)
-                    referenced_files.append(_os.path.join(base, rel))
+                    referenced_files.append(os.path.join(base, rel))
     # Fallback: if no image records, scan folder
     if not referenced_files:
         referenced_files = list(_iter_dicom_files(base))

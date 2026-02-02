@@ -1,8 +1,15 @@
-# DICOM Creator v0.3.1
+﻿# DICOM Creator v0.6.0
 
-A professional DICOM file creation, editing, and transmission tool with comprehensive testing and validation capabilities.
+A professional DICOM file creation, editing, and transmission tool with comprehensive validation, testing, and transmission capabilities.
 
-## ? Features
+## Quick Links
+
+- **[Main README](../README.md)** - Complete project documentation
+- **[INDEX.md](INDEX.md)** - Full documentation index
+- **[Changelog v0.6.0](CHANGELOG_v0.6.0.md)** - Release notes and new features
+- **[Build Instructions](BUILD_INSTRUCTIONS.md)** - How to build the EXE
+
+## Features
 
 ### Core Features
 - **DICOM Metadata Management** - Create and edit patient, study, and series metadata
@@ -11,7 +18,46 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
 - **Server Presets** - Save and manage server connection profiles
 
-### Advanced Testing System (v0.3.1)
+### Data Validation & Compliance (v0.6.0)
+
+#### **Real-Time VR Validation**
+- Comprehensive validation of all DICOM data elements
+- Field-level validation with specific error messages
+- Support for all DICOM Value Representation types
+- Reference to DICOM PS3.6 standard
+
+#### **Validation Report Dialogs**
+- Interactive validation dialogs with error details
+- Color-coded errors vs warnings
+- Remediation suggestions for invalid values
+- Options to review and continue or abort
+
+#### **Load-Time Validation**
+- Automatic validation when loading DICOM files
+- Detailed error reporting in validation dialogs
+- Option to continue with warnings or cancel
+
+#### **Pre-Save Validation**
+- Validation check before saving DICOM files
+- Prevents saving invalid DICOM files
+- Clear error messages with how to fix
+
+#### **Pre-Send Validation**
+- Validation before transmitting to remote server
+- Ensures server receives compliant DICOM
+- Automatic validation before transmission
+
+#### **DICOMDIR Support**
+- Load and process DICOMDIR files
+- Automatic expansion of directory references
+- Support for hierarchical structures
+
+#### **Private Tag Preservation**
+- Maintains manufacturer-specific tags during save
+- Ensures data integrity through edit/save cycles
+- Group Length cleanup for DICOM 2008+ compliance
+
+### Advanced Testing System (v0.3.1+)
 
 #### **Connection Testing Tab**
 - TCP connection validation
@@ -45,183 +91,262 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ### Test Data Generation
 - **Random DICOM Generator** - Create test DICOM files with random metadata
+- **Hierarchical Generation** - Patient → Study → Series → Instances structure
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and immediately send test files
 
-## ?? Quick Start
-
-### Installation
-```bash
-git clone https://github.com/piotrrozentreter/dcmcreator.git
-cd dcmcreator
-pip install -r requirements.txt
-```
-
-### Running the Application
-```bash
-python src/app.py
-```
-
-## ?? 13 Application Tabs
-
-| Tab | Purpose |
-|-----|---------|
-| **Patient** | Patient metadata (name, ID, age, sex, etc.) |
-| **Study** | Study metadata (date, description, accession) |
-| **Series/Modality** | Series metadata (modality, description, protocol) |
-| **Image** | Image loading and preview |
-| **Load DICOM** | Load and browse DICOM files/folders |
-| **Save** | Save DICOM files |
-| **Remote** | Configure server and send DICOM |
-| **Test/Generate** | Generate test DICOMs and transmission tests |
-| **Connection Test** | Validate server connectivity |
-| **Stress Test** | Simulate high-load scenarios |
-| **Transmission History** | Track and analyze transmission history |
-| **Benchmarking** | Performance analysis and reporting |
-| **Parallel Send** | Multi-threaded transmission management |
-
-## ?? Testing System
-
-### Test Execution Workflow
-
-1. **Connection Validation**
-   ```
-   Connection Test Tab ? Test TCP/Quality/Latency
-   ```
-
-2. **DICOM Generation**
-   ```
-   Test/Generate Tab ? Generate DICOMs ? Creates test files
-   ```
-
-3. **Stress Testing**
-   ```
-   Stress Test Tab ? Create Plan ? Start Test ? Analyze Results
-   ```
-
-4. **Transmission**
-   ```
-   Test/Generate Tab ? Send All Generated ? Transmission History
-   ```
-
-### Quick Test Execution
-
-See `doc/QUICK_TEST_EXECUTION_GUIDE.md` for step-by-step testing procedures.
-
-See `doc/WHERE_TO_RUN_TESTS.md` for recommended test environments.
-
-## ?? Documentation
-
-### Getting Started
-- [Getting Started Guide](doc/GETTING_STARTED.md)
-- [Build Instructions](doc/BUILD_INSTRUCTIONS.md)
-
-### Features & Usage
-- [Index & Navigation](doc/INDEX.md)
-- [Server Presets Guide](doc/SERVER_PRESETS.md)
-- [Random DICOM Generator](doc/RANDOM_DICOM_GENERATOR.md)
-- [Quick Start - Presets](doc/QUICK_START_PRESETS.md)
-- [Quick Start - DICOM Generator](doc/QUICK_START_RANDOM_DICOM.md)
-
-### Testing & Development
-- [Complete Test Execution Reference](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)
-- [Quick Test Execution Guide](doc/QUICK_TEST_EXECUTION_GUIDE.md)
-- [Where to Run Tests](doc/WHERE_TO_RUN_TESTS.md)
-- [Developer Guide - Presets](doc/DEVELOPER_GUIDE_PRESETS.md)
-
-### Project Info
-- [Project Structure](doc/ORGANIZATION.md)
-- [Changelog](doc/CHANGELOG_v0.3.0.md)
-- [Distribution Guide](doc/DISTRIBUTION_GUIDE.md)
-
-## ?? System Requirements
-
-- **Python** 3.7+
-- **pydicom** - DICOM file handling
-- **Pillow** - Image processing
-- **numpy** - Numerical operations
-- **pynetdicom** - DICOM networking (optional, for remote send)
-
-## ?? Project Structure
-
-```
-dcmcreator/
-??? src/
-?   ??? app.py                          # Main application entry point
-?   ??? appgui.py                       # GUI implementation (13 tabs)
-?   ??? dcm.py                          # DICOM operations
-?   ??? presets.py                      # Server presets manager
-?   ??? random_dicom.py                 # Test DICOM generator
-?   ??? connection_validator.py         # Connection testing
-?   ??? stress_tester.py                # Stress testing
-?   ??? transmission_history.py         # Transmission tracking
-?   ??? performance_benchmarking.py     # Performance testing
-?   ??? parallel_transmission.py        # Parallel sending
-?   ??? dcmlogger.py                    # Logging utilities
-??? doc/                                # Complete documentation
-??? requirements.txt                    # Dependencies
-??? README.md                           # This file
-```
-
-## ?? Use Cases
-
-### Clinical Testing
-- Validate DICOM SCP server connectivity
-- Test remote DICOM transmission
-- Performance benchmarking under load
-
-### Development
-- Generate test DICOM files
-- Stress test DICOM servers
-- Performance analysis and optimization
-
-### Quality Assurance
-- Transmission history tracking
-- Success rate monitoring
-- Latency and throughput analysis
-
-## ?? Key Metrics
-
-- **Transmission Tracking** - Track all sent/received DICOMs
-- **Performance Analysis** - Measure latency, throughput, success rates
-- **Stress Testing** - Simulate up to 50 files/second
-- **Parallel Performance** - Up to 10x improvement with worker threads
-
-## ?? Version History
-
-### v0.3.1 (Current)
-- ? Connection Testing System
-- ? Stress Testing Framework
-- ? Transmission History Tracking
-- ? Performance Benchmarking
-- ? Parallel Transmission Manager
-- ? Complete Test Execution Reference
-
-### v0.3.0
-- DICOM creation and editing
-- Server presets management
-- Remote DICOM transmission
-- Random DICOM generator
-
-## ?? Contributing
-
-For development guidelines, see `doc/DEVELOPER_GUIDE_PRESETS.md`.
-
-## ?? License
-
-See LICENSE file for details.
-
-## ?? Author
-
-Written by Piotr Rozentreter  
-� 2025-2026 Hyland
+### DICOM Inspection & Analytics
+- **DICOM Tag Viewer** - View all DICOM tags including private tags
+- **Tag Search & Filter** - Find tags by name, keyword, or number
+- **Tag Export** - Export tag information to text files
+- **VR Information** - Display VR types and constraints for each tag
 
 ---
 
-## ?? Next Steps
+## What's New in v0.6.0
 
-1. **First Time Users** ? Read [Getting Started Guide](doc/GETTING_STARTED.md)
-2. **Test System Users** ? Read [Complete Test Execution Reference](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)
-3. **Developers** ? Read [Developer Guide](doc/DEVELOPER_GUIDE_PRESETS.md)
-4. **Deployment** ? Read [Distribution Guide](doc/DISTRIBUTION_GUIDE.md)
+### Validation System (Major Feature)
+
+**Real-Time VR Validation:**
+- Validates form data against DICOM standards
+- Comprehensive field-level error detection
+- Integration with all save/send workflows
+
+**New Dialogs:**
+- Validation Report Dialog for detailed error information
+- Load Validation Dialog for DICOM file loading
+- Pre-Save Validation for file operations
+- Pre-Send Validation for remote transmission
+
+**DICOM Compliance:**
+- Full DICOM PS3.6 standard support
+- VR type enforcement
+- Value range validation
+- Format compliance checking
+
+### DICOM Operations
+
+**DICOMDIR Support:**
+- Load DICOMDIR files with automatic reference expansion
+- Hierarchical dataset organization
+- Full compatibility with DICOM directory structures
+
+**Private Tag Preservation:**
+- Maintains all manufacturer-specific tags
+- Ensures data integrity through edit cycles
+- Group Length cleanup for modern systems
+
+### User Interface
+
+**Tab Visibility Management:**
+- Hide/show test tabs via View menu
+- Cleaner UI with optional features
+- Quick "Show All" / "Hide Test Tabs" options
+
+**Enhanced Context Menus:**
+- Right-click on DICOM instances
+- Quick image viewing
+- Easy navigation to Image tab
+
+**Better Error Messages:**
+- Clear, actionable error descriptions
+- Reference to DICOM standards
+- Suggestions for fixing issues
+
+**Improved Image Preview:**
+- Better handling of various dimensions
+- Improved resizing and aspect ratio
+- Support for more image formats
+
+### Developer Features
+
+**Enhanced LazyImport:**
+- Better detection of main classes in multi-class modules
+- Explicit class selection support
+- Improved error diagnostics
+
+**Better Error Handling:**
+- Clear diagnostics when modules unavailable
+- Graceful fallback mechanisms
+- No crashes due to missing optional features
+
+**Enhanced Logging:**
+- More detailed debug information
+- Better error context
+- Improved troubleshooting data
+
+---
+
+## System Requirements
+
+### Minimum Requirements
+- Python 3.9 or higher
+- Windows 7+, macOS 10.14+, or Linux
+- 500 MB RAM minimum
+- 100 MB disk space
+
+### Recommended Requirements
+- Python 3.10+
+- Windows 10+, macOS 11+, or modern Linux
+- 1 GB+ RAM
+- 500 MB disk space for tests/logs
+
+### Dependencies
+- `pydicom >= 2.4.0` - DICOM library
+- `pynetdicom >= 2.0.0` - DICOM network communication
+- `pillow >= 10.0.0` - Image processing
+- `numpy >= 1.20.0` - Array operations
+
+---
+
+## Quick Start
+
+### Option 1: Windows EXE (Recommended for Windows Users)
+
+1. Download from releases
+2. Extract to any folder
+3. Run `DICOM Creator.exe`
+4. No installation required!
+
+### Option 2: Run from Python
+
+```bash
+# Install
+git clone https://github.com/piotrrozentreter/dcmcreator
+cd dcmcreator
+pip install -r requirements.txt
+
+# Run
+python src/app.py
+```
+
+---
+
+## Documentation Structure
+
+```
+doc/
+├── INDEX.md                              ← START HERE
+├── CHANGELOG_v0.6.0.md                   ✨ CURRENT - New validation system
+├── CHANGELOG_v0.5.0.md                   - LazyImport enhancements
+├── CHANGELOG_v0.4.0.md                   - Testing features
+├── CHANGELOG_v0.3.0.md                   - Server presets
+│
+├── User Guides:
+│   ├── QUICK_START_PRESETS.md
+│   ├── QUICK_START_TAG_VIEWER.md
+│   ├── QUICK_START_RANDOM_DICOM.md
+│   ├── SERVER_PRESETS.md
+│   ├── TAG_VIEWER_FEATURE.md
+│   ├── RANDOM_DICOM_GENERATOR.md
+│   ├── QUICK_TEST_EXECUTION_GUIDE.md
+│   ├── COMPLETE_TEST_EXECUTION_REFERENCE.md
+│   └── PARALLEL_TRANSMISSION_GUIDE.md
+│
+├── Build & Deployment:
+│   ├── BUILD_INSTRUCTIONS.md
+│   ├── BUILD_QUICK_REFERENCE.md
+│   └── DISTRIBUTION_GUIDE.md
+│
+└── Developer:
+    ├── DEVELOPER_GUIDE_PRESETS.md
+    └── EXTERNAL_SCRIPT_USAGE.md
+```
+
+---
+
+## Common Tasks
+
+### Validate DICOM Data (NEW in v0.6.0)
+```
+1. Fill in Patient/Study/Series metadata
+2. File Menu → Validate
+3. Review validation report
+4. Fix any errors or continue with warnings
+5. Save or Send DICOM
+```
+
+### View DICOM Tags
+```
+1. Load a DICOM file
+2. DICOM Menu → View All Tags
+3. Search/filter tags
+4. Export to text if needed
+```
+
+### Transmit to Server
+```
+1. Load or create DICOM
+2. Go to Remote tab
+3. Enter server IP and port
+4. Click Send All Loaded DICOM
+5. Monitor progress in Messages area
+```
+
+### Run Connection Test
+```
+1. Go to Connection Test tab
+2. Enter server IP and port
+3. Click "Test TCP" button
+4. Review results
+```
+
+### Generate Test DICOMs
+```
+1. Go to Test/Generate tab
+2. Set hierarchy (studies/series/instances)
+3. Select output directory
+4. Click "Generate DICOMs"
+5. Files are created and ready to send
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**"VRValidator not available"**
+- Check that `src/VR.xml` exists
+- Rebuild or reinstall the application
+
+**"Connection Validator could not be loaded"**
+- Update to v0.5.0+
+- Verify `connection_validator.py` is present
+
+**"Validation errors found" (v0.6.0)**
+- Review error details in validation dialog
+- Common: Date format (YYYYMMDD), invalid VR values
+- Fix issues or click "Continue" if warnings only
+
+**Module loading issues**
+- Check log files for detailed errors
+- Reinstall dependencies: `pip install -r requirements.txt --force-reinstall`
+- Verify all required files are present
+
+---
+
+## Version Information
+
+| Version | Date | Status | Key Features |
+|---------|------|--------|--------------|
+| **0.6.0** | Jan 2025 | **Current** | ✨ VR Validation, DICOMDIR, dialogs |
+| 0.5.0 | Jan 2025 | Stable | LazyImport improvements |
+| 0.4.0 | Dec 2024 | Stable | Connection/Stress testing |
+| 0.3.0 | Nov 2024 | Stable | Server presets, Tag viewer |
+| 0.2.0 | Oct 2024 | Legacy | Remote transmission |
+| 0.1.0 | Sep 2024 | Legacy | Basic DICOM creation |
+
+---
+
+## Support
+
+- **Documentation**: See [INDEX.md](INDEX.md)
+- **GitHub Issues**: Report bugs
+- **GitHub Discussions**: Ask questions
+- **Changelog**: [CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)
+
+---
+
+**Happy DICOM Creating! 🏥📊**
 

@@ -16,7 +16,16 @@ except Exception:
     ImageTk = None
     np = None
 
-APP_TITLE = "DICOM Creator v0.5.0\n"
+try:
+    from .sop_utils import get_sop_name_only
+except ImportError:
+    try:
+        from sop_utils import get_sop_name_only
+    except ImportError:
+        def get_sop_name_only(sop_uid):
+            return "Unknown SOP"
+
+APP_TITLE = "DICOM Creator v0.6.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -650,9 +659,9 @@ class DicomCreatorApp(tk.Tk):
                 output_dir=output_dir
             )
 
-            self._append_test_status(f"? Generated {len(files)} hierarchical DICOM files")
+            self._append_test_status(f"  Generated {len(files)} hierarchical DICOM files")
             self._append_test_status(f"  Location: {output_dir}")
-            self._append_test_status(f"  Structure: Patient ? {studies_per_patient} Studies ? {series_per_study} Series ? {instances_per_series} Instances")
+            self._append_test_status(f"  Structure: Patient: {studies_per_patient} Studies -> {series_per_study} Series -> {instances_per_series} Instances")
 
             messagebox.showinfo(APP_TITLE, f"Generated {len(files)} hierarchical DICOM files")
         except ValueError as ve:
@@ -825,7 +834,7 @@ class DicomCreatorApp(tk.Tk):
         """Show About dialog."""
         messagebox.showinfo(
             APP_TITLE,
-            f"{APP_TITLE}(c) 2025-2026 by Hyland\nWritten by Piotr Rozentreter\n\n"
+            f"{APP_TITLE}(c) 2025-2026 by Piotr Rozentreter\n\n"
             "A tool to create, edit, test and sendingDICOM metadata and images."
         )
 
@@ -1158,6 +1167,15 @@ class DicomCreatorApp(tk.Tk):
                 messagebox.showerror(APP_TITLE, f"Failed to import DICOM module: {e}")
                 return
 
+        # Get base dataset if available (to preserve private tags and other non-form tags)
+        base_dataset = None
+        if self.selected_study_uid and self.selected_series_uid:
+            # Get the first instance from the selected series
+            instances = self.grouped_dicom.get(self.selected_study_uid, {}).get(self.selected_series_uid, [])
+            if instances:
+                base_dataset, _ = instances[0]
+                self.logger.info("Using loaded dataset as base to preserve private tags")
+
         try:
             ds = create_dicom(
                 save_path=save_path,
@@ -1203,15 +1221,83 @@ class DicomCreatorApp(tk.Tk):
                     "Laterality": self.series_vars["Laterality"].get().strip(),
                 },
                 pixel_array=self.pixel_array,
+                base_dataset=base_dataset,
             )
         except Exception as e:
             self.logger.exception("Failed to create DICOM dataset")
             messagebox.showerror(APP_TITLE, f"Failed to create DICOM: {e}")
             return
 
+        # Count total tags before save to detect removals
+        tags_before = len(ds)
+        original_tag_count = tags_before
+        
+        # Warn user about potential tag removal if using base_dataset
+        if base_dataset is not None:
+            warning_msg = (
+                "DICOM Tag Cleanup Notice\n\n"
+                f"Original file: {original_tag_count} tags\n\n"
+                "During save, pydicom will remove:\n"
+                "- Group Length tags (element 0000) - deprecated since DICOM 2008\n"
+                "- Obsolete/retired tags - for DICOM 2008+ compliance\n\n"
+                "All data-bearing private tags will be preserved.\n\n"
+                "Do you want to continue saving?"
+            )
+            
+            result = messagebox.askyesno(APP_TITLE, warning_msg)
+            if not result:
+                self.logger.info("Save cancelled by user due to tag removal warning")
+                messagebox.showinfo(APP_TITLE, "Save cancelled.")
+                return
+
         try:
-            ds.save_as(save_path)
-            messagebox.showinfo(APP_TITLE, f"DICOM saved to: {save_path}")
+            # Save with write_like_original=False to ensure proper DICOM format
+            ds.save_as(save_path, write_like_original=False)
+            
+            # Verify private tags were saved correctly
+            try:
+                import pydicom as pydicom_verify
+                saved_ds = pydicom_verify.dcmread(save_path)
+                tags_after = len(saved_ds)
+                removed_tags_count = original_tag_count - tags_after
+                
+                saved_private_tags = [(elem.tag, elem.tag.group, elem.tag.element) 
+                                      for elem in saved_ds if elem.tag.group % 2 == 1]
+                
+                # Check if any Group Length tags were removed
+                original_private_tags = [(elem.tag, elem.tag.group, elem.tag.element) 
+                                        for elem in ds if elem.tag.group % 2 == 1]
+                
+                removed_group_length = False
+                for tag, group, elem in original_private_tags:
+                    if elem == 0 and (group, elem) not in [(t[1], t[2]) for t in saved_private_tags]:
+                        removed_group_length = True
+                        print(f"[INFO] Group Length tag ({group:04x},0000) was removed (deprecated in modern DICOM)")
+                
+                print(f"[VERIFY] Saved file contains {len(saved_private_tags)} private tag(s)")
+                if len(saved_private_tags) > 0:
+                    for tag, group, element in saved_private_tags:
+                        print(f"  [VERIFY TAG] {tag} (group={group:04x}, elem={element:04x})")
+                        
+                if removed_group_length:
+                    self.logger.info("Group Length tags removed during save (standard DICOM behavior)")
+                
+                # Show confirmation with tag counts
+                if removed_tags_count > 0:
+                    info_msg = (
+                        "DICOM file saved successfully!\n\n"
+                        f"Tags before: {original_tag_count}\n"
+                        f"Tags after: {tags_after}\n"
+                        f"Removed: {removed_tags_count} (obsolete/retired tags)\n"
+                        f"Private tags preserved: {len(saved_private_tags)}"
+                    )
+                else:
+                    info_msg = f"DICOM file saved successfully!\n\nTotal tags: {tags_after}"
+                
+                messagebox.showinfo(APP_TITLE, info_msg)
+            except Exception as verify_error:
+                self.logger.warning("Verification of saved DICOM failed", exc_info=True)
+                messagebox.showwarning(APP_TITLE, "DICOM saved but verification failed")
         except Exception as e:
             self.logger.exception("Failed to save DICOM to '%s'", save_path)
             messagebox.showerror(APP_TITLE, f"Failed to save DICOM: {e}")
@@ -1426,6 +1512,8 @@ class DicomCreatorApp(tk.Tk):
             cols = getattr(ds, 'Columns', None)
             if rows and cols:
                 self.image_label.config(text=f"Selected Study: {study_uid} | {cols}x{rows}")
+            else:
+                self.image_label.config(text=f"Selected Study: {study_uid}")
             
             # Update preview if no user-loaded image is active
             if self.image_source != "file" and arr is not None:
@@ -1503,6 +1591,8 @@ class DicomCreatorApp(tk.Tk):
         cols = getattr(ds, 'Columns', None)
         if rows and cols:
             self.image_label.config(text=f"Selected Series: {series_uid} | {cols}x{rows}")
+        else:
+            self.image_label.config(text=f"Selected Series: {series_uid}")
             
         # Only update preview if no user-loaded image is active
         if self.image_source != "file" and arr is not None:
@@ -1613,8 +1703,14 @@ class DicomCreatorApp(tk.Tk):
             self.logger.info("Send cancelled due to validation")
             return
         
-        # Always create dataset from current form values to ensure modifications are sent
-        grouped_to_send = self._create_in_memory_dataset(patient_id)
+        # Use loaded studies if available, otherwise create from form values
+        if self.grouped_dicom:
+            grouped_to_send = self.grouped_dicom
+            self._append_remote_message(f"Sending {len(grouped_to_send)} loaded studies")
+        else:
+            # No studies loaded, create dataset from current form values
+            grouped_to_send = self._create_in_memory_dataset(patient_id)
+        
         if not grouped_to_send:
             return
 
@@ -2445,6 +2541,18 @@ result = bench.run_file_size_benchmark(
 
 # Get report
 print(bench.get_benchmark_report(0))
+print(bench.get_all_benchmarks_summary())
+
+BENEFITS:
+- 5 workers = ~5x faster than sequential
+- Automatic load balancing
+- Real-time progress tracking
+- Detailed performance report
+
+Tips:
+- For large files, increase memory limits
+- Monitor CPU/memory usage during tests
+- Adjust worker count based on system capability
 """
         messagebox.showinfo(APP_TITLE, example)
     
@@ -2466,7 +2574,7 @@ print(bench.get_benchmark_report(0))
         
         ttk.Label(config_frame, text="Worker Threads:").grid(row=0, column=0, sticky="w", padx=5)
         self.parallel_workers = tk.StringVar(value="5")
-        ttk.Spinbox(config_frame, from_=1, to=10, textvariable=self.parallel_workers, width=10).grid(row=0, column=1, sticky="w", padx=5)
+        ttk.Entry(config_frame, textvariable=self.parallel_workers, width=30).grid(row=0, column=1, sticky="ew", padx=5)
         
         ttk.Label(config_frame, text="Session Name:").grid(row=1, column=0, sticky="w", padx=5)
         self.parallel_session_name = tk.StringVar(value="Bulk Transmission")

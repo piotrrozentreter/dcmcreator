@@ -42,9 +42,9 @@ def main():
         print("\n" + "="*60)
         print("GENERATION COMPLETE")
         print("="*60)
-        print(f"? Generated {len(files)} DICOM files")
-        print(f"? Location: {os.path.abspath(OUTPUT_DIR)}")
-        print(f"? Total size: {len(files) * FILE_SIZE_MB:.1f} MB")
+        print(f"Generated {len(files)} DICOM files")
+        print(f"Location: {os.path.abspath(OUTPUT_DIR)}")
+        print(f"Total size: {len(files) * FILE_SIZE_MB:.1f} MB")
         
         print("\nGenerated files:")
         for i, filepath in enumerate(files[:5], 1):

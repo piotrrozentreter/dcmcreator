@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,6 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
+- [What's New in v0.6.0](#whats-new-in-v060)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -83,28 +84,49 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 #### **Test Data Generation**
 - Random DICOM Generator - Create test files with random metadata
-- Hierarchical generation (Patient ? Study ? Series ? Instances)
+- Hierarchical generation (Patient → Study → Series → Instances)
 - Bulk generation with configurable sizes
 - Integrated testing workflow
 - Immediate test and send capabilities
 
-### What's New in v0.5.0
+### What's New in v0.6.0
 
-**Enhanced Features:**
-- Improved LazyImport system for better module loading
-- Enhanced class detection for modules with multiple classes
-- Better error handling and diagnostics
-- Performance optimizations for large DICOM datasets
+**Enhanced Validation Features:**
+- **Real-time VR Validation** - Validate form data as you edit with comprehensive VR compliance checks
+- **Validation Dialogs** - Interactive validation reports with field-level error reporting
+- **Field-Level Validation** - Immediate feedback on individual DICOM data elements
+- **Load-Time Validation** - Automatic validation when loading DICOM files with warnings for issues
+- **Pre-Save Validation** - Prevent saving invalid DICOM files with detailed error messages
+- **Pre-Send Validation** - Validate before remote transmission to DICOM servers
 
-**Bug Fixes:**
-- Fixed ConnectionValidator class loading issue
-- Improved module import reliability
-- Better handling of missing optional dependencies
+**UI Improvements:**
+- **Validation Report Dialog** - Detailed visual reporting of validation errors and warnings
+- **Enhanced Error Messages** - Clear descriptions of validation issues with remediation suggestions
+- **Tab Visibility Management** - Toggle test tabs on/off via View menu
+- **Improved Image Preview** - Better handling of various image formats and dimensions
+- **Enhanced Context Menus** - Right-click on instances to view images
+
+**DICOM Operations:**
+- **DICOMDIR Support** - Load and expand DICOMDIR files to reference datasets
+- **Private Tag Preservation** - Maintain private tags during save operations
+- **Group Length Cleanup** - Automatic removal of deprecated Group Length tags (DICOM 2008+ compliance)
+- **Enhanced Tag Verification** - Post-save verification of tag integrity
+
+**Testing Enhancements:**
+- **Connection Validator Improvements** - Better error detection and reporting
+- **Parallel Transmission** - Improved worker management and progress tracking
+- **Transmission History** - Enhanced session tracking and statistics
+
+**Developer & Admin Features:**
+- **Improved LazyImport** - Better handling of multi-class modules with explicit class selection
+- **Enhanced Logging** - Detailed debug information for troubleshooting
+- **Better Error Diagnostics** - Clear error messages for import and module loading issues
 
 **Documentation:**
-- Updated Copilot instructions for LazyImport
+- Complete VR Validator documentation
 - Enhanced troubleshooting guides
-- Improved code documentation
+- New validation workflow documentation
+- Improved API documentation for developers
 
 ## Quick Start
 
@@ -128,7 +150,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 **Installation:**
 ```bash
 # Clone the repository
-git clone https://github.com/HylandSoftware/dcmcreator
+git clone https://github.com/piotrrozentreter/dcmcreator
 cd dcmcreator
 
 # Create virtual environment (optional but recommended)
@@ -157,7 +179,7 @@ Want to build a standalone executable yourself?
 Starting with **v0.4.0+**, the build includes additional optional modules for testing. Make sure you have all dependencies:
 
 ```bash
-# Install build dependencies (updated for v0.5.0)
+# Install build dependencies (updated for v0.6.0)
 pip install -r build-requirements.txt
 ```
 
@@ -189,11 +211,12 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with:
 - All transmission history features
 - All performance benchmarking features
 - All parallel transmission features
-- Enhanced LazyImport system (v0.5.0)
+- Enhanced validation system (v0.6.0)
+- Improved LazyImport system (v0.6.0)
 
 **See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
 
-### What's Bundled (v0.5.0)
+### What's Bundled (v0.6.0)
 
 The build now automatically includes:
 
@@ -215,7 +238,8 @@ All optional test modules are automatically included in the build - no extra con
 
 1. Fill in Patient, Study, Series metadata
 2. (Optional) Load an image via Image tab
-3. Click "Save" to save as DICOM
+3. Click "Validate" from File menu to check your data (v0.6.0)
+4. Click "Save" to save as DICOM
 
 ### Loading DICOM Files
 
@@ -223,13 +247,15 @@ All optional test modules are automatically included in the build - no extra con
 2. Click "Load DICOM File(s)" or "Load DICOM Folder"
 3. Select studies/series from the tree
 4. Metadata auto-populates in the forms
+5. Any validation issues are reported (v0.6.0)
 
 ### Sending to Remote Server
 
 1. Fill in Server IP/hostname and Port
 2. Optionally adjust AE Titles
-3. Click "Send All Loaded DICOM"
-4. Monitor progress in Messages area
+3. Validation is performed before sending (v0.6.0)
+4. Click "Send All Loaded DICOM"
+5. Monitor progress in Messages area
 
 #### Using Server Presets
 1. Go to "Remote" tab
@@ -238,17 +264,29 @@ All optional test modules are automatically included in the build - no extra con
 4. Select preset and click "Load" or simply select and it auto-applies
 5. Click "Send All Loaded DICOM"
 
-### Testing & Validation
+### Data Validation & VR Compliance (v0.6.0)
 
-#### DICOM Data Validation & Inspection
-- Go to "File" menu  "Validate" to check current form data
-- Go to "DICOM" menu  "View VRs" to browse DICOM Value Representations
-- Go to "DICOM" menu  "View All Tags" to inspect all tags in a DICOM file:
-- View all public and private tags
-- Search and filter tags
-- Export tags to text file
-- View tag statistics
-- Color-coded private tags
+#### Validate Form Data
+- Go to "File" menu → "Validate" to check all form fields against VR specifications
+- View detailed validation report with specific error messages
+- Get remediation suggestions for invalid values
+- Optional: continue anyway if there are only warnings
+
+#### DICOM Data Inspection
+- Go to "DICOM" menu → "View VRs" to browse complete DICOM Value Representations
+- Go to "DICOM" menu → "View All Tags" to inspect all tags in a DICOM file:
+  - View all public and private tags
+  - Search and filter tags
+  - Export tags to text file
+  - View tag statistics
+  - Color-coded private tags
+
+#### Automatic Load Validation
+- When loading DICOM files, validation is performed automatically
+- Any errors or warnings are reported in a dialog
+- You can view the full validation report if needed
+
+### Testing & Validation
 
 #### Connection Testing
 - Go to "Connection Test" tab
@@ -337,6 +375,7 @@ python test/verify_build.py
 
 ### Additional Resources
 - **[examples/](examples/)** - Example scripts for common tasks
+- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - Release notes for v0.6.0
 - **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - Release notes for v0.5.0
 - **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Release notes for v0.4.0
 - **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
@@ -347,9 +386,9 @@ python test/verify_build.py
 dcmcreator/
 ├── src/
 │   ├── app.py                      (Entry point)
-│   ├── appgui.py                   (Main GUI application - v0.5.0)
+│   ├── appgui.py                   (Main GUI application - v0.6.0)
 │   ├── app_logic.py                (Core application logic)
-│   ├── import_helper.py            (Enhanced LazyImport - v0.5.0)
+│   ├── import_helper.py            (Enhanced LazyImport - v0.5.0+)
 │   ├── dcm.py                      (DICOM creation/loading)
 │   ├── remote.py                   (DICOM C-STORE sending)
 │   ├── presets.py                  (Server Presets management)
@@ -360,8 +399,8 @@ dcmcreator/
 │   ├── parallel_transmission.py    (Multi-threaded sending)
 │   ├── random_dicom.py             (Test DICOM generator)
 │   ├── test_runner.py              (Testing framework)
-│   ├── vr_validator.py             (VR validation)
-│   ├── validation_dialog.py        (Validation UI)
+│   ├── vr_validator.py             (VR validation - v0.6.0)
+│   ├── validation_dialog.py        (Validation UI - v0.6.0)
 │   ├── tag_dialog.py               (Tag viewer UI)
 │   └── dcmlogger.py                (Logging setup)
 ├── test/                           (Test scripts and verification)
@@ -390,7 +429,38 @@ dcmcreator/
 
 ## Version History
 
-### Version 0.5.0 (Current)
+### Version 0.6.0 (Current)
+**Release Date**: January 2025
+
+**Major Features:**
+- **Real-time VR Validation System** - Comprehensive validation of DICOM data elements
+- **Validation Report Dialogs** - Interactive UI for viewing and understanding validation issues
+- **DICOM Load Validation** - Automatic validation when loading DICOM files with error reporting
+- **Pre-Send Validation** - Validate before remote transmission to ensure compliance
+- **DICOMDIR Support** - Load and reference DICOM dataset files
+- **Private Tag Preservation** - Maintain private tags during file operations
+- **Group Length Cleanup** - Automatic DICOM 2008+ compliance
+
+**Enhancements:**
+- Enhanced field-level validation with remediation suggestions
+- Improved context menus for DICOM instances
+- Better image preview handling for various formats
+- Improved error messages and diagnostics
+- Better LazyImport handling for multi-class modules
+
+**UI Improvements:**
+- View menu for toggling test tabs on/off
+- Enhanced validation dialogs with detailed reporting
+- Better image preview resizing and display
+- Improved right-click context menus
+
+**Bug Fixes:**
+- Fixed validation dialog display issues
+- Improved error handling for missing dependencies
+- Better handling of edge cases in image preview
+- Enhanced module loading reliability
+
+### Version 0.5.0
 **Release Date**: January 2025
 
 **New Features:**
@@ -405,8 +475,8 @@ dcmcreator/
 
 **Bug Fixes:**
 - Fixed ConnectionValidator class loading issue
-- Improved import error handling
-- Better fallback mechanisms for missing dependencies
+- Improved module import reliability
+- Better handling of missing optional dependencies
 
 ### Version 0.4.0
 **Release Date**: December 2024
@@ -453,9 +523,9 @@ MIT License. See `LICENSE` for details.
 
 ## Support & Contributing
 
-- **GitHub**: https://github.com/HylandSoftware/dcmcreator
+- **GitHub**: https://github.com/piotrrozentreter/dcmcreator
 - **Issues**: Report bugs via GitHub Issues
-- **Internal Support**: Contact Hyland development team
+- **Internal Support**: Contact development team
 
 ## Troubleshooting
 
@@ -480,11 +550,17 @@ MIT License. See `LICENSE` for details.
 - Verify server IP and port are correct
 - Try saving and loading a Server Preset
 
-### Module Loading Issues (v0.5.0)
+### Module Loading Issues (v0.5.0+)
 - Check log files for detailed error messages
 - Verify all dependencies are installed
 - Try reinstalling with `pip install -r requirements.txt --force-reinstall`
 - Contact support if LazyImport errors persist
+
+### Validation Issues (v0.6.0)
+- Check that `src/VR.xml` exists in your installation
+- VR Validator requires the complete DICOM dictionary
+- Review validation error messages for specific remediation steps
+- Fields marked with warnings can still be saved if needed
 
 ### Common Error Messages
 
@@ -498,12 +574,7 @@ MIT License. See `LICENSE` for details.
 - Update to latest version
 - Check that `connection_validator.py` is present
 
-#### "Remote unavailable: pynetdicom not installed"
-- Install with: `pip install pynetdicom>=2.0.0`
-- Verify installation: `python -c "import pynetdicom; print(pynetdicom.__version__)"`
-
----
-
-**Need Help?** Check the [documentation](doc/INDEX.md) or open an [issue](https://github.com/HylandSoftware/dcmcreator/issues).
-
-**Quick Links:** [Quick Start](#quick-start) | [Features](#features) | [Documentation](#documentation) | [Screenshots](#screenshots)
+#### "Validation errors found"
+- Review the validation report dialog (v0.6.0)
+- Common issues: incorrect date format (YYYYMMDD), invalid VR values
+- Fix issues or click "Continue" if warnings only

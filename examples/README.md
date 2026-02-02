@@ -397,32 +397,3 @@ Server: 192.168.1.100:4321
 ? TCP Connection: 12.45 ms
 ? Quality Level: EXCELLENT
 ? Recommendation: Optimal for transmission
-```
-
-### Parallel Transmission Results (5 files)
-```
-Sequential (1 worker):  5.2 MB/s
-Parallel (5 workers):   24.1 MB/s
-Speedup: 4.6x
-```
-
-### Stress Test Results (60 second test)
-```
-Target: 50 files/sec
-Actual: 47.8 files/sec
-Success Rate: 98.2%
-Performance: PASS
-```
-
----
-
-## Next Steps
-
-1. **Test connectivity:** `python examples/test_connection.py`
-2. **Generate test data:** `python examples/generate_test_dicoms.py`
-3. **Test performance:** `python examples/stress_test.py`
-4. **View results:** `python examples/view_history.py`
-
----
-
-**Everything is ready to use!** Just pick a script, edit the configuration, and run it!
