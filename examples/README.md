@@ -65,7 +65,7 @@ FILE_SIZE_MB = 1.0                  # Size per file
 Generating 10 DICOM files (1.0 MB each)...
 
 ? Generated 10 DICOM files
-? Location: C:\Users\...\test_dicom_output
+?? Location: C:\Users\...\test_dicom_output
 ? Total size: 10.0 MB
 
 Generated files:
@@ -389,7 +389,7 @@ python examples/test_connection.py
 
 ---
 
-## Example Performance Results
+## ?? Example Performance Results
 
 ### Connection Test Results
 ```

@@ -97,7 +97,7 @@ if node_id.startswith("series:"):
 
 #### QUICK_TEST_EXECUTION_GUIDE.md
 - ? Removed all "planned" indicators
-- ? Updated all modules to ? ACTIVE
+- ? Updated all modules to ACTIVE
 - ? Added GUI usage instructions for each module
 - ? Added quick reference GUI tab access
 - ? Updated test execution matrix
@@ -123,7 +123,7 @@ if node_id.startswith("series:"):
 
 ---
 
-## ? Feature Status Summary
+## ?? Feature Status Summary
 
 ### Core Features (Always Visible)
 | Feature | Status | Location |
@@ -143,10 +143,10 @@ if node_id.startswith("series:"):
 | Connection Testing | ? ACTIVE | Connection Test | ? | ? |
 | Stress Testing | ? ACTIVE | Stress Test | ? | ? |
 | Transmission Tracking | ? ACTIVE | Transmission History | ? | ? |
-| Benchmarking | ? ACTIVE | Benchmarking | ??? | ? |
-| Parallel Transmission | ? ACTIVE | Parallel Send | ??? | ? |
+| Benchmarking | ? ACTIVE | Benchmarking | ?? | ? |
+| Parallel Transmission | ? ACTIVE | Parallel Send | ?? | ? |
 
-Legend: ? = Direct use, ??? = Config, ? = Not available
+Legend: ? = Direct use, ?? = Config, ? = Not available
 
 ---
 
@@ -202,7 +202,7 @@ Legend: ? = Direct use, ??? = Config, ? = Not available
 
 ---
 
-## ? Release Readiness
+## ?? Release Readiness
 
 ### ? Code Ready
 - No compilation errors
@@ -253,7 +253,7 @@ git push origin v0.3.1
 
 ---
 
-## ? v0.3.1 Final Feature List
+## ?? v0.3.1 Final Feature List
 
 ### Core Features
 - ? DICOM metadata editing (Patient, Study, Series)
@@ -297,7 +297,7 @@ git push origin v0.3.1
 
 ---
 
-## ? Quality Metrics
+## ?? Quality Metrics
 
 - **Code Changes:** Minimal, focused
 - **Backward Compatibility:** 100%

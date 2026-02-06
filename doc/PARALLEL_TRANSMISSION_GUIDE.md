@@ -1,4 +1,4 @@
-# Parallel Transmission Tab - Complete Guide
+﻿# Parallel Transmission Tab - Complete Guide
 
 ## Overview
 
@@ -6,7 +6,7 @@ The Parallel Transmission tab allows you to configure multi-threaded DICOM file 
 
 ---
 
-## ?? Where Values Are Stored
+## 📍 Where Values Are Stored
 
 ### In the GUI (appgui.py)
 
@@ -28,27 +28,27 @@ session_name = self.parallel_session_name.get()     # Get session name
 
 ---
 
-## ??? GUI Configuration Tab
+## 🎛️ GUI Configuration Tab
 
 ### What You See in the GUI:
 
 ```
-?? Parallel Transmission Manager ??????????????????????
-?                                                     ?
-? Configuration                                      ?
-?  Worker Threads: [5]  (spinbox 1-10)              ?
-?  Session Name:   [Bulk Transmission          ]    ?
-?                                                     ?
-? Information                                         ?
-?  - Multi-threaded file transmission (1-10)        ?
-?  - 3-5x speed improvement over sequential         ?
-?  - Session management and progress tracking       ?
-?  - Real-time performance metrics                  ?
-?                                                    ?
-?  Note: Configure workers and use Python API       ?
-?                                                    ?
-?  [Example Code] [Documentation]                   ?
-???????????????????????????????????????????????????????
+┌─ Parallel Transmission Manager ──────────────────┐
+│                                                   │
+│ Configuration                                    │
+│  Worker Threads: [5]  (spinbox 1-10)            │
+│  Session Name:   [Bulk Transmission          ]  │
+│                                                   │
+│ Information                                       │
+│  • Multi-threaded file transmission (1-10)      │
+│  • 3-5x speed improvement over sequential       │
+│  • Session management and progress tracking     │
+│  • Real-time performance metrics                │
+│                                                   │
+│  Note: Configure workers and use Python API     │
+│                                                   │
+│  [Example Code] [Documentation]                 │
+└──────────────────────────────────────────────────┘
 ```
 
 ### Controls:
@@ -60,55 +60,54 @@ session_name = self.parallel_session_name.get()     # Get session name
 
 ---
 
-## ?? How It Works - Architecture
+## 🏗️ How It Works - Architecture
 
 ### Flow Diagram
 
 ```
-???????????????????????????????????????????????????????
-? Parallel Transmission Manager                       ?
-???????????????????????????????????????????????????????
-?                                                     ?
-?  1. Create Manager (with worker count)             ?
-?     mgr = ParallelTransmissionManager(max_workers) ?
-?                                                     ?
-?  2. Start Session (with session name)              ?
-?     session = mgr.start_session("name")            ?
-?                                                     ?
-?  3. Queue Files (add to transmission queue)        ?
-?     mgr.queue_transmission(file, send_func)        ?
-?                                                     ?
-?  4. Process in Parallel (workers distribute load)  ?
-?     Worker 1 ??                                    ?
-?     Worker 2 ??? Send Files ? Remote Server       ?
-?     Worker 3 ??                                    ?
-?     ...                                            ?
-?                                                     ?
-?  5. Wait & Report (get results)                    ?
-?     mgr.wait_for_completion()                      ?
-?     report = mgr.get_session_report()              ?
-?                                                     ?
-???????????????????????????????????????????????????????
+┌──────────────────────────────────────────────────┐
+│ Parallel Transmission Manager                    │
+└──────────────────────────────────────────────────┘
+│
+│  1. Create Manager (with worker count)
+│     mgr = ParallelTransmissionManager(max_workers)
+│
+│  2. Start Session (with session name)
+│     session = mgr.start_session("name")
+│
+│  3. Queue Files (add to transmission queue)
+│     mgr.queue_transmission(file, send_func)
+│
+│  4. Process in Parallel (workers distribute load)
+│     Worker 1 ┐
+│     Worker 2 ├─→ Send Files → Remote Server
+│     Worker 3 ┘
+│     ...
+│
+│  5. Wait & Report (get results)
+│     mgr.wait_for_completion()
+│     report = mgr.get_session_report()
+└──────────────────────────────────────────────────┘
 ```
 
 ### Performance Comparison
 
 ```
 Sequential Transmission:
-File 1 ? Send ??? File 2 ? Send ??? File 3 ? Send
-?? 10s ???? 10s ???? 10s ??
+File 1 → Send → File 2 → Send → File 3 → Send
+  10s      10s      10s
 Total: 30 seconds
 
 Parallel Transmission (3 workers):
-File 1 ??                          
-File 2 ??? Send ??? Remote Server
-File 3 ??
+File 1 ┐
+File 2 ├→ Send → Remote Server
+File 3 ┘
 Total: 10 seconds (3x faster!)
 ```
 
 ---
 
-## ?? Usage Scenarios
+## 📋 Usage Scenarios
 
 ### Scenario 1: Get Current Settings from GUI
 
@@ -194,51 +193,51 @@ print(f"Speed: {report['throughput_mbps']} MB/s")
 
 ---
 
-## ?? Worker Thread Selection Guide
+## 👷 Worker Thread Selection Guide
 
 ### How Many Workers Should I Use?
 
 ```
-??????????????????????????????????????????????????????????????
-? Recommended Settings by Use Case                           ?
-??????????????????????????????????????????????????????????????
-?                                                            ?
-? Light Load (Home/Test):                                   ?
-?   Workers: 2-3                                            ?
-?   Use: Local testing, small batches                       ?
-?   CPU Impact: Low                                         ?
-?                                                            ?
-? Medium Load (Office/Clinical):                            ?
-?   Workers: 5 (DEFAULT)                                    ?
-?   Use: Regular daily operations                           ?
-?   CPU Impact: Moderate                                    ?
-?                                                            ?
-? Heavy Load (Enterprise/Bulk):                             ?
-?   Workers: 8-10                                           ?
-?   Use: Bulk transmission, overnight jobs                  ?
-?   CPU Impact: High                                        ?
-?                                                            ?
-? Performance Improvements:                                 ?
-?   1 worker:  100% baseline speed                         ?
-?   2 workers:  ~2x faster (200%)                          ?
-?   5 workers:  ~5x faster (500%)                          ?
-?   10 workers: ~10x faster (1000%)                        ?
-?                                                            ?
-? BUT: Network bandwidth is the limiting factor!           ?
-?   If you have 1 Mbps link:                              ?
-?   - 5 workers � 1 Mbps = still capped at 1 Mbps        ?
-?   - Better to use 2-3 workers                           ?
-?                                                            ?
-?   If you have 100 Mbps link:                            ?
-?   - 5-10 workers will saturate the link                 ?
-?   - All 5-10 files can transmit simultaneously         ?
-?                                                            ?
-??????????????????????????????????????????????????????????????
+┌────────────────────────────────────────────────────┐
+│ Recommended Settings by Use Case                   │
+├────────────────────────────────────────────────────┤
+│                                                    │
+│ Light Load (Home/Test):                            │
+│   Workers: 2-3                                     │
+│   Use: Local testing, small batches                │
+│   CPU Impact: Low                                  │
+│                                                    │
+│ Medium Load (Office/Clinical):                     │
+│   Workers: 5 (DEFAULT)                             │
+│   Use: Regular daily operations                    │
+│   CPU Impact: Moderate                             │
+│                                                    │
+│ Heavy Load (Enterprise/Bulk):                      │
+│   Workers: 8-10                                    │
+│   Use: Bulk transmission, overnight jobs           │
+│   CPU Impact: High                                 │
+│                                                    │
+│ Performance Improvements:                          │
+│   1 worker:  100% baseline speed                   │
+│   2 workers:  ~2x faster (200%)                    │
+│   5 workers:  ~5x faster (500%)                    │
+│   10 workers: ~10x faster (1000%)                  │
+│                                                    │
+│ BUT: Network bandwidth is the limiting factor!     │
+│   If you have 1 Mbps link:                         │
+│   • 5 workers × 1 Mbps = still capped at 1 Mbps    │
+│   • Better to use 2-3 workers                      │
+│                                                    │
+│   If you have 100 Mbps link:                       │
+│   • 5-10 workers will saturate the link            │
+│   • All 5-10 files can transmit simultaneously     │
+│                                                    │
+└────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ?? Integration Points
+## 🔗 Integration Points
 
 ### Where Tab Values Connect
 
@@ -264,12 +263,12 @@ def start_parallel_send(self, files, send_func):
 
 ---
 
-## ?? How to Actually Use Parallel Transmission
+## 🚀 How to Actually Use Parallel Transmission
 
 ### Step 1: Configure in GUI
 
 1. Launch app: `python src/app.py`
-2. View ? Show All (if test tabs hidden)
+2. View → Show All (if test tabs hidden)
 3. Go to "Parallel Send" tab
 4. Set Worker Threads (e.g., 5)
 5. Set Session Name (e.g., "Batch Upload")
@@ -314,7 +313,7 @@ print(report)
 
 ---
 
-## ?? What the Session Reports
+## 📊 What the Session Reports
 
 ```python
 report = mgr.get_session_report()
@@ -337,7 +336,7 @@ report = mgr.get_session_report()
 
 ---
 
-## ?? Advanced: Monitoring Progress
+## 📈 Advanced: Monitoring Progress
 
 ```python
 import time
@@ -363,25 +362,25 @@ report = mgr.get_session_report()
 
 ---
 
-## ?? Key Points
+## 🔑 Key Points
 
-? **Worker Threads stored in:**
+✅ **Worker Threads stored in:**
 - `self.parallel_workers` (StringVar)
 - Accessible via `.get()` to get string value
 - Range: 1-10
 
-? **Session Name stored in:**
+✅ **Session Name stored in:**
 - `self.parallel_session_name` (StringVar)
 - Accessible via `.get()` to get string value
 
-? **How it works:**
+✅ **How it works:**
 - GUI is for configuration only
 - Actual transmission requires Python API
 - Values from GUI can be read and used in scripts
 - Workers distribute file transmission load
 - Speed improves with more workers (until network saturated)
 
-? **Best practices:**
+✅ **Best practices:**
 - Use 5 workers for standard operations
 - Use more for high-speed networks
 - Use fewer for constrained networks
@@ -405,4 +404,4 @@ report = mgr.get_session_report()
 
 ---
 
-Everything is documented and ready to use! ??
+Everything is documented and ready to use! 🎉

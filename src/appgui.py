@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.6.0\n"
+APP_TITLE = "DICOM Creator v0.6.1\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME

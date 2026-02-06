@@ -60,11 +60,11 @@ Save and quickly load your frequently used DICOM server configurations. No more 
 
 ## Tips
 
-? **Use descriptive names** for your presets (e.g., "MainHospital" instead of "Server1")
+?? **Use descriptive names** for your presets (e.g., "MainHospital" instead of "Server1")
 
-? **Save presets for servers you use regularly** to speed up DICOM transmission
+?? **Save presets for servers you use regularly** to speed up DICOM transmission
 
-? **Presets are stored locally** on your computer at `~/.dcmcreator/server_presets.json`
+?? **Presets are stored locally** on your computer at `~/.dcmcreator/server_presets.json`
 
 ? **You can have unlimited presets** - organize by department, hospital, or use case
 

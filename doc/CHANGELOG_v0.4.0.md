@@ -2,12 +2,12 @@
 
 ## Version 0.4.0 - DICOM Tag Viewer & Enhanced Validation
 
-### ?? Overview
+###  Overview
 Version 0.4.0 introduces powerful DICOM inspection and validation capabilities, making it easier to view, analyze, and validate DICOM data.
 
 ---
 
-## ?? New Features
+##  New Features
 
 ### DICOM Tag Viewer
 View all DICOM tags from any file, including private vendor-specific tags.
@@ -72,7 +72,7 @@ New menu items added:
 
 ---
 
-## ?? Technical Improvements
+##  Technical Improvements
 
 ### LazyImport Enhancements
 - Improved class extraction for modules with multiple classes
@@ -86,7 +86,7 @@ New menu items added:
 
 ---
 
-## ?? Documentation Updates
+##  Documentation Updates
 
 ### New Documentation
 - **TAG_VIEWER_FEATURE.md** - Complete Tag Viewer guide
@@ -102,7 +102,7 @@ New menu items added:
 
 ---
 
-## ?? Compatibility
+##  Compatibility
 
 ### Requirements
 - Python 3.9+
@@ -111,13 +111,13 @@ New menu items added:
 - All existing dependencies remain unchanged
 
 ### Backward Compatibility
-- ? Fully backward compatible with v0.3.x
-- ? Existing presets and configurations preserved
-- ? No breaking changes to existing features
+-  Fully backward compatible with v0.3.x
+-  Existing presets and configurations preserved
+-  No breaking changes to existing features
 
 ---
 
-## ?? Bug Fixes
+##  Bug Fixes
 
 ### LazyImport
 - Fixed ConnectionValidator loading issue
@@ -130,18 +130,18 @@ New menu items added:
 
 ---
 
-## ?? File Changes
+##  File Changes
 
 ### New Files
 ```
 src/
-??? tag.py                   (Tag extraction logic)
-??? tag_dialog.py           (Tag viewer UI)
-??? vr_validator.py         (VR validation logic)
-??? validation_dialog.py    (Validation UI)
+ tag.py                   (Tag extraction logic)
+ tag_dialog.py           (Tag viewer UI)
+ vr_validator.py         (VR validation logic)
+ validation_dialog.py    (Validation UI)
 
 doc/
-??? TAG_VIEWER_FEATURE.md   (Tag viewer documentation)
+ TAG_VIEWER_FEATURE.md   (Tag viewer documentation)
 
 test_tag_viewer.py          (Test suite)
 ```
@@ -156,7 +156,7 @@ doc/INDEX.md                (Added new documentation links)
 
 ---
 
-## ?? Usage Examples
+##  Usage Examples
 
 ### View All Tags
 ```python
@@ -184,7 +184,7 @@ doc/INDEX.md                (Added new documentation links)
 
 ---
 
-## ?? Learning Resources
+##  Learning Resources
 
 ### For Users
 - Read [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) for complete guide
@@ -198,7 +198,7 @@ doc/INDEX.md                (Added new documentation links)
 
 ---
 
-## ?? Future Enhancements
+##  Future Enhancements
 
 ### Planned for Future Versions
 - Edit tag values directly in viewer
@@ -209,7 +209,7 @@ doc/INDEX.md                (Added new documentation links)
 
 ---
 
-## ?? Statistics
+##  Statistics
 
 - **New Features**: 2 (Tag Viewer, VR Validator)
 - **New Files**: 5
@@ -220,13 +220,13 @@ doc/INDEX.md                (Added new documentation links)
 
 ---
 
-## ?? Acknowledgments
+##  Acknowledgments
 
 Special thanks to the DICOM community for PS3.5 and PS3.6 specifications.
 
 ---
 
-## ?? Support
+##  Support
 
 ### Issues & Questions
 - Check [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) for troubleshooting

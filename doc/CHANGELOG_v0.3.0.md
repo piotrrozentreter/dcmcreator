@@ -2,7 +2,7 @@
 
 ## Version 0.3.0 - Server Presets Implementation
 
-### New Feature: Server Presets ??
+### New Feature: Server Presets
 
 Save and manage frequently used DICOM server configurations with the new **Server Presets** feature.
 
@@ -112,26 +112,26 @@ manager.has_presets()                       # Check if any presets exist
 
 #### Future Enhancements (Potential)
 
-- ?? Credential encryption for saved presets
-- ?? Import/Export presets to CSV/JSON
-- ??? Organize presets with categories/tags
-- ? Preset favorites/pinning
-- ?? Preset usage statistics and history
-- ?? Cloud backup integration
-- ?? Sync presets across multiple devices
-- ?? Server connection testing/validation
+-  Credential encryption for saved presets
+-  Import/Export presets to CSV/JSON
+-  Organize presets with categories/tags
+-  Preset favorites/pinning
+-  Preset usage statistics and history
+-  Cloud backup integration
+-  Sync presets across multiple devices
+-  Server connection testing/validation
 
 #### Testing Notes
 
 Feature tested with:
-- ? Create multiple presets
-- ? Load presets from dropdown
-- ? Manual load button
-- ? Delete presets with confirmation
-- ? Preset persistence across restarts
-- ? Empty preset list handling
-- ? Invalid configuration validation
-- ? File I/O error handling
+-  Create multiple presets
+-  Load presets from dropdown
+-  Manual load button
+-  Delete presets with confirmation
+-  Preset persistence across restarts
+-  Empty preset list handling
+-  Invalid configuration validation
+-  File I/O error handling
 
 #### Migration Notes
 

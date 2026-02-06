@@ -118,7 +118,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ??? Navigation Guide
+## ?? Navigation Guide
 
 ### By Role
 
@@ -160,39 +160,39 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ? Quick Reference
+## ?? Quick Reference
 
 ### Common Tasks
 
 **How do I validate DICOM data? (v0.6.0)**
-? See [CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md) "Real-Time VR Validation System"
+?? See [CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md) "Real-Time VR Validation System"
 
 **How do I view all tags in a DICOM file?**
-? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "How to Use"
+?? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "How to Use"
 
 **How do I export DICOM tags?**
-? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "Export to Text"
+?? See [TAG_VIEWER_FEATURE.md](TAG_VIEWER_FEATURE.md) "Export to Text"
 
 **How do I save a preset?**
-? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Save Your First Preset"
+?? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Save Your First Preset"
 
 **How do I load a preset?**
-? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Load a Preset"
+?? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Load a Preset"
 
 **Where are my presets stored?**
-? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Where Are My Presets?"
+?? See [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md) "Where Are My Presets?"
 
 **How do I build the EXE?**
-? See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
+?? See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
 
 **How do I run tests?**
-? See [QUICK_TEST_EXECUTION_GUIDE.md](QUICK_TEST_EXECUTION_GUIDE.md)
+?? See [QUICK_TEST_EXECUTION_GUIDE.md](QUICK_TEST_EXECUTION_GUIDE.md)
 
 **How do I use as a library?**
-? See [EXTERNAL_SCRIPT_USAGE.md](EXTERNAL_SCRIPT_USAGE.md)
+?? See [EXTERNAL_SCRIPT_USAGE.md](EXTERNAL_SCRIPT_USAGE.md)
 
 **How do I extend the code?**
-? See [DEVELOPER_GUIDE_PRESETS.md](DEVELOPER_GUIDE_PRESETS.md) "Extension Points"
+?? See [DEVELOPER_GUIDE_PRESETS.md](DEVELOPER_GUIDE_PRESETS.md) "Extension Points"
 
 ---
 

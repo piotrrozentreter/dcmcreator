@@ -124,46 +124,46 @@ This ensures VR.xml and other resources can be found whether running:
 New modules depend on each other:
 ```
 vr_validator.py
-    ? Loads VR.xml for validation rules
+     Loads VR.xml for validation rules
     
 validation_dialog.py
-    ? Uses vr_validator for displaying results
+     Uses vr_validator for displaying results
     
 tag.py
-    ? Core tag parsing utilities
+     Core tag parsing utilities
     
 tag_dialog.py
-    ? Uses tag.py for displaying tag data
-    ? Can use VR.xml for tag descriptions
+     Uses tag.py for displaying tag data
+     Can use VR.xml for tag descriptions
 ```
 
 ## Build Process Flow
 
 ```
 1. Pre-Build Verification (NEW)
-   ? python verify_build.py
-       ? Check source files
-       ? Check spec file config
-       ? Check dependencies
-       ? Verify VR.xml
-       ? Check build config
+    python verify_build.py
+        Check source files
+        Check spec file config
+        Check dependencies
+        Verify VR.xml
+        Check build config
 
 2. Build Execution
-   ? python build.py
-       ? Step 1: Check Python
-       ? Step 2: Install dependencies
-       ? Step 3: Create icon
-       ? Step 3.5: Verify VR.xml (NEW)
-       ? Step 4: Clean previous builds
-       ? Step 5: Build with PyInstaller
-       ? Step 6: Create ZIP distribution
+    python build.py
+        Step 1: Check Python
+        Step 2: Install dependencies
+        Step 3: Create icon
+        Step 3.5: Verify VR.xml (NEW)
+        Step 4: Clean previous builds
+        Step 5: Build with PyInstaller
+        Step 6: Create ZIP distribution
 
 3. Post-Build Testing (NEW - see checklist)
-   ? Verify distribution structure
-   ? Test VR Viewer
-   ? Test Tag Viewer
-   ? Test Validation
-   ? Verify no missing file errors
+    Verify distribution structure
+    Test VR Viewer
+    Test Tag Viewer
+    Test Validation
+    Verify no missing file errors
 ```
 
 ## Testing Requirements

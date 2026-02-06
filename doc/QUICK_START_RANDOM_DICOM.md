@@ -160,11 +160,11 @@ A: Normal for large batches (100+ files). Takes ~1 min for 100 files.
 
 ## Tips
 
-? Test connection BEFORE generating large batches
-? Start small (10 files) before trying 500+ files  
-? Check Messages area for detailed status
-? Files are saved to disk - reuse them multiple times
-? Generated files are real DICOM files - usable anywhere
+?? Test connection BEFORE generating large batches
+?? Start small (10 files) before trying 500+ files  
+?? Check Messages area for detailed status
+?? Files are saved to disk - reuse them multiple times
+?? Generated files are real DICOM files - usable anywhere
 
 ---
 

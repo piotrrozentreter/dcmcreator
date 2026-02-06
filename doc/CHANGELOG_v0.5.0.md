@@ -126,29 +126,29 @@ ConnectionValidator = LazyImport(".connection_validator", "connection_validator"
 
 ### Tested Configurations
 
-? **Windows 10/11 (64-bit)**
+ **Windows 10/11 (64-bit)**
 - Python 3.9, 3.10, 3.11, 3.12
 - PyInstaller EXE
 - All features working
 
-? **Windows 7 (64-bit)**
+ **Windows 7 (64-bit)**
 - Python 3.9
 - PyInstaller EXE
 - All features working
 
-?? **macOS / Linux**
+ **macOS / Linux**
 - Not officially tested this release
 - Should work with Python source
 - EXE build is Windows-only
 
 ### Test Coverage
 
-- ? Module loading (all optional modules)
-- ? ConnectionValidator initialization
-- ? VRValidator initialization
-- ? LazyImport with multiple classes
-- ? Error handling and reporting
-- ? Direct import fallback mechanism
+-  Module loading (all optional modules)
+-  ConnectionValidator initialization
+-  VRValidator initialization
+-  LazyImport with multiple classes
+-  Error handling and reporting
+-  Direct import fallback mechanism
 
 ## Migration Guide
 
@@ -228,11 +228,11 @@ except Exception as e:
 ## Next Release (v0.6.0 - Planned)
 
 ### Planned Features
-- ?? Batch DICOM editing
-- ?? Advanced analytics dashboard
-- ?? Secure transmission (TLS)
-- ?? Multi-language support
-- ?? Web interface (optional)
+-  Batch DICOM editing
+-  Advanced analytics dashboard
+-  Secure transmission (TLS)
+-  Multi-language support
+-  Web interface (optional)
 
 ### Under Consideration
 - Cloud storage integration

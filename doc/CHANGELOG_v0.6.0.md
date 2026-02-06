@@ -26,7 +26,7 @@ Version 0.6.0 introduces a comprehensive validation system for DICOM data, signi
 
 **How to Use:**
 ```
-File Menu ? Validate
+File Menu  Validate
 ```
 
 **Example Validation Checks:**
@@ -185,25 +185,25 @@ Select a DICOMDIR file, and it will automatically load all referenced DICOM file
 **Menu Options:**
 ```
 View Menu:
-??? Core Tabs (disabled label)
-?? Patient (checkbox)
-?? Study (checkbox)
-?? Series/Modality (checkbox)
-?? Image (checkbox)
-?? Load DICOM (checkbox)
-?? Save (checkbox)
-?? Remote (checkbox)
-?? (separator)
-??? Test Tabs (disabled label)
-?? Test/Generate (checkbox)
-?? Connection Test (checkbox)
-?? Stress Test (checkbox)
-?? Transmission History (checkbox)
-?? Benchmarking (checkbox)
-?? Parallel Send (checkbox)
-?? (separator)
-?? Show All
-?? Hide Test Tabs
+ Core Tabs (disabled label)
+ Patient (checkbox)
+ Study (checkbox)
+ Series/Modality (checkbox)
+ Image (checkbox)
+ Load DICOM (checkbox)
+ Save (checkbox)
+ Remote (checkbox)
+ (separator)
+ Test Tabs (disabled label)
+ Test/Generate (checkbox)
+ Connection Test (checkbox)
+ Stress Test (checkbox)
+ Transmission History (checkbox)
+ Benchmarking (checkbox)
+ Parallel Send (checkbox)
+ (separator)
+ Show All
+ Hide Test Tabs
 ```
 
 **Quick Actions:**
@@ -264,7 +264,7 @@ Error: Patient Birth Date must be in YYYYMMDD format (DA - Date)
 **Context Menu:**
 ```
 Right-click on instance:
-??? Show Image
+ Show Image
     (Displays image in Image tab with auto-switch)
 ```
 
@@ -381,20 +381,20 @@ Right-click on instance:
 
 **File Menu:**
 ```
-??? New
-??? Load
-??? Load Folder
-??? Save
-??? (separator)
-??? Validate (NEW)
-??? (separator)
-??? Exit
+ New
+ Load
+ Load Folder
+ Save
+ (separator)
+ Validate (NEW)
+ (separator)
+ Exit
 ```
 
 **DICOM Menu:**
 ```
-??? View VRs
-??? View All Tags
+ View VRs
+ View All Tags
 ```
 
 ## Bug Fixes
@@ -555,15 +555,15 @@ from src.import_helper import LazyImport
 
 ### Test Coverage
 
-- ? Validation system for all field types
-- ? DICOMDIR file loading
-- ? Private tag preservation
-- ? Group Length cleanup
-- ? Validation dialogs
-- ? Pre-save validation
-- ? Pre-send validation
-- ? Load validation
-- ? Error messages and recovery
+-  Validation system for all field types
+-  DICOMDIR file loading
+-  Private tag preservation
+-  Group Length cleanup
+-  Validation dialogs
+-  Pre-save validation
+-  Pre-send validation
+-  Load validation
+-  Error messages and recovery
 
 ### Test Commands
 
@@ -607,13 +607,13 @@ python test/test_validation_dialog.py
 Version 0.6.0 significantly improves DICOM data quality through comprehensive validation, better error reporting, and enhanced user experience. The new validation system helps ensure DICOM compliance, while improved UI and error messages make it easier to work with DICOM files correctly.
 
 **Key Achievements:**
-- ? Comprehensive VR validation system
-- ? Better error messages and recovery
-- ? DICOMDIR support
-- ? Private tag preservation
-- ? Enhanced dialogs and UI
-- ? Improved module reliability
-- ? Better documentation
+-  Comprehensive VR validation system
+-  Better error messages and recovery
+-  DICOMDIR support
+-  Private tag preservation
+-  Enhanced dialogs and UI
+-  Improved module reliability
+-  Better documentation
 
 **For Users:**
 - More confidence in DICOM data quality

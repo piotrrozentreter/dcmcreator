@@ -27,16 +27,16 @@ python -m PyInstaller dcmcreator.spec
 
 ```
 DICOM Creator.zip (60-80 MB)
-??> dist/DICOM Creator/
-    ??> DICOM Creator.exe      25 MB
-    ??> _internal/             120 MB (libraries)
-    ??> src/
-        ??> VR.xml             7 MB  ?? CRITICAL
-        ??> vr_validator.py
-        ??> validation_dialog.py
-        ??> tag.py
-        ??> tag_dialog.py
-        ??> ... (other modules)
+> dist/DICOM Creator/
+    > DICOM Creator.exe      25 MB
+    > _internal/             120 MB (libraries)
+    > src/
+        > VR.xml             7 MB   CRITICAL
+        > vr_validator.py
+        > validation_dialog.py
+        > tag.py
+        > tag_dialog.py
+        > ... (other modules)
 ```
 
 ## Quick Test After Build
@@ -68,7 +68,7 @@ Test these features:
 ### In Distribution
 - [x] `dist/DICOM Creator/DICOM Creator.exe`
 - [x] `dist/DICOM Creator/_internal/` (all libraries)
-- [x] `dist/DICOM Creator/src/VR.xml` ?? MUST EXIST
+- [x] `dist/DICOM Creator/src/VR.xml`  MUST EXIST
 - [x] `DICOM Creator.zip` (auto-created)
 
 ## Common Errors

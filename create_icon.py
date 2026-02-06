@@ -46,7 +46,7 @@ def create_icon(output_path="app.ico"):
     
     # Save as ICO
     img.save(output_path)
-    print(f"? Icon created: {output_path}")
+    print(f" Icon created: {output_path}")
     
     # Also create smaller sizes for multiple resolutions
     ico_path = output_path
@@ -56,7 +56,7 @@ def create_icon(output_path="app.ico"):
     img_16 = img.resize((16, 16), Image.Resampling.LANCZOS)
     
     img.save(ico_path, sizes=[(256, 256), (128, 128), (64, 64), (32, 32), (16, 16)])
-    print(f"? Multi-resolution icon saved: {ico_path}")
+    print(f" Multi-resolution icon saved: {ico_path}")
     print(f"  Includes sizes: 256x256, 128x128, 64x64, 32x32, 16x16")
 
 if __name__ == "__main__":

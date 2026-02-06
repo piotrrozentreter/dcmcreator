@@ -51,7 +51,7 @@ def create_zip_distribution(source_folder, output_zip):
         
         # Get file size
         zip_size = os.path.getsize(output_zip) / (1024 * 1024)
-        print(f"? ZIP created successfully: {zip_size:.1f} MB")
+        print(f" ZIP created successfully: {zip_size:.1f} MB")
         return True
     except Exception as e:
         print(f"ERROR: Failed to create ZIP: {e}")
@@ -66,7 +66,7 @@ def main():
     print("\nStep 1: Checking Python installation...")
     try:
         result = subprocess.run([sys.executable, "--version"], capture_output=True, text=True)
-        print(f"? {result.stdout.strip()}")
+        print(f" {result.stdout.strip()}")
     except Exception as e:
         print(f"ERROR: Python not found: {e}")
         return False
@@ -79,14 +79,14 @@ def main():
     ):
         print("WARNING: Could not install all dependencies, continuing anyway...")
     else:
-        print("? Dependencies installed")
+        print(" Dependencies installed")
     
     # Step 3: Create icon
     print("\nStep 3: Creating application icon...")
     if not run_command(f"{sys.executable} create_icon.py", "Generating icon..."):
         print("WARNING: Icon creation failed, continuing without custom icon")
     else:
-        print("? Icon created successfully")
+        print(" Icon created successfully")
     
     # Step 3.5: Verify VR.xml exists
     print("\nStep 3.5: Verifying DICOM data dictionary...")
@@ -98,7 +98,7 @@ def main():
         return False
     else:
         vr_size = vr_xml_path.stat().st_size / (1024 * 1024)
-        print(f"? VR.xml found ({vr_size:.1f} MB)")
+        print(f" VR.xml found ({vr_size:.1f} MB)")
     
     # Step 4: Clean previous builds
     print("\nStep 4: Cleaning previous builds...")
@@ -106,7 +106,7 @@ def main():
         if os.path.exists(folder):
             try:
                 shutil.rmtree(folder)
-                print(f"? Removed {folder}")
+                print(f" Removed {folder}")
             except Exception as e:
                 print(f"Warning: Could not remove {folder}: {e}")
     
@@ -130,7 +130,7 @@ def main():
             folder_size = get_folder_size(str(dist_path))
             zip_size = zip_path.stat().st_size / (1024 * 1024)
             
-            print(f"\n? ZIP distribution created successfully!")
+            print(f"\n ZIP distribution created successfully!")
             print(f"  Folder size: {folder_size:.1f} MB")
             print(f"  ZIP size: {zip_size:.1f} MB")
             print(f"  Compression: {((1 - zip_size/folder_size) * 100):.1f}%")
@@ -144,26 +144,26 @@ def main():
     print("\n" + "="*50)
     print("Build completed successfully!")
     print("="*50)
-    print("\n? Your application is ready for distribution:")
+    print("\n Your application is ready for distribution:")
     print("\nFeatures included in this build:")
-    print("  ? DICOM creation and editing")
-    print("  ? VR validation with PS3.6 data dictionary")
-    print("  ? Tag viewer for all DICOM tags")
-    print("  ? Validation dialog with detailed reports")
-    print("  ? Remote DICOM transmission (C-STORE)")
-    print("  ? Connection testing and stress testing")
-    print("  ? Transmission history tracking")
-    print("  ? Performance benchmarking")
-    print("  ? Parallel transmission support")
+    print("   DICOM creation and editing")
+    print("   VR validation with PS3.6 data dictionary")
+    print("   Tag viewer for all DICOM tags")
+    print("   Validation dialog with detailed reports")
+    print("   Remote DICOM transmission (C-STORE)")
+    print("   Connection testing and stress testing")
+    print("   Transmission history tracking")
+    print("   Performance benchmarking")
+    print("   Parallel transmission support")
     print("\nOptions:")
     print("  1. Share the ZIP file:")
-    print(f"     ? DICOM Creator.zip (~{zip_size:.0f} MB)")
-    print("     ? Users extract and run DICOM Creator.exe")
-    print("     ? Best for email, GitHub, websites")
+    print(f"      DICOM Creator.zip (~{zip_size:.0f} MB)")
+    print("      Users extract and run DICOM Creator.exe")
+    print("      Best for email, GitHub, websites")
     print("\n  2. Share the folder directly:")
-    print(f"     ? dist\\DICOM Creator\\ folder (~{folder_size:.0f} MB)")
-    print("     ? Users run DICOM Creator.exe")
-    print("     ? Best for USB drives, network shares")
+    print(f"      dist\\DICOM Creator\\ folder (~{folder_size:.0f} MB)")
+    print("      Users run DICOM Creator.exe")
+    print("      Best for USB drives, network shares")
     print("\nSystem Requirements:")
     print("  - Windows 7 or newer (64-bit)")
     print("  - ~100 MB disk space")

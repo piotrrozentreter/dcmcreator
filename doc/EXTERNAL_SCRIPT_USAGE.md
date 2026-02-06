@@ -21,15 +21,15 @@ See `examples/README.md` for complete guide and customization options.
 
 If you need to write your own scripts, follow these guidelines:
 
-### ?? The Problem with Different Processes
+### ? The Problem with Different Processes
 
 When you run the GUI app and a separate script, they are **different Python processes**. Values in one process are NOT accessible from the other.
 
 ```
 GUI App Process (PID 1234)          External Script Process (PID 5678)
-?? self.parallel_workers            ?? Can't access these values!
-?? self.parallel_session_name        ?? Different process
-?? All GUI state                     ?? Separate memory space
+? self.parallel_workers             ? Can't access these values!
+? self.parallel_session_name        ? Different process
+? All GUI state                     ? Separate memory space
 ```
 
 **This WON'T work:**

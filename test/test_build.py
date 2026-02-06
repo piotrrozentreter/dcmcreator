@@ -66,13 +66,13 @@ def test_vr_xml_present():
     for vr_xml_path in vr_xml_paths:
         if vr_xml_path.exists():
             size = vr_xml_path.stat().st_size / (1024 * 1024)
-            print(f"  ? VR.xml found at: {vr_xml_path}")
+            print(f"   VR.xml found at: {vr_xml_path}")
             print(f"     Size: {size:.2f} MB")
             
             if size < 5:
-                print(f"  ??  WARNING: VR.xml seems too small (expected 6-8 MB)")
+                print(f"    WARNING: VR.xml seems too small (expected 6-8 MB)")
             else:
-                print(f"  ? VR.xml size is appropriate")
+                print(f"   VR.xml size is appropriate")
             
             vr_xml_found = True
             break
@@ -125,17 +125,17 @@ def test_zip_distribution():
     
     zip_path = Path("DICOM Creator.zip")
     if not zip_path.exists():
-        print("  ??  DICOM Creator.zip not found")
+        print("    DICOM Creator.zip not found")
         print("  This is OK if you just want to test the folder")
         return True  # Not critical
     
     size = zip_path.stat().st_size / (1024 * 1024)
-    print(f"  ? DICOM Creator.zip exists ({size:.1f} MB)")
+    print(f"   DICOM Creator.zip exists ({size:.1f} MB)")
     
     if size < 40 or size > 100:
-        print(f"  ??  WARNING: ZIP size unexpected (expected 60-80 MB)")
+        print(f"    WARNING: ZIP size unexpected (expected 60-80 MB)")
     else:
-        print(f"  ? ZIP size is appropriate")
+        print(f"   ZIP size is appropriate")
     
     return True
 
@@ -162,7 +162,7 @@ def test_pydicom_bundled():
             break
     
     if not pydicom_found:
-        print("  ??  WARNING: Could not locate pydicom")
+        print("    WARNING: Could not locate pydicom")
         print("  This might be OK if it's embedded in PYZ archive")
         return True  # Not critical, might be in PYZ
     

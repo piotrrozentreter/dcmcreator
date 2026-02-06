@@ -169,7 +169,7 @@ def send_grouped_dicom(
         if logger:
             logger.error(error_msg)
         if on_message:
-            on_message(f"? {error_msg}")
+            on_message(f" {error_msg}")
         raise RuntimeError(error_msg) from e
     
     if not assoc.is_established:

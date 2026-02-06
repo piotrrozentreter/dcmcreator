@@ -114,14 +114,14 @@ files = g.generate_with_sizes(10, 1.0, "./output")
 |---------|-----|---------|-----------|
 | Connection Test | ? | ? | ? |
 | Generate DICOMs | ? | ? | ? |
-| Send DICOMs | ? | ??? | ? |
+| Send DICOMs | ? | ?? | ? |
 | Stress Test | ? | ? | ? |
 | View History | ? | ? | ? |
 | Export Results | ? | ? | ? |
-| Parallel Send | ??? Config | ? | ? |
+| Parallel Send | ?? Config | ? | ? |
 | Automation | ? | ? | ? |
 
-Legend: ? Direct, ??? Configuration required, ? Not available
+Legend: ? Direct, ?? Configuration required, ? Not available
 
 ---
 
@@ -153,19 +153,19 @@ WORKER_THREADS = 10        # More parallel workers
 ## ?? Documentation
 
 ### For Quick Start
-? Read: `examples/README.md`
+?? Read: `examples/README.md`
 
 ### For Comprehensive Guide
-? Read: `doc/README.md`
+?? Read: `doc/README.md`
 
 ### For Testing Details
-? Read: `doc/WHERE_TO_RUN_TESTS.md`
+?? Read: `doc/WHERE_TO_RUN_TESTS.md`
 
 ### For Parallel Transmission
-? Read: `doc/PARALLEL_TRANSMISSION_GUIDE.md`
+?? Read: `doc/PARALLEL_TRANSMISSION_GUIDE.md`
 
 ### For External Scripts
-? Read: `doc/EXTERNAL_SCRIPT_USAGE.md`
+?? Read: `doc/EXTERNAL_SCRIPT_USAGE.md`
 
 ---
 
@@ -262,7 +262,7 @@ python examples/generate_test_dicoms.py
 
 ---
 
-## ?? What's New in v0.3.1
+## ? What's New in v0.3.1
 
 ? **6 New Test Tabs** - Connection, Stress, History, Benchmarking, Parallel  
 ? **View Menu** - Hide/show tabs dynamically  

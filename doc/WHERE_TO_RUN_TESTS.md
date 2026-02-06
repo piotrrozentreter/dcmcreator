@@ -10,7 +10,7 @@ All advanced testing modules are **NOW FULLY INTEGRATED** into the GUI! Choose y
 
 ---
 
-## ? What You Can Do
+## ?? What You Can Do
 
 ### Option 1: Ready-to-Run Example Scripts (EASIEST)
 Located in `examples/` directory - just execute them!
@@ -315,14 +315,14 @@ print(f"Files sent: {report['files_sent']}")
 | **Export Statistics** | ? | ? | ? | Low |
 | **DICOM Generation** | ? | ? | ? | Low |
 | **Latency Analysis** | ? | ? | ? | Low |
-| **Parallel Transmission** | ? Config | ? | ? | Medium |
+| **Parallel Transmission** | ?? Config | ? | ? | Medium |
 | **Custom Scenarios** | ? | ? | ? | High |
 | **Automation** | ? | ? | ? | Medium |
 
 Legend:
 - ? = Available
 - ? = Not available
-- Config = Setup available
+- ?? = Setup available
 
 ---
 
@@ -449,7 +449,7 @@ python examples/parallel_send.py
 
 ---
 
-## ?? Status: v0.3.1
+## ? Status: v0.3.1
 
 ? **All test modules fully integrated into GUI**
 ? **All test modules accessible from Python**

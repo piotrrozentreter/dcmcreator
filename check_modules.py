@@ -30,12 +30,12 @@ for name, (rel, abs_) in modules.items():
     
     if result is not None:
         loaded.append(name)
-        print(f"? {name:35} LOADED")
+        print(f" {name:35} LOADED")
     else:
         failed.append((name, error))
-        print(f"? {name:35} FAILED")
+        print(f" {name:35} FAILED")
         if error:
-            print(f"  ?? Error: {error}")
+            print(f"   Error: {error}")
 
 print()
 print("=" * 70)

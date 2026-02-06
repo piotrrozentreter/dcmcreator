@@ -77,20 +77,20 @@ Expected output:
 ### 8. Distribution Contents Check
 ```
 dist/DICOM Creator/
-??? DICOM Creator.exe       (~25 MB)
-??? _internal/              (Python libraries)
-?   ??? pydicom/
-?   ??? pynetdicom/
-?   ??? PIL/
-?   ??? numpy/
-?   ??? ...
-??? src/                    (Application code)
-    ??? VR.xml              (7 MB - CRITICAL!)
-    ??? vr_validator.py
-    ??? validation_dialog.py
-    ??? tag.py
-    ??? tag_dialog.py
-    ??? ...
+ DICOM Creator.exe       (~25 MB)
+ _internal/              (Python libraries)
+    pydicom/
+    pynetdicom/
+    PIL/
+    numpy/
+    ...
+ src/                    (Application code)
+     VR.xml              (7 MB - CRITICAL!)
+     vr_validator.py
+     validation_dialog.py
+     tag.py
+     tag_dialog.py
+     ...
 ```
 
 - [ ] `DICOM Creator.exe` present and ~25MB

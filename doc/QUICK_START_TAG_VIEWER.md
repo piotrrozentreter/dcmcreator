@@ -114,7 +114,7 @@ DICOM ? View All Tags
 
 ---
 
-## ?? Common Questions
+## ? Common Questions
 
 ### Q: Why are some tags empty?
 **A:** Empty tags show `<empty>` - this is normal for optional elements

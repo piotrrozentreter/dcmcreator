@@ -30,7 +30,7 @@ Generate multiple DICOMs at once:
 - Randomized or template patient data
 - Batch save to directory
 
-### 3. Connection Testing ?
+### 3. Connection Testing ??
 
 Test DICOM server connectivity:
 - TCP connection validation
@@ -149,9 +149,9 @@ Steps:
 1. Open Test/Generate tab
 2. Set Count: 5, Size: 1.0 MB
 3. Click "Test Connection"
-   ?? Verify server is reachable
+   ? Verify server is reachable
 4. Click "Generate & Send"
-   ?? Create 5 test files and send them
+   ? Create 5 test files and send them
 5. Check "View Results" for summary
 ```
 
@@ -193,26 +193,26 @@ Process:
 
 ### Patient Data
 Random but realistic:
-- Real-looking names (first + last)
-- Valid patient IDs
-- Believable ages (18-90)
-- Random birth dates
-- Height/weight ranges
+- ? Real-looking names (first + last)
+- ? Valid patient IDs
+- ? Believable ages (18-90)
+- ? Random birth dates
+- ? Height/weight ranges
 
 ### Medical Data
 Proper DICOM format:
-- Valid UIDs (generated per DICOM standard)
-- Proper DICOM tags and values
-- Standard modalities (CR, DX, CT, MR, XC, SC)
-- Valid pixel data (16-bit grayscale)
-- Complete metadata headers
+- ? Valid UIDs (generated per DICOM standard)
+- ? Proper DICOM tags and values
+- ? Standard modalities (CR, DX, CT, MR, XC, SC)
+- ? Valid pixel data (16-bit grayscale)
+- ? Complete metadata headers
 
 ### Images
 Synthetic but realistic:
-- Random grayscale pixel data
-- Configurable dimensions (256x256 default, up to 4096x4096)
-- 16-bit depth (medical standard)
-- Size scales with dimensions
+- ? Random grayscale pixel data
+- ? Configurable dimensions (256x256 default, up to 4096x4096)
+- ? 16-bit depth (medical standard)
+- ? Size scales with dimensions
 
 ---
 
@@ -377,17 +377,17 @@ runner.export_results("test_results.txt")
 
 ## Tips & Best Practices
 
-? **Test Before Bulk Send**
+?? **Test Before Bulk Send**
 - Always test connection first
 - Start with small batch (5-10 files)
 - Verify results before large transmission
 
-? **Monitor Performance**
+?? **Monitor Performance**
 - Check transmission progress
 - Note any failures
 - Review results after completion
 
-? **Use for Different Purposes**
+?? **Use for Different Purposes**
 - Demo: Small files (10 x 0.5 MB)
 - Testing: Medium batch (50 x 1 MB)
 - Stress test: Large batch (500+ x 1-5 MB)

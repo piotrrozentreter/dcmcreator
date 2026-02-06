@@ -1,4 +1,4 @@
-# Server Presets - Developer's Guide
+﻿# Server Presets - Developer's Guide
 
 ## Overview
 
@@ -7,33 +7,33 @@ This guide is for developers who want to understand, extend, or modify the Serve
 ## Architecture Overview
 
 ```
-?? appgui.py ??
-?  (GUI Layer)?
-???????????????
-       ? Uses
-       ?
-???????????????????????????????????????????????
-?                presets.py                   ?
-?         (ServerPresetsManager class)        ?
-?                                              ?
-? Public Methods:                              ?
-? - save_preset(name, config_dict)           ?
-? - load_preset(name)                         ?
-? - delete_preset(name)                       ?
-? - list_presets()                            ?
-? - has_presets()                             ?
-?                                              ?
-? Private Methods:                             ?
-? - _load_presets() - Read from file          ?
-? - _save_presets() - Write to file           ?
-?                                              ?
-???????????????????????????????????????????????
-       ? Reads/Writes
-       ?
-???????????????????????????????????????????????
-?    ~/.dcmcreator/server_presets.json        ?
-?        (JSON Configuration File)             ?
-????????????????????????????????????????????????
+┌─────────────────────┐
+│   appgui.py         │
+│   (GUI Layer)       │
+└──────────┬──────────┘
+           │ Uses
+           │
+┌──────────▼──────────────────────────────────┐
+│  presets.py                                 │
+│  (ServerPresetsManager class)               │
+│                                             │
+│  Public Methods:                            │
+│  • save_preset(name, config_dict)           │
+│  • load_preset(name)                        │
+│  • delete_preset(name)                      │
+│  • list_presets()                           │
+│  • has_presets()                            │
+│                                             │
+│  Private Methods:                           │
+│  • _load_presets() - Read from file         │
+│  • _save_presets() - Write to file          │
+└──────────┬──────────────────────────────────┘
+           │ Reads/Writes
+           │
+┌──────────▼──────────────────────────────────┐
+│  ~/.dcmcreator/server_presets.json          │
+│  (JSON Configuration File)                  │
+└─────────────────────────────────────────────┘
 ```
 
 ## Class Reference

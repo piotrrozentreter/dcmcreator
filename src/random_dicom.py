@@ -49,6 +49,10 @@ class RandomDicomGenerator:
         
         self.logger = logger
         self.generated_dicoms = []
+        self.first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia',
+                        'David', 'Linda', 'Richard', 'Barbara', 'Joseph', 'Susan', 'Piotr', 'Adam']
+        self.last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Brzeszczyszczykiewicz',
+                        'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Rozen', 'Rozsoft']
     
     def generate_single(self, 
                        filename=None,
@@ -61,7 +65,7 @@ class RandomDicomGenerator:
         
         Args:
             filename: Output filename (generates random if None)
-            patient_name: Patient name (generates random if None)
+            patient_name: Patient name
             patient_id: Patient ID (generates random if None)
             width: Image width in pixels
             height: Image height in pixels
@@ -79,13 +83,7 @@ class RandomDicomGenerator:
             if seed is not None:
                 np.random.seed(seed)
                 random.seed(seed)
-            
-            # Generate metadata
-            if patient_name is None:
-                first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia']
-                last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
-                patient_name = f"{random.choice(first_names)} {random.choice(last_names)}"
-            
+                        
             if patient_id is None:
                 patient_id = f"TEST{random.randint(100000, 999999)}"
             
@@ -208,15 +206,10 @@ class RandomDicomGenerator:
         patients = []
         
         # Generate unique patients if requested
-        if randomize_patient:
-            first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia',
-                          'David', 'Linda', 'Richard', 'Barbara', 'Joseph', 'Susan', 'Piotr', 'Adam']
-            last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Brzeszczyszczykiewicz',
-                         'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Rozen', 'Rozsoft']
-            
+        if randomize_patient:            
             for _ in range(count):
-                first = random.choice(first_names)
-                last = random.choice(last_names)
+                first = random.choice(self.first_names)
+                last = random.choice(self.last_names)
                 patients.append((f"{first} {last}", f"TEST{random.randint(1000, 9999)}"))
         else:
             patients = [(f"Test Patient {i}", f"TEST{random.randint(1000, 9999)}") for i in range(count)]
@@ -345,9 +338,7 @@ class RandomDicomGenerator:
         
         # Generate patient info if not provided
         if patient_name is None:
-            first_names = ['John', 'Jane', 'Robert', 'Mary', 'Michael', 'Patricia']
-            last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia']
-            patient_name = f"{random.choice(first_names)} {random.choice(last_names)}"
+            patient_name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
         
         if patient_id is None:
             patient_id = f"TEST{random.randint(100000, 999999)}"
