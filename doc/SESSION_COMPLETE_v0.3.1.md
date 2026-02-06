@@ -297,7 +297,7 @@ git push origin v0.3.1
 
 ---
 
-## ?? Quality Metrics
+## ? Quality Metrics
 
 - **Code Changes:** Minimal, focused
 - **Backward Compatibility:** 100%
