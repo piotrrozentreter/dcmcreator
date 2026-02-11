@@ -224,10 +224,13 @@ def send_grouped_dicom(
         except Exception:
             on_message("Association established")
 
+    # Check if C-ECHO should be skipped
+    skip_c_echo = config.get('skip_c_echo', False)
+    
     try:
         # Send a C-ECHO first (optional health check)
         # Note: Some servers may close association after C-ECHO, skip if needed
-        if VerificationSOPClass is not None:
+        if not skip_c_echo and VerificationSOPClass is not None:
             if on_message:
                 on_message("Verifying connectivity (C-ECHO)...")
             try:
@@ -250,6 +253,11 @@ def send_grouped_dicom(
                     on_message(f"C-ECHO skipped or failed (continuing with C-STORE): {e}")
                 if logger:
                     logger.warning(f"C-ECHO issue, continuing: {e}")
+        elif skip_c_echo:
+            if on_message:
+                on_message("C-ECHO skipped (disabled by user)")
+            if logger:
+                logger.info("C-ECHO skipped as requested by user configuration")
 
         # Iterate through grouped datasets and send each via C-STORE
         total = 0

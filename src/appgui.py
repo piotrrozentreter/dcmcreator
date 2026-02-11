@@ -478,6 +478,7 @@ class DicomCreatorApp(tk.Tk):
             "calling_ae": tk.StringVar(value="DCMCREATOR"),
             "called_ae": tk.StringVar(value="AcuoMed1"),
             "preset_name": tk.StringVar(),
+            "skip_c_echo": tk.BooleanVar(value=False),
         }
         
         # Preset management section
@@ -512,6 +513,7 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(config_frame, "Port", self.remote_vars["port"], 1)
         self._add_labeled_entry(config_frame, "Calling AE Title", self.remote_vars["calling_ae"], 2)
         self._add_labeled_entry(config_frame, "Called AE Title", self.remote_vars["called_ae"], 3)
+        ttk.Checkbutton(config_frame, text="Skip C-ECHO", variable=self.remote_vars["skip_c_echo"]).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=5)
 
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
@@ -1649,7 +1651,7 @@ class DicomCreatorApp(tk.Tk):
             self.remote_messages.configure(state=tk.NORMAL)
             self.remote_messages.insert(tk.END, text + "\n")
             self.remote_messages.see(tk.END)
-            self.remote_messages.configure(state=tk.DISABLED)
+            self.remote_messages.configure(state=tk.DISabled)
         except Exception:
             pass
 
@@ -1705,8 +1707,9 @@ class DicomCreatorApp(tk.Tk):
         
         # Use loaded studies if available, otherwise create from form values
         if self.grouped_dicom:
-            grouped_to_send = self.grouped_dicom
-            self._append_remote_message(f"Sending {len(grouped_to_send)} loaded studies")
+            # Update loaded datasets with current form field values
+            grouped_to_send = self._update_datasets_with_form_values(self.grouped_dicom)
+            self._append_remote_message(f"Sending {len(grouped_to_send)} loaded studies with updated form values")
         else:
             # No studies loaded, create dataset from current form values
             grouped_to_send = self._create_in_memory_dataset(patient_id)
@@ -1730,6 +1733,7 @@ class DicomCreatorApp(tk.Tk):
             "port": port,
             "calling_ae": calling_ae,
             "called_ae": called_ae,
+            "skip_c_echo": bool(self.remote_vars["skip_c_echo"].get()),
         }
 
         def post_message(msg: str):
@@ -1832,6 +1836,124 @@ class DicomCreatorApp(tk.Tk):
             self.logger.exception("Failed to build in-memory dataset for sending")
             messagebox.showerror(APP_TITLE, f"Failed to build dataset from current form: {ce}")
             return None
+
+    def _update_datasets_with_form_values(self, grouped):
+        """Update loaded DICOM datasets with current form field values.
+        
+        Args:
+            grouped: Dictionary of {study_uid: {series_uid: [(ds, pixel_array)]}}
+            
+        Returns:
+            Updated grouped dictionary with form values applied to datasets
+        """
+        try:
+            # Create a copy to avoid modifying the original
+            import copy
+            updated_grouped = {}
+            
+            for study_uid, series_map in grouped.items():
+                updated_series_map = {}
+                
+                for series_uid, instances in series_map.items():
+                    updated_instances = []
+                    
+                    for ds, pixel_array in instances:
+                        # Create a shallow copy of the dataset
+                        updated_ds = copy.copy(ds)
+                        
+                        # Update patient fields
+                        patient_name = self.patient_vars["PatientName"].get().strip()
+                        if patient_name:
+                            updated_ds.PatientName = patient_name
+                        
+                        patient_id = self.patient_vars["PatientID"].get().strip()
+                        if patient_id:
+                            updated_ds.PatientID = patient_id
+                        
+                        patient_birth_date = self.patient_vars["PatientBirthDate"].get().strip()
+                        if patient_birth_date:
+                            updated_ds.PatientBirthDate = patient_birth_date
+                        
+                        patient_sex = self.patient_vars["PatientSex"].get().strip()
+                        if patient_sex:
+                            updated_ds.PatientSex = patient_sex
+                        
+                        patient_age = self.patient_vars["PatientAge"].get().strip()
+                        if patient_age:
+                            updated_ds.PatientAge = patient_age
+                        
+                        patient_weight = self.patient_vars["PatientWeight"].get().strip()
+                        if patient_weight:
+                            updated_ds.PatientWeight = patient_weight
+                        
+                        patient_size = self.patient_vars["PatientSize"].get().strip()
+                        if patient_size:
+                            updated_ds.PatientSize = patient_size
+                        
+                        patient_comments = self.patient_vars["PatientComments"].get().strip()
+                        if patient_comments:
+                            updated_ds.PatientComments = patient_comments
+                        
+                        # Update study fields
+                        study_date = self.study_vars["StudyDate"].get().strip()
+                        if study_date:
+                            updated_ds.StudyDate = study_date
+                        
+                        study_time = self.study_vars["StudyTime"].get().strip()
+                        if study_time:
+                            updated_ds.StudyTime = study_time
+                        
+                        study_desc = self.study_vars["StudyDescription"].get().strip()
+                        if study_desc:
+                            updated_ds.StudyDescription = study_desc
+                        
+                        accession = self.study_vars["AccessionNumber"].get().strip()
+                        if accession:
+                            updated_ds.AccessionNumber = accession
+                        
+                        study_id = self.study_vars["StudyID"].get().strip()
+                        if study_id:
+                            updated_ds.StudyID = study_id
+                        
+                        # Update series fields
+                        series_num = self.series_vars["SeriesNumber"].get().strip()
+                        if series_num:
+                            updated_ds.SeriesNumber = series_num
+                        
+                        modality = self.series_vars["Modality"].get().strip()
+                        if modality:
+                            updated_ds.Modality = modality
+                        
+                        series_desc = self.series_vars["SeriesDescription"].get().strip()
+                        if series_desc:
+                            updated_ds.SeriesDescription = series_desc
+                        
+                        body_part = self.series_vars["BodyPartExamined"].get().strip()
+                        if body_part:
+                            updated_ds.BodyPartExamined = body_part
+                        
+                        protocol = self.series_vars["ProtocolName"].get().strip()
+                        if protocol:
+                            updated_ds.ProtocolName = protocol
+                        
+                        updated_instances.append((updated_ds, pixel_array))
+                    
+                    updated_series_map[series_uid] = updated_instances
+                
+                updated_grouped[study_uid] = updated_series_map
+            
+            self.logger.info("Updated loaded DICOM datasets with current form values")
+            return updated_grouped
+            
+        except Exception as e:
+            self.logger.exception("Failed to update datasets with form values")
+            # On error, return original grouped data
+            messagebox.showwarning(
+                APP_TITLE,
+                f"Warning: Could not apply form changes to loaded DICOM: {e}\n\n"
+                "Sending original data instead."
+            )
+            return grouped
 
     def _on_preset_selected(self, event=None):
         """Handle preset selection from the combobox."""
@@ -2043,9 +2165,7 @@ class DicomCreatorApp(tk.Tk):
         self.conn_attempts = tk.StringVar(value="5")
         ttk.Entry(config_frame, textvariable=self.conn_attempts, width=30).grid(row=2, column=1, sticky="ew", padx=5)
         
-        config_frame.columnconfigure(1, weight=1)
-        
-        # Buttons
+        # Send button
         btn_frame = ttk.Frame(self.connection_test_frame)
         btn_frame.pack(fill=tk.X, padx=10, pady=5)
         ttk.Button(btn_frame, text="Test TCP", command=self._test_tcp).pack(side=tk.LEFT, padx=2)
@@ -2245,7 +2365,7 @@ class DicomCreatorApp(tk.Tk):
         self.stress_results = tk.Text(results_frame, height=15, wrap="word")
         self.stress_results.pack(fill=tk.BOTH, expand=True)
         
-        scrollbar = ttk.Scrollbar(results_frame, orient="vertical", command=self.stress_results.yview)
+        scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.stress_results.yview)
         self.stress_results.config(yscrollcommand=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
