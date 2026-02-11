@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.6.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.6.1-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,6 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
+- [What's New in v0.6.1](#whats-new-in-v061)
 - [What's New in v0.6.0](#whats-new-in-v060)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
@@ -33,7 +34,43 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ![Pic 4](pic4.png)
 
-## Features
+## What's New in v0.6.1
+
+**Release Date**: February 2026
+
+### 🐛 Bug Fixes
+
+#### LazyImport Class Loading Enhancement
+- **Fixed**: ConnectionValidator failed to load correctly when CEchoValidator appeared first in module inspection
+- **Enhanced**: LazyImport now intelligently prioritizes main/public classes in modules with multiple class definitions
+- **Impact**: Connection Test tab now loads correctly and all LazyImport modules work reliably
+
+#### Improved Error Reporting
+- Better error messages when VRValidator or other modules fail to load
+- Detailed logging with full stack traces for debugging
+- User-friendly error dialogs with diagnostic information
+
+#### Enhanced Documentation
+- Added LazyImport usage guidelines to Copilot instructions
+- Improved inline documentation in import_helper.py
+- Updated docstrings for better code clarity
+
+### ✅ Compatibility
+- **100% backward compatible** with v0.6.0
+- All settings, presets, and data preserved
+- No dependency changes
+- Drop-in replacement upgrade
+
+### 📖 Full Details
+See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md) for complete release notes.
+
+---
+
+## What's New in v0.6.0
+
+**Release Date**: January 2025
+
+### Features
 
 ### Core Features
 - **DICOM Metadata Management** - Create and edit patient, study, and series metadata
@@ -375,6 +412,7 @@ python test/verify_build.py
 
 ### Additional Resources
 - **[examples/](examples/)** - Example scripts for common tasks
+- **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - Release notes for v0.6.1 (Latest)
 - **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - Release notes for v0.6.0
 - **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - Release notes for v0.5.0
 - **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Release notes for v0.4.0
@@ -386,13 +424,13 @@ python test/verify_build.py
 dcmcreator/
 ├── src/
 │   ├── app.py                      (Entry point)
-│   ├── appgui.py                   (Main GUI application - v0.6.0)
+│   ├── appgui.py                   (Main GUI application - v0.6.1)
 │   ├── app_logic.py                (Core application logic)
-│   ├── import_helper.py            (Enhanced LazyImport - v0.5.0+)
+│   ├── import_helper.py            (Enhanced LazyImport - v0.6.1)
 │   ├── dcm.py                      (DICOM creation/loading)
 │   ├── remote.py                   (DICOM C-STORE sending)
 │   ├── presets.py                  (Server Presets management)
-│   ├── connection_validator.py     (Connection testing)
+│   ├── connection_validator.py     (Connection testing - v0.6.1 fix)
 │   ├── stress_tester.py            (Stress testing)
 │   ├── transmission_history.py     (Transmission tracking)
 │   ├── performance_benchmarking.py (Performance analysis)
@@ -429,7 +467,29 @@ dcmcreator/
 
 ## Version History
 
-### Version 0.6.0 (Current)
+### Version 0.6.1 (Current)
+**Release Date**: February 2026
+
+**Bug Fixes:**
+- **LazyImport Class Loading** - Fixed ConnectionValidator loading when multiple classes exist in module
+- **Enhanced Error Reporting** - Better error messages for module loading failures
+- **Improved Logging** - Detailed class loading attempts with full context
+
+**Improvements:**
+- Intelligent class selection for modules with multiple classes
+- Enhanced documentation and Copilot instructions
+- Better fallback mechanisms for missing dependencies
+
+**Compatibility:**
+- 100% backward compatible with v0.6.0
+- All settings and data preserved
+- No dependency changes
+
+**Full Details:** See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)
+
+---
+
+### Version 0.6.0
 **Release Date**: January 2025
 
 **Major Features:**
@@ -446,7 +506,6 @@ dcmcreator/
 - Improved context menus for DICOM instances
 - Better image preview handling for various formats
 - Improved error messages and diagnostics
-- Better LazyImport handling for multi-class modules
 
 **UI Improvements:**
 - View menu for toggling test tabs on/off
@@ -458,7 +517,10 @@ dcmcreator/
 - Fixed validation dialog display issues
 - Improved error handling for missing dependencies
 - Better handling of edge cases in image preview
-- Enhanced module loading reliability
+
+**Full Details:** See [CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)
+
+---
 
 ### Version 0.5.0
 **Release Date**: January 2025

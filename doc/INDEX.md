@@ -11,9 +11,20 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Common questions answered
 
 - **[README.md](../README.md)**
-  - Main project documentation
+  - Main project documentation  
   - Installation instructions
   - Usage overview
+
+### Latest Release (v0.6.1)
+- **[VERSION_0.6.1_SUMMARY.md](VERSION_0.6.1_SUMMARY.md)** ? **LATEST - v0.6.1**
+  - Quick summary of changes
+  - Upgrade instructions
+  - Bug fixes overview
+
+- **[CHANGELOG_v0.6.1.md](CHANGELOG_v0.6.1.md)**
+  - Complete v0.6.1 release notes
+  - LazyImport improvements
+  - Technical details and compatibility
 
 ### DICOM Validation & Inspection (v0.6.0+)
 - **[QUICK_START_TAG_VIEWER.md](QUICK_START_TAG_VIEWER.md)** ? **QUICK START**
@@ -27,7 +38,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Search, filter, and export capabilities
   - Usage examples and troubleshooting
 
-- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** ? **NEW - v0.6.0**
+- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** ? **v0.6.0 Release**
   - Comprehensive validation system
   - VR Validator enhancements
   - DICOMDIR support
