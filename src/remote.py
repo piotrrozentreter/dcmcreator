@@ -5,6 +5,8 @@ Implements C-STORE for all loaded datasets (grouped by Study/Series).
 All-or-nothing: aborts on first error.
 """
 from typing import Callable, Dict, Any
+import ssl
+import os
 
 try:
     from .sop_utils import get_sop_name
@@ -58,6 +60,136 @@ def remote_unavailable_reason() -> str:
     return ", ".join(reasons) or "unknown"
 
 
+def _create_tls_context(tls_config: Dict[str, Any], logger=None, on_message: Callable[[str], None] = None) -> ssl.SSLContext:
+    """
+    Create an SSL context from TLS configuration.
+    
+    Args:
+        tls_config: Dictionary with TLS configuration:
+            - cert_file: Path to client certificate (PEM)
+            - key_file: Path to private key (PEM)
+            - key_password: Optional password for private key
+            - ca_file: Path to CA certificate for server verification
+            - verify_server: Whether to verify server certificate (default True)
+            - verify_hostname: Whether to verify server hostname (default True)
+            - allow_self_signed: Whether to allow self-signed certificates (default False)
+            - tls_version: Minimum TLS version (TLSv1.1, TLSv1.2, TLSv1.3)
+            - cipher_suite: Optional cipher suite string
+        logger: Optional logger for warnings
+        on_message: Optional callback for status messages
+    
+    Returns:
+        ssl.SSLContext configured for TLS connection
+    
+    Raises:
+        RuntimeError: If TLS configuration is invalid
+    """
+    if not tls_config:
+        tls_config = {}
+    
+    # Determine TLS protocol version
+    tls_version = tls_config.get('tls_version', 'TLSv1.2')
+    if tls_version == 'TLSv1.3':
+        protocol = ssl.PROTOCOL_TLS_CLIENT
+    elif tls_version == 'TLSv1.2':
+        protocol = ssl.PROTOCOL_TLS_CLIENT
+    elif tls_version == 'TLSv1.1':
+        protocol = ssl.PROTOCOL_TLS_CLIENT
+    else:
+        protocol = ssl.PROTOCOL_TLS_CLIENT
+    
+    # Create SSL context
+    context = ssl.SSLContext(protocol)
+    
+    # Set minimum TLS version
+    if hasattr(ssl, 'TLSVersion'):
+        if tls_version == 'TLSv1.3':
+            context.minimum_version = ssl.TLSVersion.TLSv1_3
+        elif tls_version == 'TLSv1.2':
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
+        elif tls_version == 'TLSv1.1':
+            context.minimum_version = ssl.TLSVersion.TLSv1_1
+    
+    # Configure certificate verification
+    verify_server = tls_config.get('verify_server', True)
+    if verify_server:
+        context.check_hostname = tls_config.get('verify_hostname', True)
+        context.verify_mode = ssl.CERT_REQUIRED
+        if on_message:
+            on_message("TLS: Server certificate verification enabled")
+    else:
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        if on_message:
+            on_message("TLS: Server certificate verification disabled (not recommended)")
+    
+    # Load CA certificate for server verification
+    ca_file = tls_config.get('ca_file')
+    if ca_file:
+        if not os.path.exists(ca_file):
+            raise RuntimeError(f"CA certificate file not found: {ca_file}")
+        try:
+            context.load_verify_locations(cafile=ca_file)
+            if on_message:
+                on_message(f"TLS: Loaded CA certificate from {ca_file}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load CA certificate: {e}")
+    elif verify_server:
+        # Load default system CA certificates
+        try:
+            context.load_default_certs()
+            if on_message:
+                on_message("TLS: Using system default CA certificates")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Failed to load default CA certificates: {e}")
+    
+    # Allow self-signed certificates if requested
+    if tls_config.get('allow_self_signed', False):
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_OPTIONAL
+        if on_message:
+            on_message("TLS: Self-signed certificates allowed")
+    
+    # Load client certificate and private key
+    cert_file = tls_config.get('cert_file')
+    key_file = tls_config.get('key_file')
+    key_password = tls_config.get('key_password')
+    
+    if cert_file or key_file:
+        if not cert_file or not key_file:
+            raise RuntimeError("Both certificate and private key must be provided for client authentication")
+        
+        if not os.path.exists(cert_file):
+            raise RuntimeError(f"Client certificate file not found: {cert_file}")
+        if not os.path.exists(key_file):
+            raise RuntimeError(f"Private key file not found: {key_file}")
+        
+        try:
+            context.load_cert_chain(
+                certfile=cert_file,
+                keyfile=key_file,
+                password=key_password if key_password else None
+            )
+            if on_message:
+                on_message(f"TLS: Loaded client certificate from {cert_file}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load client certificate/key: {e}")
+    
+    # Set cipher suite if specified
+    cipher_suite = tls_config.get('cipher_suite')
+    if cipher_suite:
+        try:
+            context.set_ciphers(cipher_suite)
+            if on_message:
+                on_message(f"TLS: Using cipher suite: {cipher_suite}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to set cipher suite: {e}")
+    
+    return context
+
+
+
 def send_grouped_dicom(
     grouped: Dict[str, Dict[str, list]],
     config: Dict[str, Any],
@@ -69,7 +201,11 @@ def send_grouped_dicom(
     Send all datasets in grouped dict to remote SCP via C-STORE.
 
     grouped: {study_uid: {series_uid: [ (ds, pixel_arr) ]}}
-    config: {server, port, calling_ae, called_ae}
+    config: {
+        server, port, calling_ae, called_ae,
+        use_tls (bool): Enable TLS/SSL connection,
+        tls_config (dict): TLS configuration (cert_file, key_file, ca_file, etc.)
+    }
     logger: optional logger for errors
     on_message: optional callback to append status messages
     transmission_history: optional TransmissionHistory instance for recording
@@ -157,19 +293,49 @@ def send_grouped_dicom(
     if VerificationSOPClass is not None:
         ae.add_requested_context(VerificationSOPClass)
 
+    # Configure TLS if requested
+    use_tls = config.get("use_tls", False)
+    tls_context = None
+    if use_tls:
+        tls_config = config.get("tls_config", {})
+        if on_message:
+            on_message("Configuring TLS/SSL connection...")
+        try:
+            tls_context = _create_tls_context(tls_config, logger, on_message)
+        except Exception as e:
+            error_msg = f"Failed to configure TLS: {e}"
+            if logger:
+                logger.error(error_msg)
+            if on_message:
+                on_message(f"X {error_msg}")
+            raise RuntimeError(error_msg) from e
+
     # Associate
     if on_message:
-        on_message(f"Connecting to {server}:{port} as {calling_ae} -> {called_ae} ...")
+        tls_status = " (TLS/SSL)" if use_tls else ""
+        on_message(f"Connecting to {server}:{port}{tls_status} as {calling_ae} -> {called_ae} ...")
     
     try:
-        assoc = ae.associate(server, port, ae_title=called_ae.encode("ascii", errors="ignore"))
+        if use_tls and tls_context:
+            # Associate with TLS
+            # Pass server hostname for certificate verification if check_hostname is enabled
+            server_hostname = server if tls_context.check_hostname else None
+            assoc = ae.associate(
+                server, 
+                port, 
+                ae_title=called_ae.encode("ascii", errors="ignore"),
+                tls_args=(tls_context, server_hostname)  # (ssl_context, server_hostname)
+            )
+        else:
+            # Associate without TLS
+            assoc = ae.associate(server, port, ae_title=called_ae.encode("ascii", errors="ignore"))
     except Exception as e:
         # Network/connection error before association could be attempted
         error_msg = f"Connection error to {server}:{port}: {e}"
         if logger:
             logger.error(error_msg)
         if on_message:
-            on_message(f" {error_msg}")
+            on_message(f"X {error_msg}")
         raise RuntimeError(error_msg) from e
     
     if not assoc.is_established:
@@ -201,12 +367,12 @@ def send_grouped_dicom(
         except:
             pass
         
-        error_msg = f"Association failed to {server}:{port} ({calling_ae} ? {called_ae}): {reject_reason}"
+        error_msg = f"Association failed to {server}:{port} ({calling_ae} -> {called_ae}): {reject_reason}"
         
         if logger:
             logger.error(error_msg)
         if on_message:
-            on_message(f"? {error_msg}")
+            on_message(f"X {error_msg}")
         
         raise RuntimeError(error_msg)
     if on_message:
@@ -218,7 +384,7 @@ def send_grouped_dicom(
                 try:
                     sop_uid = str(ctx.abstract_syntax)
                     sop_name = get_sop_name(sop_uid)
-                    on_message(f"  ? {sop_name}")
+                    on_message(f"  + {sop_name}")
                 except Exception:
                     pass
         except Exception:

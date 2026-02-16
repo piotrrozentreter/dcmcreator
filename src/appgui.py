@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.6.1\n"
+APP_TITLE = "DICOM Creator v0.7.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -194,6 +194,8 @@ class DicomCreatorApp(tk.Tk):
         # Remote menu
         remote_menu = tk.Menu(menubar, tearoff=False)
         remote_menu.add_command(label="Send to Remote", command=lambda: self.send_remote(), accelerator="Ctrl+R")
+        remote_menu.add_separator()
+        remote_menu.add_command(label="TLS Settings...", command=self.show_tls_settings)
         menubar.add_cascade(label="Remote", menu=remote_menu)
 
         # View menu
@@ -479,7 +481,11 @@ class DicomCreatorApp(tk.Tk):
             "called_ae": tk.StringVar(value="AcuoMed1"),
             "preset_name": tk.StringVar(),
             "skip_c_echo": tk.BooleanVar(value=False),
+            "use_tls": tk.BooleanVar(value=False),
         }
+        
+        # TLS configuration storage
+        self.tls_config = {}
         
         # Preset management section
         preset_frame = ttk.LabelFrame(self.remote_frame, text="Server Presets", padding=10)
@@ -514,6 +520,7 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(config_frame, "Calling AE Title", self.remote_vars["calling_ae"], 2)
         self._add_labeled_entry(config_frame, "Called AE Title", self.remote_vars["called_ae"], 3)
         ttk.Checkbutton(config_frame, text="Skip C-ECHO", variable=self.remote_vars["skip_c_echo"]).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=5)
+        ttk.Checkbutton(config_frame, text="Use TLS/SSL", variable=self.remote_vars["use_tls"]).grid(row=5, column=0, columnspan=2, sticky="w", padx=5, pady=5)
 
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
@@ -839,6 +846,34 @@ class DicomCreatorApp(tk.Tk):
             f"{APP_TITLE}(c) 2025-2026 by Piotr Rozentreter\n\n"
             "A tool to create, edit, test and sendingDICOM metadata and images."
         )
+
+    def show_tls_settings(self):
+        """Show TLS/SSL settings dialog."""
+        try:
+            from .tls_dialog import TLSSettingsDialog
+        except ImportError:
+            try:
+                from tls_dialog import TLSSettingsDialog
+            except ImportError as e:
+                self.logger.exception("Failed to import TLS dialog")
+                messagebox.showerror(
+                    APP_TITLE,
+                    f"TLS Settings dialog is not available: {e}"
+                )
+                return
+        
+        dialog = TLSSettingsDialog(self, self.logger, self.tls_config)
+        self.wait_window(dialog)
+        
+        result = dialog.get_result()
+        if result is not None:
+            self.tls_config = result
+            self.logger.info("TLS configuration updated")
+            messagebox.showinfo(
+                APP_TITLE,
+                "TLS settings have been saved.\n\n"
+                "Enable 'Use TLS/SSL' checkbox on Remote tab to use these settings."
+            )
 
     def show_vr_viewer(self):
         """Show DICOM Value Representation viewer dialog."""
@@ -1734,6 +1769,8 @@ class DicomCreatorApp(tk.Tk):
             "calling_ae": calling_ae,
             "called_ae": called_ae,
             "skip_c_echo": bool(self.remote_vars["skip_c_echo"].get()),
+            "use_tls": bool(self.remote_vars["use_tls"].get()),
+            "tls_config": self.tls_config if self.remote_vars["use_tls"].get() else None,
         }
 
         def post_message(msg: str):
@@ -1970,6 +2007,10 @@ class DicomCreatorApp(tk.Tk):
                     self.remote_vars["port"].set(str(preset.get('port', '4321')))
                     self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
                     self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+                    self.remote_vars["use_tls"].set(preset.get('use_tls', False))
+                    # Load TLS config if present
+                    if 'tls_config' in preset and preset['tls_config']:
+                        self.tls_config = preset['tls_config']
         except Exception as e:
             self.logger.exception("Failed to load preset")
 
@@ -2012,6 +2053,10 @@ class DicomCreatorApp(tk.Tk):
             self.remote_vars["port"].set(str(preset.get('port', '4321')))
             self.remote_vars["calling_ae"].set(preset.get('calling_ae', 'DCMCREATOR'))
             self.remote_vars["called_ae"].set(preset.get('called_ae', 'ANY-SCP'))
+            self.remote_vars["use_tls"].set(preset.get('use_tls', False))
+            # Load TLS config if present
+            if 'tls_config' in preset and preset['tls_config']:
+                self.tls_config = preset['tls_config']
             
             self._append_remote_message(f"Loaded preset: {name}")
             messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
@@ -2022,27 +2067,13 @@ class DicomCreatorApp(tk.Tk):
     def _save_current_preset(self):
         """Save the current remote settings to a preset.
         
-        If preset name is provided, uses that. Otherwise uses Server IP/hostname.
-        If preset already exists, it will be replaced.
+        If preset name is provided and server matches, updates that preset.
+        If preset name is provided but server differs, asks to create new or update.
+        If no preset name, uses server IP as preset name.
         """
         try:
             # Get preset name from input
             preset_name = self.remote_vars["preset_name"].get().strip()
-            
-            # If no name provided, use server IP/hostname as preset name
-            if not preset_name:
-                preset_name = self.remote_vars["server"].get().strip()
-                
-                if not preset_name:
-                    messagebox.showerror(APP_TITLE, "Please enter a server address or preset name")
-                    return
-                
-                # Confirm using server as preset name
-                if not messagebox.askyesno(
-                    APP_TITLE, 
-                    f"No preset name provided.\nUse server '{preset_name}' as preset name?"
-                ):
-                    return
             
             # Collect current remote settings
             server = self.remote_vars["server"].get().strip()
@@ -2066,7 +2097,53 @@ class DicomCreatorApp(tk.Tk):
                 messagebox.showerror(APP_TITLE, "Port must be a valid number")
                 return
             
-            # Check if preset already exists
+            # If preset name is provided, check if it exists and if server matches
+            if preset_name:
+                if self.presets_manager.preset_exists(preset_name):
+                    # Load existing preset to check server IP
+                    existing_preset = self.presets_manager.load_preset(preset_name)
+                    existing_server = existing_preset.get('server', '') if existing_preset else ''
+                    
+                    # If server IP differs, ask user what to do
+                    if existing_server != server:
+                        choice = messagebox.askyesnocancel(
+                            APP_TITLE,
+                            f"Preset '{preset_name}' has different server ({existing_server}).\n\n"
+                            f"Current server: {server}\n\n"
+                            f"Yes: Create new preset with name '{server}'\n"
+                            f"No: Update existing preset '{preset_name}'\n"
+                            f"Cancel: Abort"
+                        )
+                        
+                        if choice is None:  # Cancel
+                            return
+                        elif choice:  # Yes - create new preset with server name
+                            preset_name = server
+                            # Check if this new name already exists
+                            if self.presets_manager.preset_exists(preset_name):
+                                if not messagebox.askyesno(
+                                    APP_TITLE,
+                                    f"Preset '{preset_name}' already exists. Update it?"
+                                ):
+                                    return
+                        # else: No - continue with updating existing preset
+            else:
+                # No preset name provided, use server IP as preset name
+                preset_name = server
+                
+                if not preset_name:
+                    messagebox.showerror(APP_TITLE, "Please enter a server address or preset name")
+                    return
+                
+                # Confirm using server as preset name if it's a new preset
+                if not self.presets_manager.preset_exists(preset_name):
+                    if not messagebox.askyesno(
+                        APP_TITLE, 
+                        f"Create new preset with name '{preset_name}'?"
+                    ):
+                        return
+            
+            # Save or update preset
             if self.presets_manager.preset_exists(preset_name):
                 # Update existing preset
                 success, message = self.presets_manager.update_preset(
@@ -2074,12 +2151,14 @@ class DicomCreatorApp(tk.Tk):
                     server=server,
                     port=port,
                     calling_ae=calling_ae,
-                    called_ae=called_ae
+                    called_ae=called_ae,
+                    use_tls=self.remote_vars["use_tls"].get(),
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
                 )
                 
                 if success:
                     self._refresh_presets_list()
-                    self._append_remote_message(f"? Updated preset: {preset_name}")
+                    self._append_remote_message(f"Updated preset: {preset_name}")
                     messagebox.showinfo(APP_TITLE, message)
                     self.remote_vars["preset_name"].set("")  # Clear the input field
                 else:
@@ -2091,12 +2170,14 @@ class DicomCreatorApp(tk.Tk):
                     server=server,
                     port=port,
                     calling_ae=calling_ae,
-                    called_ae=called_ae
+                    called_ae=called_ae,
+                    use_tls=self.remote_vars["use_tls"].get(),
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
                 )
                 
                 if success:
                     self._refresh_presets_list()
-                    self._append_remote_message(f"? Created preset: {preset_name}")
+                    self._append_remote_message(f"Created preset: {preset_name}")
                     messagebox.showinfo(APP_TITLE, message)
                     self.remote_vars["preset_name"].set("")  # Clear the input field
                 else:
@@ -2126,7 +2207,7 @@ class DicomCreatorApp(tk.Tk):
             
             if success:
                 self._refresh_presets_list()
-                self._append_remote_message(f"? Deleted preset: {name}")
+                self._append_remote_message(f"Deleted preset: {name}")
                 messagebox.showinfo(APP_TITLE, message)
             else:
                 messagebox.showerror(APP_TITLE, message)
@@ -2531,7 +2612,7 @@ class DicomCreatorApp(tk.Tk):
             stats = self.history.get_statistics()
             
             msg = "Transmission Statistics\n"
-            msg += "=" * 50 + "\n"
+            msg += "=" * 16 + "\n"
             msg += f"Total Transmissions: {stats.get('total_transmissions', 0)}\n"
             msg += f"Successful: {stats.get('successful', 0)}\n"
             msg += f"Failed: {stats.get('failed', 0)}\n"
