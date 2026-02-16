@@ -109,7 +109,7 @@ class ServerPresetsManager:
         
         return True, ""
     
-    def create_preset(self, name, server, port, calling_ae=None, called_ae=None):
+    def create_preset(self, name, server, port, calling_ae=None, called_ae=None, use_tls=False, tls_config=None):
         """Create and save a new preset with full validation.
         
         Args:
@@ -118,6 +118,8 @@ class ServerPresetsManager:
             port: Server port (int or str)
             calling_ae: Calling AE title (optional, defaults to DCMCREATOR)
             called_ae: Called AE title (optional, defaults to ANY-SCP)
+            use_tls: Whether to use TLS/SSL (optional, defaults to False)
+            tls_config: TLS configuration dictionary (optional)
             
         Returns:
             Tuple: (success, message)
@@ -138,7 +140,9 @@ class ServerPresetsManager:
             'server': server,
             'port': port,
             'calling_ae': calling_ae or 'DCMCREATOR',
-            'called_ae': called_ae or 'ANY-SCP'
+            'called_ae': called_ae or 'ANY-SCP',
+            'use_tls': use_tls,
+            'tls_config': tls_config
         }
         
         valid, error = self._validate_server_config(config_dict)
@@ -153,6 +157,8 @@ class ServerPresetsManager:
                 'port': port,
                 'calling_ae': str(calling_ae or 'DCMCREATOR').strip(),
                 'called_ae': str(called_ae or 'ANY-SCP').strip(),
+                'use_tls': use_tls,
+                'tls_config': tls_config
             }
             
             if self._save_presets():
@@ -163,7 +169,7 @@ class ServerPresetsManager:
         except Exception as e:
             return False, f"Error creating preset: {str(e)}"
     
-    def update_preset(self, name, server=None, port=None, calling_ae=None, called_ae=None):
+    def update_preset(self, name, server=None, port=None, calling_ae=None, called_ae=None, use_tls=None, tls_config=None):
         """Update an existing preset.
         
         Args:
@@ -172,6 +178,8 @@ class ServerPresetsManager:
             port: New port (optional)
             calling_ae: New calling AE (optional)
             called_ae: New called AE (optional)
+            use_tls: Whether to use TLS/SSL (optional)
+            tls_config: TLS configuration dictionary (optional)
             
         Returns:
             Tuple: (success, message)
@@ -188,6 +196,8 @@ class ServerPresetsManager:
             'port': port if port is not None else current['port'],
             'calling_ae': calling_ae if calling_ae else current['calling_ae'],
             'called_ae': called_ae if called_ae else current['called_ae'],
+            'use_tls': use_tls if use_tls is not None else current.get('use_tls', False),
+            'tls_config': tls_config if tls_config is not None else current.get('tls_config')
         }
         
         # Validate
@@ -202,6 +212,8 @@ class ServerPresetsManager:
                 'port': port_int,
                 'calling_ae': str(new_config['calling_ae']).strip(),
                 'called_ae': str(new_config['called_ae']).strip(),
+                'use_tls': new_config['use_tls'],
+                'tls_config': new_config['tls_config']
             }
             
             if self._save_presets():
