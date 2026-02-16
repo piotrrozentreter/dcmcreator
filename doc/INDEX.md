@@ -15,16 +15,22 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Installation instructions
   - Usage overview
 
-### Latest Release (v0.6.1)
-- **[VERSION_0.6.1_SUMMARY.md](VERSION_0.6.1_SUMMARY.md)** ? **LATEST - v0.6.1**
+### Latest Release (v0.7.0)
+- **[VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md)** ? **LATEST - v0.7.0**
   - Quick summary of changes
   - Upgrade instructions
-  - Bug fixes overview
+  - Certificate management features
+  - Release highlights
 
-- **[CHANGELOG_v0.6.1.md](CHANGELOG_v0.6.1.md)**
-  - Complete v0.6.1 release notes
-  - LazyImport improvements
+- **[CHANGELOG_v0.7.0.md](CHANGELOG_v0.7.0.md)**
+  - Complete v0.7.0 release notes
+  - SSL/TLS certificate support
   - Technical details and compatibility
+
+### Previous Releases
+- **[CHANGELOG_v0.6.1.md](CHANGELOG_v0.6.1.md)**
+  - LazyImport improvements
+  - Bug fixes overview
 
 ### DICOM Validation & Inspection (v0.6.0+)
 - **[QUICK_START_TAG_VIEWER.md](QUICK_START_TAG_VIEWER.md)** ? **QUICK START**
@@ -289,4 +295,6 @@ dcmcreator/
 ---
 
 Last updated: January 2025
+
+
 

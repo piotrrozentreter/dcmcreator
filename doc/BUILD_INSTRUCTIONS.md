@@ -1,84 +1,87 @@
-# Building DICOM Creator as an Executable
+# Building DICOM Creator v0.7.0 as an Executable
 
-This guide explains how to build a standalone executable (.exe) file that can run on Windows computers without Python installed.
+This guide explains how to build a standalone executable (.exe) file that can run on Windows, macOS, and Linux without Python installed.
 
 ## Important: What to Distribute
 
-**The build process now automatically creates a ZIP file!**
+**The build process automatically creates distribution packages!**
 
-- [x] **Best option**: Use the auto-generated `DICOM Creator.zip` file
-- [x] **Alternative**: Distribute the entire `dist\DICOM Creator\` folder
-- [ ] **DON'T distribute**: Just the `DICOM Creator.exe` alone (needs libraries)
+- ? **Best option**: Use auto-generated `DICOM Creator.zip` file
+- ? **Alternative**: Distribute the entire `dist/DICOM Creator/` folder  
+- ? **Certificates**: Include certificate support (see below)
+- ? **DON'T distribute**: Just the executable alone (needs libraries)
 
-## Version 0.4.0+ Changes
+## Version 0.7.0 Changes
 
-Starting with v0.4.0, the build now includes **new validation and viewer modules**:
+v0.7.0 introduces **SSL/TLS certificate support**:
 
-| Module | Features |
-|--------|----------|
-| **vr_validator** | DICOM VR validation against PS3.6 standard |
-| **validation_dialog** | Interactive validation reports with warnings/errors |
-| **tag** | DICOM tag parsing and statistics |
-| **tag_dialog** | Tag viewer for displaying all DICOM tags |
-| **VR.xml** | Complete DICOM data dictionary (PS3.6) |
-| **connection_validator** | Network connectivity testing |
-| **stress_tester** | Load testing and stress simulation |
-| **transmission_history** | Transmission tracking and statistics |
-| **performance_benchmarking** | Performance measurements |
-| **parallel_transmission** | Multi-threaded DICOM sending |
+| Feature | Status |
+|---------|--------|
+| **TLS/SSL Configuration** | NEW |
+| **Certificate Support** | PEM, CRT, PKCS#12, CER |
+| **Secure Transmission** | Full support |
+| **Certificate Files** | Excluded from Git (see .gitignore) |
 
-**Good news**: These are automatically bundled into the executable. No additional steps needed!
+### Build Includes
+- All validation modules (v0.6.0+)
+- Connection testing (v0.3.1+)
+- Stress testing and benchmarking
+- Performance analysis tools
+- Parallel transmission support
+- **NEW**: Certificate management utilities
+
+---
 
 ## Quick Start
 
-### Option 1: Using Batch Script (Easiest on Windows)
+### Option 1: Using Batch Script (Easiest - Windows)
 
 1. Open Command Prompt or PowerShell
-2. Navigate to the project directory:
+2. Navigate to project directory:
    ```cmd
    cd C:\path\to\dcmcreator
    ```
-3. Run the build script:
+3. Run build script:
    ```cmd
    build.bat
    ```
-4. Wait for the build to complete (takes 5-10 minutes)
-5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (60-70 MB) - For email/upload
-   - `dist\DICOM Creator\` folder (150-200 MB) - For direct sharing
+4. Wait 5-10 minutes for completion
+5. Two options are created:
+   - `DICOM Creator.zip` (60-80 MB) - For distribution
+   - `dist/DICOM Creator/` folder (150-200 MB) - For local testing
 
 ### Option 2: Using Python Script
 
 1. Open Command Prompt or PowerShell
-2. Navigate to the project directory:
+2. Navigate to project directory:
    ```cmd
    cd C:\path\to\dcmcreator
    ```
-3. Run the build script:
+3. Run build script:
    ```cmd
    python build.py
    ```
 4. Wait for the build to complete
-5. **Two distribution options are created**:
-   - `DICOM Creator.zip` (60-70 MB) - For email/upload
-   - `dist\DICOM Creator\` folder (150-200 MB) - For direct sharing
+5. Two options are created:
+   - `DICOM Creator.zip` (60-80 MB) - For distribution
+   - `dist/DICOM Creator/` folder (150-200 MB) - For local testing
 
 ## What Gets Built
 
 ### Automatic ZIP Creation
 The build script now automatically creates `DICOM Creator.zip` containing:
 - `DICOM Creator.exe` - Main executable (~25 MB)
-- `_internal\` - All Python libraries (required!) - PyDICOM, PyNetDICOM, NumPy, Pillow, etc.
-- `src\` - Application source code
-- **Total ZIP size**: 60-70 MB (compressed)
+- `_internal/` - All Python libraries (required!) - PyDICOM, PyNetDICOM, NumPy, Pillow, etc.
+- `src/` - Application source code
+- **Total ZIP size**: 60-80 MB (compressed)
 
 ### Also Available
-- **Distribution folder**: `dist\DICOM Creator\` (150-200 MB uncompressed)
+- **Distribution folder**: `dist/DICOM Creator/` (150-200 MB uncompressed)
 - **For direct folder sharing** or USB distribution
 
 ### Compression Savings
 - Folder size: 150-200 MB
-- ZIP size: 60-70 MB
+- ZIP size: 60-80 MB
 - **Compression: 55-65%**
 
 ## What's Included
@@ -90,7 +93,7 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 - Remote DICOM transmission (C-STORE)
 - Server preset management
 
-### New in v0.4.0+ (Now Bundled)
+### New in v0.7.0 (Now Bundled)
 - **VR Validation**: DICOM value representation validation against PS3.6 standard
 - **Validation Dialog**: Interactive validation reports with detailed warnings/errors
 - **Tag Viewer**: View all DICOM tags from files (including private tags)
@@ -100,6 +103,7 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 - **Transmission History**: Track and analyze past transmissions
 - **Performance Benchmarking**: Measure throughput and latency
 - **Parallel Transmission**: Multi-threaded file sending (1-10 workers)
+- **Certificate Support**: Manage SSL/TLS certificates for secure transmission
 
 Access features via:
 - **DICOM** menu: VR Viewer, Tag Viewer
@@ -131,7 +135,7 @@ Access features via:
 - Internal IT deployment
 
 **User instructions:**
-1. Copy `dist\DICOM Creator\` folder
+1. Copy `dist/DICOM Creator/` folder
 2. Extract or copy to destination
 3. Double-click `DICOM Creator.exe`
 4. Done!
@@ -142,11 +146,11 @@ If the automatic ZIP wasn't created or you want to regenerate it:
 
 ```cmd
 # Using Windows built-in compression
-Right-click dist\DICOM Creator -> Send to -> Compressed (zipped) folder
-# Creates DICOM Creator.zip (60-70 MB)
+Right-click dist/DICOM Creator -> Send to -> Compressed (zipped) folder
+# Creates DICOM Creator.zip (60-80 MB)
 
 # Or using PowerShell
-powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', 'DICOM Creator.zip')"
+powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist/DICOM Creator', 'DICOM Creator.zip')"
 
 # Or using 7-Zip or WinRAR for even better compression
 ```
@@ -166,7 +170,7 @@ See [NSIS Documentation](https://nsis.sourceforge.io/) for details.
 ### Mistake 1: Distributing just the EXE
 ```
 WRONG: Send only DICOM Creator.exe
-Result: Won't work! Missing _internal\ folder with libraries
+Result: Won't work! Missing _internal/ folder with libraries
 ```
 
 ### Solution 1: Use the ZIP file
@@ -178,13 +182,13 @@ Result: Works perfectly! ZIP includes everything needed
 ### Mistake 2: Distributing just the EXE from ZIP
 ```
 WRONG: Extract ZIP, then send only DICOM Creator.exe
-Result: Won't work! Missing _internal\ folder
+Result: Won't work! Missing _internal/ folder
 ```
 
 ### Solution 2: Send the entire extracted folder or use ZIP as-is
 ```
 CORRECT: Send DICOM Creator.zip directly (users extract)
-or send entire dist\DICOM Creator\ folder
+or send entire dist/DICOM Creator/ folder
 Result: Works perfectly!
 ```
 
@@ -204,17 +208,17 @@ dcmcreator/
 |       |   |-- [other DLLs]
 |       |-- src/                    (Application source)
 |-- build/                          (Temporary - can delete)
-|-- dcmcreator.spec                 (Build configuration - UPDATED for v0.4.0+)
+|-- dcmcreator.spec                 (Build configuration - UPDATED for v0.7.0)
 |-- build.bat                       (Windows batch build script)
 |-- build.py                        (Python build script)
 |-- create_icon.py                  (Icon generator)
 |-- app.ico                         (Generated icon)
 |-- requirements.txt                (Runtime dependencies - for source installs)
-|-- build-requirements.txt          (Build dependencies - UPDATED for v0.4.0+)
+|-- build-requirements.txt          (Build dependencies - UPDATED for v0.7.0)
 |-- ...
 ```
 
-## Build Configuration (v0.4.0+)
+## Build Configuration (v0.7.0)
 
 ### Updated Files
 
@@ -267,13 +271,13 @@ pip install -r build-requirements.txt
 ### Issue: ".exe file won't start when distributed"
 **Solution**: 
 1. Make sure you're distributing the ZIP file or entire folder
-2. Never send just the EXE without the `_internal\` folder
-3. The `_internal\` folder contains all Python libraries needed
+2. Never send just the EXE without the `_internal/` folder
+3. The `_internal/` folder contains all Python libraries needed
 
 ### Issue: "Missing DLL" or "ModuleNotFoundError"
 **Solution**:
 1. If using ZIP: Users must extract the entire ZIP file
-2. If distributing folder: Ensure `_internal\` folder is included
+2. If distributing folder: Ensure `_internal/` folder is included
 3. Test before distributing by running from dist folder
 
 ### Issue: Test tabs show "not available" (v0.4.0+)

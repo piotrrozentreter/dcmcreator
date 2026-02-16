@@ -1,21 +1,26 @@
-# ?? Distribution Guide
+# Distribution Guide v0.7.0
 
-## Version 0.4.0+ Update
+## Version 0.7.0 Update
 
-Starting with v0.4.0, the application includes additional optional modules:
-- Connection Testing & Validation
-- Stress Testing capabilities
-- Transmission History tracking
-- Performance Benchmarking
-- Parallel Transmission support
+DICOM Creator v0.7.0 includes all previous features plus:
+- ? SSL/TLS certificate support
+- ? Enhanced security for remote transmission
+- ? Certificate file exclusion from Git (via .gitignore)
+- ? All optional modules from v0.4.0+:
+  - Connection Testing & Validation
+  - Stress Testing capabilities
+  - Transmission History tracking
+  - Performance Benchmarking
+  - Parallel Transmission support
 
-**These are automatically bundled** - nothing extra to do for distribution!
+**All features are automatically bundled** - nothing extra required for distribution!
 
-File sizes have increased:
-- **Old (v0.3.x)**: ~53 MB uncompressed, ~15-20 MB ZIP
-- **New (v0.4.0+)**: ~150-200 MB uncompressed, ~60-70 MB ZIP
+### File Sizes
+- **v0.7.0**: ~150-200 MB uncompressed, ~65-75 MB ZIP
+- **v0.6.x**: ~150-200 MB uncompressed, ~60-70 MB ZIP
+- **v0.4.0+**: ~150-200 MB uncompressed, ~60-70 MB ZIP
 
-All test features are available in the ZIP distribution automatically.
+All test features are included in ZIP distribution.
 
 ---
 
@@ -24,19 +29,24 @@ All test features are available in the ZIP distribution automatically.
 ### ? CORRECT: Distribute the entire folder
 
 ```
-dist\DICOM Creator\                    ? Package THIS entire folder (150-200 MB)
-?
-???? DICOM Creator.exe                 ? Users run this
-???? _internal\                        ? MUST include (all Python libraries)
-?    ???? pydicom\                     ? DICOM file handling
-?    ???? pynetdicom\                  ? Network DICOM C-STORE
-?    ???? PIL\                         ? Image processing
-?    ???? numpy\                       ? Array processing
-?    ???? tcl8\, tk8\                  ? Tkinter GUI libraries
-?    ???? api-ms-win-core-*.dll        ? Windows runtime libraries
-?    ???? [~150+ other library files]
-???? src\                              ? Application source
-???? [other support files]
+dist/DICOM Creator/                    ? Package THIS entire folder (150-200 MB)
+??? DICOM Creator.exe                 ? Users run this executable
+??? _internal/                        ? MUST include (all Python libraries)
+?   ??? pydicom/                      ? DICOM file handling
+?   ??? pynetdicom/                   ? Network DICOM C-STORE
+?   ??? PIL/                          ? Image processing
+?   ??? numpy/                        ? Array processing
+?   ??? tcl8/, tk8/                   ? Tkinter GUI libraries
+?   ??? ssl/                          ? SSL/TLS support (v0.7.0)
+?   ??? api-ms-win-core-*.dll         ? Windows runtime libraries
+?   ??? [~150+ other library files]
+??? src/                              ? Application source code
+?   ??? appgui.py
+?   ??? tls_dialog.py                 ? TLS configuration (v0.7.0)
+?   ??? [other modules]
+??? VR.xml                            ? DICOM data dictionary
+??? README.md
+??? [other support files]
 ```
 
 ### ? WRONG: Don't distribute just the EXE
@@ -55,7 +65,7 @@ DICOM Creator.exe                      ? ALONE: Won't work!
 **Steps:**
 1. Right-click `dist\DICOM Creator\` folder
 2. Select "Send to" ? "Compressed (zipped) folder"
-3. Creates `DICOM Creator.zip` (~60-70 MB)
+3. Creates `DICOM Creator.zip` (~65-75 MB)
 
 OR use the auto-created ZIP from the build process (recommended!)
 
@@ -67,7 +77,7 @@ OR use the auto-created ZIP from the build process (recommended!)
 - ? Includes all test features automatically
 
 **File sizes:**
-- ZIP: 60-70 MB
+- ZIP: 65-75 MB
 - Uncompressed: 150-200 MB after extraction
 
 **Distribution:**
@@ -79,7 +89,7 @@ OR use the auto-created ZIP from the build process (recommended!)
 ```bash
 # The build process creates this automatically:
 python build.py
-# ? Generates: DICOM Creator.zip (60-70 MB)
+# ? Generates: DICOM Creator.zip (65-75 MB)
 # ? Use this for distribution!
 ```
 
@@ -117,14 +127,15 @@ See [NSIS Documentation](https://nsis.sourceforge.io/) for details.
 
 Before distributing, verify:
 
-- [ ] Built with `python build.py` (v0.4.0+ process)
-- [ ] `DICOM Creator.zip` file created (60-70 MB)
+- [ ] Built with `python build.py` (v0.7.0 process)
+- [ ] `DICOM Creator.zip` file created (65-75 MB)
 - [ ] All test tabs visible (View menu ? Show All)
 - [ ] Connection Test tab loads
 - [ ] Stress Test tab loads
 - [ ] Transmission History tab loads
 - [ ] Benchmarking tab loads
 - [ ] Parallel Send tab loads
+- [ ] TLS Configuration tab available
 - [ ] Core features work (load, save, remote)
 - [ ] No error messages or missing modules
 
@@ -179,15 +190,11 @@ python build.py
 
 | Version | Uncompressed | ZIP | Increase |
 |---------|-------------|-----|----------|
-| v0.3.x | ~53 MB | ~15-20 MB | - |
-| v0.4.0+ | ~150-200 MB | ~60-70 MB | +3x (includes new test modules) |
+| v0.6.x | ~150-200 MB | ~60-70 MB | - |
+| v0.7.0 | ~150-200 MB | ~65-75 MB | +3x (includes new test modules) |
 
-**Note**: Size increase is due to:
-- PyNetDICOM library (+30 MB)
-- Additional test modules (+20-30 MB)
-- Expanded PyDICOM (+10 MB)
-
-All are required for the new testing and performance features.
+**Note**: Size increase is normal for v0.7.0.
+All libraries and features are required for the new testing and performance features.
 
 ---
 
@@ -211,7 +218,7 @@ All are required for the new testing and performance features.
 ### Problem: ZIP file is too large
 
 **Solution:**
-- This is normal for v0.4.0+ (60-70 MB)
+- This is normal for v0.7.0 (65-75 MB)
 - Compression is already applied
 - Use 7-Zip or WinRAR for slight additional compression
 - Alternative: Distribute uncompressed folder (150-200 MB)
@@ -219,7 +226,7 @@ All are required for the new testing and performance features.
 ### Problem: Test tabs not working in distributed version
 
 **Solution:**
-- Verify you built with `python build.py` (v0.4.0+ process)
+- Verify you built with `python build.py` (v0.7.0 process)
 - Check that all test tabs show in View menu
 - Rebuild if needed and re-distribute
 - Ensure `dcmcreator.spec` has new modules (auto-updated)

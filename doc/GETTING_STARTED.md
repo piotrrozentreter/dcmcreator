@@ -1,272 +1,162 @@
-# ?? Getting Started - You're All Set!
+# Getting Started with DICOM Creator v0.7.0
 
 ## What You Have
 
-### ? New Features Added
-1. **Server Presets (v0.3.0)**
+### Recent Features Added
+
+1. **SSL/TLS Certificate Support (v0.7.0)**
+   - Configure certificates in TLS Settings dialog
+   - Secure DICOM transmission with encryption
+   - Support for PEM, CRT, PKCS#12 formats
+
+2. **Server Presets (v0.3.0+)**
    - Save frequently used server configurations
    - Quick-load presets from dropdown
    - Delete presets with confirmation
 
-2. **Random DICOM Generator (v0.3.1)**
+3. **Random DICOM Generator (v0.3.1+)**
    - Generate test DICOM files
    - Batch creation (1-1000 files)
    - Configurable sizes
    - Test transmission
 
-3. **Connection Testing (v0.3.1)**
+4. **Connection Testing (v0.3.1+)**
    - Verify server is reachable
    - Quick pre-flight checks
+   - Connection quality assessment
+   - Latency analysis
 
-4. **Test/Generate Tab (v0.3.1)**
-   - New tab in application
-   - Generator controls
-   - Connection tester
-   - Status display
+5. **Advanced Testing Features (v0.6.0+)**
+   - Stress testing
+   - Performance benchmarking
+   - Transmission history tracking
+   - Parallel transmission
 
 ---
 
-## ?? Quick Start
+## Quick Start
 
 ### Step 1: Run the App
 ```bash
 python src/app.py
 ```
 
-### Step 2: Try the New Features
+### Step 2: Try the Features
+
+#### Option A - Test Server Connectivity
 ```
-Option A - Test Server Connectivity:
-  1. Click "Remote" tab
-  2. Enter server IP and port
-  3. Click "Test Connection"
-
-Option B - Generate Test Files:
-  1. Click "Test/Generate" tab
-  2. Set Count: 10
-  3. Set Size: 1.0 MB
-  4. Click "Browse" to select output folder
-  5. Click "Generate DICOMs"
-  6. Click "Test Connection"
-  7. Click "Send All Generated"
-
-Option C - Use Server Presets:
-  1. Click "Remote" tab
-  2. Enter server details
-  3. Enter preset name (e.g., "MainPACS")
-  4. Click "Save Current"
-  5. Next time: Select from dropdown
+1. Click "Remote" tab
+2. Enter server IP and port
+3. (Optional) Configure certificates in "TLS Settings..."
+4. Click "Send to Remote" to test
 ```
 
----
-
-## ?? Documentation
-
-### Start Here
-- **`README.md`** - Main documentation
-- **`doc/INDEX.md`** - Documentation index
-
-### User Guides
-- **`doc/QUICK_START_PRESETS.md`** - Server Presets quick start
-- **`doc/QUICK_START_RANDOM_DICOM.md`** - Random DICOM generator quick start
-- **`doc/SERVER_PRESETS.md`** - Complete Server Presets guide
-- **`doc/RANDOM_DICOM_GENERATOR.md`** - Complete Random DICOM guide
-
-### For Developers
-- **`doc/DEVELOPER_GUIDE_PRESETS.md`** - Architecture and API
-- **`doc/IMPLEMENTATION_COMPLETE_RANDOM_DICOM.md`** - Implementation details
-
-### Reference
-- **`doc/FINAL_SUMMARY.md`** - This project summary
-- **`doc/BUGFIX_MISSING_METHOD.md`** - Bug fixes
-
----
-
-## ?? Common Tasks
-
-### Task 1: Save a Server Configuration
+#### Option B - Generate and Send Test Files
 ```
-1. Go to Remote tab
-2. Enter server IP/port
-3. Enter preset name
-4. Click "Save Current"
-Done! Next time select from dropdown.
+1. Click "Test/Generate" tab
+2. Set Studies/Patient: 1
+3. Set Series/Study: 1
+4. Set Instances/Series: 10
+5. Set Size/File: 1.0 MB
+6. Click "Browse" to select output folder
+7. Click "Generate DICOMs"
+8. Click "Generate & Send" to send to server
 ```
 
-### Task 2: Test Server is Working
+#### Option C - Advanced Connection Testing
 ```
-1. Go to Remote tab or Test/Generate tab
-2. Enter server IP/port
-3. Click "Test Connection"
-Wait for result (success/failure)
-```
-
-### Task 3: Generate Test Files
-```
-1. Go to Test/Generate tab
-2. Set how many: 10
-3. Set size: 1.0 MB
-4. Click "Browse" to pick folder
-5. Click "Generate DICOMs"
-Files saved to folder
+1. Click "Connection Test" tab
+2. Enter server details
+3. Click "Test TCP" for basic connectivity
+4. Click "Connection Quality" for detailed assessment
+5. Click "Latency Variations" to test consistency
 ```
 
-### Task 4: Send Generated Files
+#### Option D - Stress Testing
 ```
-1. (After generating files)
-2. Click "Test Connection" (verify server)
-3. Click "Send All Generated"
-Watch progress
-```
-
-### Task 5: Create and Send Real DICOM
-```
-1. Go to Patient tab, fill in info
-2. Go to Study tab, fill in info
-3. Go to Series tab, fill in info
-4. (Optional) Go to Image tab, load image
-5. Go to Remote tab, set server
-6. Go to Save tab, click "Save DICOM"
-   OR go to Remote tab, click "Send All Loaded DICOM"
+1. Click "Stress Test" tab
+2. Configure test parameters:
+   - Files/Second: 50
+   - Duration: 60 seconds
+   - File Size: 1.0 MB
+3. Click "Create Plan"
+4. Click "Start Test"
+5. View results in the results area
 ```
 
 ---
 
-## ?? Troubleshooting
+## Certificate Configuration (v0.7.0)
 
-### App Won't Start
-- Check Python 3.9+ installed: `python --version`
-- Check dependencies: `pip install -r requirements.txt`
-- Check no syntax errors: `python -m py_compile src/*.py`
+### For SSL/TLS Secure Transmission
 
-### Can't Generate DICOMs
-- Select output directory first (use Browse button)
-- Check folder has write permissions
-- Try smaller number first (e.g., 5 instead of 100)
+1. **Generate or obtain certificates**:
+   ```bash
+   python generate_certs.py  # Generate self-signed certs
+   ```
 
-### Connection Test Fails
-- Verify server IP address is correct
-- Verify server port is correct (usually 4321)
-- Check server is running
-- Check firewall allows connection
-- Try `ping <server_ip>` to test network
+2. **Configure in application**:
+   - Go to **Remote ? TLS Settings...**
+   - Enter paths to your certificates
+   - Select certificate types (PEM, CRT, PKCS#12)
+   - Click "Save"
 
-### Files Won't Send
-- Test connection first
-- Check AE titles match server configuration
-- Try smaller files first
-- Check server logs for errors
-
-### Files Not Appearing in Output Folder
-- Check folder path is correct
-- Check write permissions on folder
-- Check disk space available
-- Check Generation succeeded (check Status display)
+3. **Enable TLS for transmission**:
+   - On Remote tab, check "Use TLS/SSL"
+   - Send DICOM as normal
 
 ---
 
-## ?? Pro Tips
+## Key Tabs Explained
 
-? **Always test connection before sending files**
-? **Start with small batches (5-10 files) before large ones**
-? **Save server presets for frequently used servers**
-? **Check Status display for detailed messages**
-? **Generated test files are real DICOMs - reuse them multiple times**
-? **You can delete generated files after testing**
+### Core Tabs
+- **Patient** - Patient demographic information
+- **Study** - Study metadata
+- **Series/Modality** - Series information and modality type
+- **Image** - Load and preview images
+- **Load DICOM** - Load and view existing DICOM files
+- **Save** - Save current DICOM
+- **Remote** - Configure and send to remote servers
 
----
-
-## ?? Next Steps
-
-### Immediate
-1. ? Run: `python src/app.py`
-2. ? Try Test/Generate tab
-3. ? Generate a few test files
-4. ? Test connection
-5. ? Send files
-
-### Short Term
-- Save your commonly used servers as presets
-- Create test data for different scenarios
-- Test transmission to your servers
-- Verify results in server logs
-
-### Long Term
-- Use for routine testing
-- Create test data for demos
-- Use for training purposes
-- Automate with scripts (API available)
+### Test Tabs (Toggle via View menu)
+- **Test/Generate** - Generate test DICOM files
+- **Connection Test** - Test server connectivity
+- **Stress Test** - Perform load testing
+- **Transmission History** - View transmission logs
+- **Benchmarking** - Performance analysis
+- **Parallel Send** - Parallel transmission configuration
 
 ---
 
-## ?? Learning Path
+## Tips & Tricks
 
-**Complete Beginner (5 minutes):**
-1. Read this file
-2. Run the app
-3. Click Test/Generate tab
-4. Generate 5 test files
-5. Done!
-
-**Regular User (15 minutes):**
-1. Read Quick Start guides
-2. Try both presets and generator
-3. Test connection and transmission
-4. Save your server presets
-
-**Power User (30 minutes):**
-1. Read full documentation
-2. Try all features
-3. Create test data
-4. Understand all options
-5. Review code (if interested)
-
-**Developer (1+ hour):**
-1. Read developer guides
-2. Review code architecture
-3. Understand API
-4. Plan extensions
-5. Contribute improvements
+1. **View ? Show All** - Display all tabs including test features
+2. **View ? Hide Test Tabs** - Show only core tabs for cleaner interface
+3. **DICOM ? View Tags** - Inspect all DICOM tags in loaded file
+4. **Ctrl+V** - Validate current form data
+5. **Ctrl+Shift+V** - Manual validation check
 
 ---
 
-## ? Need Help?
+## What's New in v0.7.0
 
-### For How-To Questions
-?? Check relevant Quick Start guide  
-?? Check main documentation  
-?? Check application Status display
-
-### For Error Messages
-?? Read error message carefully  
-?? Check Troubleshooting section  
-?? Check relevant documentation
-
-### For Feature Details
-?? Read appropriate guide document  
-?? Check code comments and docstrings  
-?? Review examples in documentation
+- ? Full SSL/TLS certificate support
+- ? Enhanced `.gitignore` for certificates
+- ? Updated documentation
+- ? Better error handling for certificate operations
+- ? 100% backward compatible with v0.6.1
 
 ---
 
-## ? You're Ready!
+## Next Steps
 
-Everything is set up and ready to use:
-- ? All code verified and working
-- ? All features tested
-- ? Documentation complete
-- ? No known issues
-- ? Production ready
-
-**Now go create some DICOMs!** ??
+1. **Create DICOM** - Fill in patient/study/series, load image, click Save
+2. **Send to Server** - Configure remote server, click "Send to Remote"
+3. **Test Features** - Explore Connection Test, Stress Test tabs
+4. **Read Docs** - See [INDEX.md](INDEX.md) for complete documentation
 
 ---
 
-## Version Info
-- **App Version:** 0.3.1
-- **Status:** Production Ready
-- **Features:** Complete
-- **Documentation:** Complete
-- **Testing:** Verified
-
-**Last Updated:** 2026-01-14
+**Version**: 0.7.0  
+**Last Updated**: March 2026
 

@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.6.1-blue.svg)
+![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,6 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
+- [What's New in v0.7](#whats-new-in-v070)
 - [What's New in v0.6.1](#whats-new-in-v061)
 - [What's New in v0.6.0](#whats-new-in-v060)
 - [Quick Start](#quick-start)
@@ -33,6 +34,34 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 ![Pic 3](pic3.png)
 
 ![Pic 4](pic4.png)
+
+## What's New in v0.7.0
+
+**Release Date**: March 2026
+
+### 🎉 Major Features
+
+#### Certificate Management
+- **SSL/TLS Certificate Support** - Full support for certificate-based secure DICOM transmission
+- **Certificate Files Support** - Added to `.gitignore`: `*.crt`, `*.key`, `*.pem`, `*.pfx`, `*.p12`, `*.cer`, `*.cert`
+- **Secure Transmissions** - Enhanced TLS settings dialog for certificate configuration
+
+#### Enhanced Test Features
+- Improved Connection Test capabilities
+- Enhanced Stress Testing infrastructure
+- Better Performance Benchmarking tools
+- Parallel Transmission improvements
+
+### ✅ Improvements
+- Updated all documentation to reflect v0.7 release
+- Enhanced certificate handling and security
+- Improved error handling and logging
+- Better user guidance and examples
+
+### 📖 Full Details
+See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md) for complete release notes.
+
+---
 
 ## What's New in v0.6.1
 
@@ -148,22 +177,6 @@ See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md) for complete release notes.
 - **Private Tag Preservation** - Maintain private tags during save operations
 - **Group Length Cleanup** - Automatic removal of deprecated Group Length tags (DICOM 2008+ compliance)
 - **Enhanced Tag Verification** - Post-save verification of tag integrity
-
-**Testing Enhancements:**
-- **Connection Validator Improvements** - Better error detection and reporting
-- **Parallel Transmission** - Improved worker management and progress tracking
-- **Transmission History** - Enhanced session tracking and statistics
-
-**Developer & Admin Features:**
-- **Improved LazyImport** - Better handling of multi-class modules with explicit class selection
-- **Enhanced Logging** - Detailed debug information for troubleshooting
-- **Better Error Diagnostics** - Clear error messages for import and module loading issues
-
-**Documentation:**
-- Complete VR Validator documentation
-- Enhanced troubleshooting guides
-- New validation workflow documentation
-- Improved API documentation for developers
 
 ## Quick Start
 
@@ -467,7 +480,23 @@ dcmcreator/
 
 ## Version History
 
-### Version 0.6.1 (Current)
+### Version 0.7.0 (Current)
+**Release Date**: March 2026
+
+**Major Features:**
+- **Certificate Management** - SSL/TLS certificate-based secure DICOM transmission
+- **Enhanced Test Features** - Improved Connection Test, Stress Testing, Performance Benchmarking, and Parallel Transmission
+
+**Improvements:**
+- Updated documentation for v0.7
+- Enhanced certificate handling and security
+- Better error handling and logging
+
+**Full Details:** See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)
+
+---
+
+### Version 0.6.1
 **Release Date**: February 2026
 
 **Bug Fixes:**
@@ -640,3 +669,4 @@ MIT License. See `LICENSE` for details.
 - Review the validation report dialog (v0.6.0)
 - Common issues: incorrect date format (YYYYMMDD), invalid VR values
 - Fix issues or click "Continue" if warnings only
+

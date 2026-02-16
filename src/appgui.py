@@ -2612,7 +2612,7 @@ class DicomCreatorApp(tk.Tk):
             stats = self.history.get_statistics()
             
             msg = "Transmission Statistics\n"
-            msg += "=" * 39 + "\n"
+            msg += "=" * 16 + "\n"
             msg += f"Total Transmissions: {stats.get('total_transmissions', 0)}\n"
             msg += f"Successful: {stats.get('successful', 0)}\n"
             msg += f"Failed: {stats.get('failed', 0)}\n"
