@@ -461,7 +461,6 @@ python examples/parallel_send.py
 
 ## ?? Documentation Files
 
-- `QUICK_START.md` - Quick reference and command guide
 - `examples/README.md` - Complete guide for ready-to-run scripts
 - `doc/PARALLEL_TRANSMISSION_GUIDE.md` - Parallel transmission details
 - `doc/EXTERNAL_SCRIPT_USAGE.md` - How to write custom scripts

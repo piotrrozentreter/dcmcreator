@@ -347,6 +347,5 @@ Use ready-to-run scripts in `examples/` directory!
 
 - `examples/README.md` - Ready-to-run example scripts
 - `doc/PARALLEL_TRANSMISSION_GUIDE.md` - Parallel transmission API details
-- `QUICK_START.md` - Quick reference guide
 
 **Happy scripting!** ??
