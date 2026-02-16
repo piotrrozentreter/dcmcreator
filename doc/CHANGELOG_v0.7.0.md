@@ -10,31 +10,31 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? New Features
+## New Features
 
 ### SSL/TLS Certificate Support
-- **Full certificate file support** in `.gitignore` and project configuration
-- **Certificate types supported**:
+- Full certificate file support in `.gitignore` and project configuration
+- Certificate types supported:
   - PEM certificates (`.pem`)
   - CRT certificates (`.crt`)
   - Private keys (`.key`)
-  - PKCS#12 format (`.pfx`, `.p12`)
+  - PKCS#12 format (`.pfx`, `p12`)
   - CER format (`.cer`, `.cert`)
 
-- **Enhanced TLS Configuration**:
+- Enhanced TLS Configuration:
   - Persistent certificate storage
   - TLS/SSL settings dialog improvements
   - Better error handling for certificate issues
   - Certificate validation before transmission
 
 ### Security Improvements
-- **`.gitignore` Updates**: Added certificate file patterns to prevent accidental commits
-- **Better Certificate Handling**: Improved TLS settings management
-- **Enhanced Error Messages**: More informative certificate-related error reporting
+- `.gitignore` Updates: Added certificate file patterns to prevent accidental commits
+- Better Certificate Handling: Improved TLS settings management
+- Enhanced Error Messages: More informative certificate-related error reporting
 
 ---
 
-## ?? Documentation Updates
+## Documentation Updates
 
 ### New Documentation
 - **VERSION_0.7.0_SUMMARY.md** - Quick release summary
@@ -48,7 +48,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Technical Changes
+## Technical Changes
 
 ### Configuration Files
 - Updated `.gitignore` with certificate file patterns
@@ -62,7 +62,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ? Improvements
+## Improvements
 
 ### User Experience
 - Clearer certificate configuration workflow
@@ -81,7 +81,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Bug Fixes
+## Bug Fixes
 
 ### Certificate Handling
 - Fixed certificate file handling in TLS dialog
@@ -95,10 +95,10 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Compatibility
+## Compatibility
 
 ### Backward Compatibility
-- ? **100% backward compatible** with v0.6.1
+- 100% backward compatible with v0.6.1
 - All settings, presets, and transmission history preserved
 - No dependency changes required
 - Seamless upgrade path
@@ -117,7 +117,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Upgrade Instructions
+## Upgrade Instructions
 
 ### From v0.6.1
 
@@ -136,7 +136,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 3. **Certificate Configuration** (Optional):
    - If using SSL/TLS, configure certificates in TLS Settings dialog
    - Certificates are NOT automatically migrated (intentional for security)
-   - See [TLS Settings Guide](../doc/TLS_SETTINGS_GUIDE.md) for setup
+   - See the TLS Settings Guide for setup
 
 4. **Verify Installation**:
    - Launch DICOM Creator
@@ -145,7 +145,7 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Distribution
+## Distribution
 
 ### Included Files
 - Main executable (Windows/macOS/Linux)
@@ -158,29 +158,29 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 
 ---
 
-## ?? Known Issues
+## Known Issues
 
 ### None
 
-All previously reported issues have been resolved. If you encounter any issues, please report them on [GitHub Issues](https://github.com/piotrrozentreter/dcmcreator/issues).
+All previously reported issues have been resolved. If you encounter any issues, please report them on GitHub Issues.
 
 ---
 
-## ?? Support
+## Support
 
 ### Documentation
-- See [Documentation Index](INDEX.md) for all guides
-- Review [TLS Settings Guide](../doc/TLS_SETTINGS_GUIDE.md) for certificate configuration
-- Check [Troubleshooting](../doc/TROUBLESHOOTING.md) for common issues
+- See Documentation Index for all guides
+- Review the TLS Settings Guide for certificate configuration
+- Check Troubleshooting for common issues
 
 ### Reporting Issues
-- [GitHub Issues](https://github.com/piotrrozentreter/dcmcreator/issues)
+- GitHub Issues
 - Include version number (v0.7.0) in bug reports
 - Provide detailed error messages and steps to reproduce
 
 ---
 
-## ?? What's Next (v0.8 Roadmap)
+## What's Next (v0.8 Roadmap)
 
 Planned features for future releases:
 - Enhanced certificate auto-detection
@@ -191,15 +191,15 @@ Planned features for future releases:
 
 ---
 
-## ?? Credits
+## Credits
 
 Thanks to all contributors and users who tested v0.7.0 and provided feedback!
 
 ---
 
-## ?? License
+## License
 
-DICOM Creator is licensed under the MIT License. See [LICENSE](../LICENSE) for details.
+DICOM Creator is licensed under the MIT License. See LICENSE for details.
 
 ---
 

@@ -96,7 +96,7 @@ python src/app.py
    ```
 
 2. **Configure in application**:
-   - Go to **Remote ? TLS Settings...**
+   - Go to **Remote -> TLS Settings...**
    - Enter paths to your certificates
    - Select certificate types (PEM, CRT, PKCS#12)
    - Click "Save"
@@ -130,9 +130,9 @@ python src/app.py
 
 ## Tips & Tricks
 
-1. **View ? Show All** - Display all tabs including test features
-2. **View ? Hide Test Tabs** - Show only core tabs for cleaner interface
-3. **DICOM ? View Tags** - Inspect all DICOM tags in loaded file
+1. **View -> Show All** - Display all tabs including test features
+2. **View -> Hide Test Tabs** - Show only core tabs for cleaner interface
+3. **DICOM -> View Tags** - Inspect all DICOM tags in loaded file
 4. **Ctrl+V** - Validate current form data
 5. **Ctrl+Shift+V** - Manual validation check
 
@@ -140,11 +140,11 @@ python src/app.py
 
 ## What's New in v0.7.0
 
-- ? Full SSL/TLS certificate support
-- ? Enhanced `.gitignore` for certificates
-- ? Updated documentation
-- ? Better error handling for certificate operations
-- ? 100% backward compatible with v0.6.1
+- Full SSL/TLS certificate support
+- Enhanced `.gitignore` for certificates
+- Updated documentation
+- Better error handling for certificate operations
+- 100% backward compatible with v0.6.1
 
 ---
 

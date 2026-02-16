@@ -4,7 +4,7 @@
 **Release Date**: March 2026  
 **Type**: Production Release
 
-## ?? What Changed
+## What Changed
 
 ### Certificate Management (NEW)
 - Full SSL/TLS certificate support for secure DICOM transmission
@@ -24,16 +24,16 @@
 
 ---
 
-## ? Upgrade Path
+## Upgrade Path
 
-**v0.6.1 ? v0.7.0**: Drop-in replacement
+**v0.6.1 to v0.7.0**: Drop-in replacement
 - 100% backward compatible
 - All presets and settings preserved
 - No action required unless using certificates
 
 ---
 
-## ?? Key Features Still Included
+## Key Features Still Included
 
 - DICOM creation and editing
 - Server presets management
@@ -48,7 +48,7 @@
 
 ---
 
-## ?? Quick Start
+## Quick Start
 
 1. **Download v0.7.0** from releases
 2. **Run the installer** (Windows) or extract (Linux/macOS)
@@ -56,14 +56,14 @@
 4. **Use as before** - all your presets load automatically
 
 ### For Certificate Support
-1. Go to **Remote ? TLS Settings...**
+1. Go to **Remote -> TLS Settings...**
 2. Configure your certificate paths
 3. Enable **"Use TLS/SSL"** on Remote tab
 4. Send DICOM securely
 
 ---
 
-## ?? Resources
+## Resources
 
 - [Full Release Notes](CHANGELOG_v0.7.0.md)
 - [Documentation Index](INDEX.md)
@@ -72,7 +72,7 @@
 
 ---
 
-## ? FAQ
+## FAQ
 
 **Q: Do I need to do anything after upgrading?**  
 A: No. Just download and run. All your presets and settings load automatically.

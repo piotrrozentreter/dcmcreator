@@ -14,7 +14,7 @@ dcmcreator/
 ?   ??? import_helper.py          # Module importing
 ?   ??? ...
 ??? doc/                          # Documentation (centralized)
-?   ??? INDEX.md                 # ?? Navigation hub
+?   ??? INDEX.md                 # [*] Navigation hub
 ?   ??? README.md                # Main docs
 ?   ??? CHANGELOG_v0.7.0.md      # v0.7.0 release notes (NEW)
 ?   ??? CHANGELOG_v0.6.1.md      # v0.6.1 release notes
@@ -37,12 +37,12 @@ dcmcreator/
 ## What's New in v0.7.0
 
 ### Documentation
-- ? Created `CHANGELOG_v0.7.0.md` - Complete v0.7.0 release notes
-- ? Created `VERSION_0.7.0_SUMMARY.md` - Quick reference guide
-- ? Updated `INDEX.md` - Now highlights v0.7.0 as latest
-- ? Updated `GETTING_STARTED.md` - Certificate configuration added
-- ? Updated root `README.md` - New v0.7.0 section
-- ? Updated `.gitignore` - Certificate file patterns added
+- [check] Created CHANGELOG_v0.7.0.md - Complete v0.7.0 release notes
+- [check] Created VERSION_0.7.0_SUMMARY.md - Quick reference guide
+- [check] Updated INDEX.md - Now highlights v0.7.0 as latest
+- [check] Updated GETTING_STARTED.md - Certificate configuration added
+- [check] Updated root README.md - New v0.7.0 section
+- [check] Updated .gitignore - Certificate file patterns added
 
 ### Organization
 - All documentation centralized in `doc/` folder
@@ -57,28 +57,28 @@ dcmcreator/
 ### I Want To...
 
 **Get started quickly**
-? Read [GETTING_STARTED.md](GETTING_STARTED.md)
+-> Read [GETTING_STARTED.md](GETTING_STARTED.md)
 
 **Understand v0.7.0 changes**
-? See [VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md) or [CHANGELOG_v0.7.0.md](CHANGELOG_v0.7.0.md)
+-> See [VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md) or [CHANGELOG_v0.7.0.md](CHANGELOG_v0.7.0.md)
 
 **Configure certificates**
-? See [GETTING_STARTED.md](GETTING_STARTED.md) "Certificate Configuration" section
+-> See [GETTING_STARTED.md](GETTING_STARTED.md) "Certificate Configuration" section
 
 **Build from source**
-? Follow [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
+-> Follow [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)
 
 **Create distributions**
-? See [DISTRIBUTION_GUIDE.md](DISTRIBUTION_GUIDE.md)
+-> See [DISTRIBUTION_GUIDE.md](DISTRIBUTION_GUIDE.md)
 
 **Use server presets**
-? Check [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md)
+-> Check [QUICK_START_PRESETS.md](QUICK_START_PRESETS.md)
 
 **Run tests**
-? See [COMPLETE_TEST_EXECUTION_REFERENCE.md](COMPLETE_TEST_EXECUTION_REFERENCE.md)
+-> See [COMPLETE_TEST_EXECUTION_REFERENCE.md](COMPLETE_TEST_EXECUTION_REFERENCE.md)
 
 **Navigate all docs**
-? Start at [INDEX.md](INDEX.md)
+-> Start at [INDEX.md](INDEX.md)
 
 ---
 

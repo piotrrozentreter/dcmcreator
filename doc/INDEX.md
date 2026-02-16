@@ -2,10 +2,10 @@
 
 Welcome to DICOM Creator documentation! Find what you need below.
 
-## ?? User Guides
+## User Guides
 
 ### Getting Started
-- **[QUICK_START_PRESETS.md](QUICK_START_PRESETS.md)** ? **START HERE**
+- **[QUICK_START_PRESETS.md](QUICK_START_PRESETS.md)** - START HERE
   - Quick reference for Server Presets feature
   - 5-minute quick start guide
   - Common questions answered
@@ -16,7 +16,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Usage overview
 
 ### Latest Release (v0.7.0)
-- **[VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md)** ? **LATEST - v0.7.0**
+- **[VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md)** - LATEST - v0.7.0
   - Quick summary of changes
   - Upgrade instructions
   - Certificate management features
@@ -33,7 +33,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Bug fixes overview
 
 ### DICOM Validation & Inspection (v0.6.0+)
-- **[QUICK_START_TAG_VIEWER.md](QUICK_START_TAG_VIEWER.md)** ? **QUICK START**
+- **[QUICK_START_TAG_VIEWER.md](QUICK_START_TAG_VIEWER.md)** - QUICK START
   - 5-minute Tag Viewer guide
   - Common use cases
   - Pro tips and shortcuts
@@ -44,7 +44,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Search, filter, and export capabilities
   - Usage examples and troubleshooting
 
-- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** ? **v0.6.0 Release**
+- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** - v0.6.0 Release
   - Comprehensive validation system
   - VR Validator enhancements
   - DICOMDIR support
@@ -91,7 +91,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ????? Developer Guides
+## Developer Guides
 
 - **[DEVELOPER_GUIDE_PRESETS.md](DEVELOPER_GUIDE_PRESETS.md)**
   - Architecture and design
@@ -106,10 +106,10 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ?? Reference
+## Reference
 
 ### Release Notes
-- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** ? **CURRENT**
+- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** - CURRENT
   - What's new in v0.6.0
   - Validation system features
   - DICOMDIR support
@@ -135,7 +135,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ?? Navigation Guide
+## Navigation Guide
 
 ### By Role
 
@@ -177,7 +177,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ?? Quick Reference
+## Quick Reference
 
 ### Common Tasks
 
@@ -213,7 +213,7 @@ Welcome to DICOM Creator documentation! Find what you need below.
 
 ---
 
-## ?? File Organization
+## File Organization
 
 ```
 dcmcreator/
@@ -264,7 +264,7 @@ dcmcreator/
 
 ---
 
-## ? Need Help?
+## Need Help?
 
 1. **Check the documentation** - Most questions are answered in the guides
 2. **Review examples** - See how features work in `examples/`
@@ -274,7 +274,7 @@ dcmcreator/
 
 ---
 
-## ?? Version Info
+## Version Info
 
 - **Current Version:** 0.6.0 ?
 - **Release Date:** January 2025
