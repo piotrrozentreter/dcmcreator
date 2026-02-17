@@ -11,9 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
-- [What's New in v0.7](#whats-new-in-v070)
-- [What's New in v0.6.1](#whats-new-in-v061)
-- [What's New in v0.6.0](#whats-new-in-v060)
+- [What's New in v0.7.0](#whats-new-in-v070)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -35,148 +33,59 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ![Pic 4](pic4.png)
 
+## Features
+
+### Core DICOM Features
+- **DICOM Metadata Management** - Create and edit patient, study, and series metadata with validation
+- **Image Support** - Load and preview images (PNG, JPG, BMP) as DICOM pixel data
+- **DICOM File Operations** - Load, save, and organize DICOM files and folders with DICOMDIR support
+- **Remote Transmission** - Send DICOM files to remote servers using C-STORE with SSL/TLS support
+- **VR Validation** - Real-time validation against DICOM Value Representation specifications
+- **Tag Viewer** - View all DICOM tags including private tags with search and export
+
+### Testing & Performance Features
+- **Server Presets** - Save and manage server connection profiles
+- **Connection Testing** - TCP validation, latency analysis, and connection quality assessment
+- **Stress Testing** - Load simulation with configurable parameters and multi-worker support
+- **Transmission History** - Track all transmissions with statistics and JSON export
+- **Performance Benchmarking** - File size analysis, latency benchmarks, and throughput measurements
+- **Parallel Transmission** - Multi-threaded sending with 3-5x speed improvements
+
+### Test Data Generation
+- **Random DICOM Generator** - Create test files with hierarchical structure (Patient → Study → Series → Instances)
+- **Bulk Generation** - Generate multiple files with configurable sizes
+- **Integrated Testing** - Generate and send in one workflow
+
 ## What's New in v0.7.0
 
 **Release Date**: March 2026
 
-### 🎉 Major Features
+### 🔒 SSL/TLS Certificate Support
+- Full certificate-based secure DICOM transmission
+- Support for PEM, CRT, KEY, PKCS#12, and CER formats
+- Enhanced TLS settings dialog with certificate configuration
+- Certificate file patterns added to `.gitignore` for security
 
-#### Certificate Management
-- **SSL/TLS Certificate Support** - Full support for certificate-based secure DICOM transmission
-- **Certificate Files Support** - Added to `.gitignore`: `*.crt`, `*.key`, `*.pem`, `*.pfx`, `*.p12`, `*.cer`, `*.cert`
-- **Secure Transmissions** - Enhanced TLS settings dialog for certificate configuration
+### 📖 Documentation Improvements
+- Streamlined documentation structure
+- Removed obsolete quick start guide (consolidated into feature-specific guides)
+- Updated all version references to 0.7.0
+- Improved certificate management guidance
 
-#### Enhanced Test Features
-- Improved Connection Test capabilities
-- Enhanced Stress Testing infrastructure
-- Better Performance Benchmarking tools
-- Parallel Transmission improvements
+### ✅ Enhancements
+- Better error handling and logging for SSL/TLS operations
+- Improved certificate validation before transmission
+- Enhanced TLS configuration management
+- Better user guidance for secure connections
 
-### ✅ Improvements
-- Updated all documentation to reflect v0.7 release
-- Enhanced certificate handling and security
-- Improved error handling and logging
-- Better user guidance and examples
+### 📋 Previous Releases
+- **v0.6.1** - LazyImport fixes, improved module loading
+- **v0.6.0** - VR validation system, validation dialogs, DICOMDIR support
+- **v0.5.0** - Enhanced LazyImport, better class detection
+- **v0.4.0** - Connection testing, stress testing, performance benchmarking
+- **v0.3.0** - Server presets, tag viewer, random DICOM generator
 
-### 📖 Full Details
-See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md) for complete release notes.
-
----
-
-## What's New in v0.6.1
-
-**Release Date**: February 2026
-
-### 🐛 Bug Fixes
-
-#### LazyImport Class Loading Enhancement
-- **Fixed**: ConnectionValidator failed to load correctly when CEchoValidator appeared first in module inspection
-- **Enhanced**: LazyImport now intelligently prioritizes main/public classes in modules with multiple class definitions
-- **Impact**: Connection Test tab now loads correctly and all LazyImport modules work reliably
-
-#### Improved Error Reporting
-- Better error messages when VRValidator or other modules fail to load
-- Detailed logging with full stack traces for debugging
-- User-friendly error dialogs with diagnostic information
-
-#### Enhanced Documentation
-- Added LazyImport usage guidelines to Copilot instructions
-- Improved inline documentation in import_helper.py
-- Updated docstrings for better code clarity
-
-### ✅ Compatibility
-- **100% backward compatible** with v0.6.0
-- All settings, presets, and data preserved
-- No dependency changes
-- Drop-in replacement upgrade
-
-### 📖 Full Details
-See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md) for complete release notes.
-
----
-
-## What's New in v0.6.0
-
-**Release Date**: January 2025
-
-### Features
-
-### Core Features
-- **DICOM Metadata Management** - Create and edit patient, study, and series metadata
-- **Image Support** - Load and preview images (PNG, JPG, BMP) as DICOM pixel data
-- **DICOM File Operations** - Load, save, and organize DICOM files and folders
-- **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
-- **Server Presets** - Save and manage server connection profiles
-- **DICOM Tag Viewer** - View all DICOM tags including private tags with search and export
-- **VR Validator** - Validate DICOM data against Value Representation specifications
-
-### Advanced Features (v0.3+)
-
-#### **Server Presets**
-- Save frequently used DICOM server configurations
-- Quick load and apply with one click
-- Persistent storage across sessions
-- Multi-server profile management
-
-#### **Connection Testing & Validation**
-- TCP connection validation to DICOM servers
-- Connection quality assessment
-- Latency variation analysis
-- Real-time network performance metrics
-
-#### **Stress Testing**
-- Load simulation and capacity planning
-- Configurable test parameters (files/sec, duration, file size)
-- Multi-worker support for parallel testing
-- Performance metrics collection
-
-#### **Transmission History & Analytics**
-- Track all DICOM transmissions with timestamps
-- Success/failure statistics and reporting
-- Throughput analysis
-- JSON export for external reporting
-
-#### **Performance Benchmarking**
-- File size performance analysis
-- Latency benchmarking
-- Throughput measurements
-- Performance trend visualization
-
-#### **Parallel Transmission**
-- Multi-threaded transmission manager
-- 1-10 configurable worker threads
-- 3-5x speed improvement over sequential sending
-- Real-time progress tracking
-
-#### **Test Data Generation**
-- Random DICOM Generator - Create test files with random metadata
-- Hierarchical generation (Patient → Study → Series → Instances)
-- Bulk generation with configurable sizes
-- Integrated testing workflow
-- Immediate test and send capabilities
-
-### What's New in v0.6.0
-
-**Enhanced Validation Features:**
-- **Real-time VR Validation** - Validate form data as you edit with comprehensive VR compliance checks
-- **Validation Dialogs** - Interactive validation reports with field-level error reporting
-- **Field-Level Validation** - Immediate feedback on individual DICOM data elements
-- **Load-Time Validation** - Automatic validation when loading DICOM files with warnings for issues
-- **Pre-Save Validation** - Prevent saving invalid DICOM files with detailed error messages
-- **Pre-Send Validation** - Validate before remote transmission to DICOM servers
-
-**UI Improvements:**
-- **Validation Report Dialog** - Detailed visual reporting of validation errors and warnings
-- **Enhanced Error Messages** - Clear descriptions of validation issues with remediation suggestions
-- **Tab Visibility Management** - Toggle test tabs on/off via View menu
-- **Improved Image Preview** - Better handling of various image formats and dimensions
-- **Enhanced Context Menus** - Right-click on instances to view images
-
-**DICOM Operations:**
-- **DICOMDIR Support** - Load and expand DICOMDIR files to reference datasets
-- **Private Tag Preservation** - Maintain private tags during save operations
-- **Group Length Cleanup** - Automatic removal of deprecated Group Length tags (DICOM 2008+ compliance)
-- **Enhanced Tag Verification** - Post-save verification of tag integrity
+**Full Details:** See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)
 
 ## Quick Start
 
@@ -185,7 +94,7 @@ See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md) for complete release notes.
 [![Download Badge](https://img.shields.io/badge/download-Windows%20EXE-blue.svg)](https://github.com/piotrrozentreter/dcmcreator/releases)
 
 **Download & Extract:**
-1. Get the `DICOM Creator` folder from `dist/`
+1. Get the `DICOM Creator` folder from `dist/` or releases page
 2. Extract anywhere on Windows
 3. Double-click `DICOM Creator.exe`
 
@@ -203,7 +112,7 @@ See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md) for complete release notes.
 git clone https://github.com/piotrrozentreter/dcmcreator
 cd dcmcreator
 
-# Create virtual environment (optional but recommended)
+# Create virtual environment (recommended)
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
@@ -215,10 +124,10 @@ python src/app.py
 ```
 
 **Dependencies:**
-- `pydicom` - DICOM file handling
-- `pynetdicom` >= 2.0.0 - DICOM network communication
-- `pillow` (PIL) - Image processing
-- `numpy` - Numerical arrays
+- `pydicom>=2.4.0` - DICOM file handling
+- `pynetdicom>=2.0.0` - DICOM network communication
+- `pillow>=10.0.0` - Image processing
+- `numpy>=1.20.0` - Numerical arrays
 
 ## Building Your Own EXE
 
@@ -226,19 +135,17 @@ Want to build a standalone executable yourself?
 
 ### Build Requirements
 
-Starting with **v0.4.0+**, the build includes additional optional modules for testing. Make sure you have all dependencies:
-
 ```bash
-# Install build dependencies (updated for v0.6.0)
+# Install build dependencies
 pip install -r build-requirements.txt
 ```
 
-**build-requirements.txt** now includes:
+**build-requirements.txt** includes:
 - `PyInstaller>=6.0.0` - EXE builder
 - `pillow>=10.0.0` - Image processing
-- `pydicom>=2.4.0` - DICOM library (analysis)
-- `pynetdicom>=2.0.0` - Network DICOM (analysis)
-- `numpy>=1.20.0` - Array processing (analysis)
+- `pydicom>=2.4.0` - DICOM library
+- `pynetdicom>=2.0.0` - Network DICOM
+- `numpy>=1.20.0` - Array processing
 
 ### Build Process
 
@@ -246,29 +153,20 @@ pip install -r build-requirements.txt
 # Create icon (generates app.ico)
 python create_icon.py
 
-# Build the executable (includes all optional modules)
+# Build the executable
 python build.py
 ```
+
 For Windows, you can also run:
 ```bat
 build.bat
 ```
 
-Your standalone EXE will be created in `dist/DICOM Creator/` with:
-- All core DICOM features
-- All connection testing features
-- All stress testing features
-- All transmission history features
-- All performance benchmarking features
-- All parallel transmission features
-- Enhanced validation system (v0.6.0)
-- Improved LazyImport system (v0.6.0)
+Your standalone EXE will be created in `dist/DICOM Creator/` with all features included.
 
 **See [doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md) for detailed build guide.**
 
-### What's Bundled (v0.6.0)
-
-The build now automatically includes:
+### What's Bundled
 
 | Component | Size | Purpose |
 |-----------|------|---------|
@@ -280,98 +178,78 @@ The build now automatically includes:
 | **Total** | **150-200 MB** | Uncompressed |
 | **ZIP** | **60-70 MB** | Compressed distribution |
 
-All optional test modules are automatically included in the build - no extra configuration needed!
-
 ## Usage
 
 ### Creating DICOM Files
 
 1. Fill in Patient, Study, Series metadata
 2. (Optional) Load an image via Image tab
-3. Click "Validate" from File menu to check your data (v0.6.0)
-4. Click "Save" to save as DICOM
+3. Click **File → Validate** to check your data
+4. Click **File → Save** to save as DICOM
 
 ### Loading DICOM Files
 
-1. Go to "Load DICOM" tab
-2. Click "Load DICOM File(s)" or "Load DICOM Folder"
+1. Go to **Load DICOM** tab
+2. Click **Load DICOM File(s)** or **Load DICOM Folder**
 3. Select studies/series from the tree
 4. Metadata auto-populates in the forms
-5. Any validation issues are reported (v0.6.0)
+5. Validation is performed automatically
 
 ### Sending to Remote Server
 
 1. Fill in Server IP/hostname and Port
 2. Optionally adjust AE Titles
-3. Validation is performed before sending (v0.6.0)
-4. Click "Send All Loaded DICOM"
+3. For secure transmission, enable **Use TLS/SSL** and configure certificates via **Remote → TLS Settings**
+4. Click **Send All Loaded DICOM**
 5. Monitor progress in Messages area
 
 #### Using Server Presets
-1. Go to "Remote" tab
-2. (Optional) Select a preset from dropdown to auto-load settings
-3. Or manually enter server details and click "Save Current" to save as preset
-4. Select preset and click "Load" or simply select and it auto-applies
-5. Click "Send All Loaded DICOM"
+1. Go to **Remote** tab
+2. Select a preset from dropdown to auto-load settings
+3. Or enter server details and click **Save Current** to save as preset
+4. Click **Send All Loaded DICOM**
 
-### Data Validation & VR Compliance (v0.6.0)
+### Data Validation & VR Compliance
 
 #### Validate Form Data
-- Go to "File" menu → "Validate" to check all form fields against VR specifications
-- View detailed validation report with specific error messages
+- Go to **File → Validate** to check all form fields
+- View detailed validation report with specific errors
 - Get remediation suggestions for invalid values
-- Optional: continue anyway if there are only warnings
+- Continue with warnings if needed
 
 #### DICOM Data Inspection
-- Go to "DICOM" menu → "View VRs" to browse complete DICOM Value Representations
-- Go to "DICOM" menu → "View All Tags" to inspect all tags in a DICOM file:
+- Go to **DICOM → View VRs** to browse complete DICOM Value Representations
+- Go to **DICOM → View All Tags** to inspect all tags in a DICOM file:
   - View all public and private tags
   - Search and filter tags
   - Export tags to text file
   - View tag statistics
-  - Color-coded private tags
 
-#### Automatic Load Validation
-- When loading DICOM files, validation is performed automatically
-- Any errors or warnings are reported in a dialog
-- You can view the full validation report if needed
-
-### Testing & Validation
+### Testing & Performance
 
 #### Connection Testing
-- Go to "Connection Test" tab
+- Go to **Connection Test** tab
 - Enter server details
-- Click "Test Connection" to validate
+- Click **Test Connection** to validate
 - Review latency and connection quality metrics
 
 #### Stress Testing
-- Go to "Stress Test" tab
-- Configure test parameters (number of files, duration, worker threads)
-- Click "Start Stress Test"
+- Go to **Stress Test** tab
+- Configure test parameters (files, duration, workers)
+- Click **Start Stress Test**
 - Monitor real-time performance metrics
 
 #### Transmission History
-- Go to "Transmission History" tab
+- Go to **Transmission History** tab
 - View all past transmissions
 - See success/failure rates
 - Export data as JSON
 
-#### Performance Benchmarking
-- Go to "Performance Benchmark" tab
-- Run benchmarks for file size and latency analysis
-- Review throughput trends
-
 #### Parallel Transmission
-- Go to "Parallel Transmission" tab
-- Configure number of worker threads (1-10)
+- Go to **Parallel Send** tab
+- Configure worker threads (1-10)
 - Select files and destination
-- Transmit with improved performance
-
-### Loading Images
-1. Go to Image tab
-2. Click "Load Image"
-3. Select PNG, JPG, or BMP file
-4. Image converts to grayscale and displays preview
+- Transmit with 3-5x performance improvement
 
 ## System Requirements
 
@@ -388,21 +266,37 @@ All optional test modules are automatically included in the build - no extra con
 
 ## Documentation
 
-### User Documentation
-- **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index and navigation
-- **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer quick start guide
-- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
-- **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start guide
-- **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Comprehensive Server Presets documentation
-- **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - Random DICOM generator quick start
-- **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - Detailed DICOM generator guide
+### Quick Start Guides
+- **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index
+- **[doc/GETTING_STARTED.md](doc/GETTING_STARTED.md)** - Getting started guide
+- **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer quick start
+- **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start
+- **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - DICOM generator quick start
 
-### Advanced Testing Guides
-- **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup and tuning
-- **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow guide
+### Feature Documentation
+- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
+- **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Server Presets documentation
+- **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - DICOM generator guide
+
+### Testing Guides
+- **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup
+- **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow
 - **[doc/COMPLETE_TEST_EXECUTION_REFERENCE.md](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)** - Complete testing reference
-- **[doc/HIERARCHICAL_GENERATION.md](doc/HIERARCHICAL_GENERATION.md)** - Hierarchical DICOM generation guide
+- **[doc/HIERARCHICAL_GENERATION.md](doc/HIERARCHICAL_GENERATION.md)** - Hierarchical DICOM generation
 - **[test/README.md](test/README.md)** - Test scripts documentation
+
+### Developer Documentation
+- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
+- **[doc/EXTERNAL_SCRIPT_USAGE.md](doc/EXTERNAL_SCRIPT_USAGE.md)** - Using DICOM Creator as a library
+- **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Building the EXE
+- **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution guide
+
+### Release Notes
+- **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes (Current)
+- **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - v0.6.1 release notes
+- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - v0.6.0 release notes
+- **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - v0.5.0 release notes
+- **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - v0.4.0 release notes
 
 ### Running Tests
 ```bash
@@ -415,194 +309,98 @@ python test/test_build.py
 python test/verify_build.py
 ```
 
-### Developer Documentation
-- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
-- **[doc/EXTERNAL_SCRIPT_USAGE.md](doc/EXTERNAL_SCRIPT_USAGE.md)** - Using DICOM Creator as a library
-
-### Build & Deployment
-- **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Complete guide to building the EXE
-- **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution and deployment guide
-
-### Additional Resources
-- **[examples/](examples/)** - Example scripts for common tasks
-- **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - Release notes for v0.6.1 (Latest)
-- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - Release notes for v0.6.0
-- **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - Release notes for v0.5.0
-- **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Release notes for v0.4.0
-- **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Release notes for v0.3.0+
-
 ## Project Structure
 
 ```
 dcmcreator/
 ├── src/
-│   ├── app.py                      (Entry point)
-│   ├── appgui.py                   (Main GUI application - v0.6.1)
-│   ├── app_logic.py                (Core application logic)
-│   ├── import_helper.py            (Enhanced LazyImport - v0.6.1)
-│   ├── dcm.py                      (DICOM creation/loading)
-│   ├── remote.py                   (DICOM C-STORE sending)
-│   ├── presets.py                  (Server Presets management)
-│   ├── connection_validator.py     (Connection testing - v0.6.1 fix)
-│   ├── stress_tester.py            (Stress testing)
-│   ├── transmission_history.py     (Transmission tracking)
-│   ├── performance_benchmarking.py (Performance analysis)
-│   ├── parallel_transmission.py    (Multi-threaded sending)
-│   ├── random_dicom.py             (Test DICOM generator)
-│   ├── test_runner.py              (Testing framework)
-│   ├── vr_validator.py             (VR validation - v0.6.0)
-│   ├── validation_dialog.py        (Validation UI - v0.6.0)
-│   ├── tag_dialog.py               (Tag viewer UI)
-│   └── dcmlogger.py                (Logging setup)
-├── test/                           (Test scripts and verification)
-│   ├── test_build.py               (Build system test)
-│   ├── test_hierarchical_generation.py (Hierarchical DICOM test)
-│   ├── test_tag_viewer.py          (Tag viewer test)
-│   ├── verify_build.py             (Build verification)
-│   ├── run_all_tests.py            (Run all tests)
-│   └── README.md                   (Test documentation)
-├── examples/                       (Example scripts for features)
-├── doc/                            (Comprehensive documentation)
-├── dist/                           (Distribution EXE folder)
-├── build.py                        (Python build script)
-├── build.bat                       (Windows build script)
-├── dcmcreator.spec                 (PyInstaller configuration)
-├── create_icon.py                  (Icon generator)
-├── requirements.txt                (Runtime dependencies)
-├── build-requirements.txt          (Build dependencies)
-├── .github/copilot-instructions.md (Development guidelines)
-├── pic1.png                        (Screenshot - Main interface)
-├── pic2.png                        (Screenshot - DICOM tree/remote)
-├── pic3.png                        (Screenshot - Test generation)
-├── pic4.png                        (Screenshot - Connection testing)
-└── README.md                       (This file)
+│   ├── app.py                      # Entry point
+│   ├── appgui.py                   # Main GUI (v0.7.0)
+│   ├── app_logic.py                # Core application logic
+│   ├── import_helper.py            # LazyImport system
+│   ├── dcm.py                      # DICOM creation/loading
+│   ├── remote.py                   # DICOM C-STORE sending
+│   ├── presets.py                  # Server Presets
+│   ├── connection_validator.py     # Connection testing
+│   ├── stress_tester.py            # Stress testing
+│   ├── transmission_history.py     # Transmission tracking
+│   ├── performance_benchmarking.py # Performance analysis
+│   ├── parallel_transmission.py    # Multi-threaded sending
+│   ├── random_dicom.py             # Test DICOM generator
+│   ├── vr_validator.py             # VR validation
+│   ├── validation_dialog.py        # Validation UI
+│   ├── tag_dialog.py               # Tag viewer UI
+│   ├── tls_dialog.py               # TLS settings dialog
+│   └── dcmlogger.py                # Logging setup
+├── test/                           # Test scripts
+│   ├── test_build.py
+│   ├── test_hierarchical_generation.py
+│   ├── test_tag_viewer.py
+│   ├── verify_build.py
+│   ├── run_all_tests.py
+│   └── README.md
+├── examples/                       # Example scripts
+├── doc/                            # Documentation
+├── dist/                           # Distribution EXE
+├── build.py                        # Build script
+├── build.bat                       # Windows build script
+├── dcmcreator.spec                 # PyInstaller config
+├── create_icon.py                  # Icon generator
+├── requirements.txt                # Runtime dependencies
+├── build-requirements.txt          # Build dependencies
+├── .gitignore                      # Git ignore (includes certificates)
+└── README.md                       # This file
 ```
 
 ## Version History
 
-### Version 0.7.0 (Current)
-**Release Date**: March 2026
+### v0.7.0 (March 2026) - Current
+- SSL/TLS certificate support for secure DICOM transmission
+- Enhanced security with certificate file protection in `.gitignore`
+- Improved TLS settings dialog with certificate configuration
+- Documentation cleanup and streamlining
+- Better error handling for SSL/TLS operations
 
-**Major Features:**
-- **Certificate Management** - SSL/TLS certificate-based secure DICOM transmission
-- **Enhanced Test Features** - Improved Connection Test, Stress Testing, Performance Benchmarking, and Parallel Transmission
-
-**Improvements:**
-- Updated documentation for v0.7
-- Enhanced certificate handling and security
-- Better error handling and logging
-
-**Full Details:** See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)
-
----
-
-### Version 0.6.1
-**Release Date**: February 2026
-
-**Bug Fixes:**
-- **LazyImport Class Loading** - Fixed ConnectionValidator loading when multiple classes exist in module
-- **Enhanced Error Reporting** - Better error messages for module loading failures
-- **Improved Logging** - Detailed class loading attempts with full context
-
-**Improvements:**
-- Intelligent class selection for modules with multiple classes
-- Enhanced documentation and Copilot instructions
-- Better fallback mechanisms for missing dependencies
-
-**Compatibility:**
+### v0.6.1 (February 2026)
+- Fixed LazyImport class loading for ConnectionValidator
+- Enhanced error reporting and logging
+- Improved module loading reliability
 - 100% backward compatible with v0.6.0
-- All settings and data preserved
-- No dependency changes
 
-**Full Details:** See [CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)
+### v0.6.0 (January 2025)
+- Real-time VR validation system
+- Validation report dialogs
+- DICOMDIR support
+- Private tag preservation
+- Pre-save and pre-send validation
 
----
-
-### Version 0.6.0
-**Release Date**: January 2025
-
-**Major Features:**
-- **Real-time VR Validation System** - Comprehensive validation of DICOM data elements
-- **Validation Report Dialogs** - Interactive UI for viewing and understanding validation issues
-- **DICOM Load Validation** - Automatic validation when loading DICOM files with error reporting
-- **Pre-Send Validation** - Validate before remote transmission to ensure compliance
-- **DICOMDIR Support** - Load and reference DICOM dataset files
-- **Private Tag Preservation** - Maintain private tags during file operations
-- **Group Length Cleanup** - Automatic DICOM 2008+ compliance
-
-**Enhancements:**
-- Enhanced field-level validation with remediation suggestions
-- Improved context menus for DICOM instances
-- Better image preview handling for various formats
-- Improved error messages and diagnostics
-
-**UI Improvements:**
-- View menu for toggling test tabs on/off
-- Enhanced validation dialogs with detailed reporting
-- Better image preview resizing and display
-- Improved right-click context menus
-
-**Bug Fixes:**
-- Fixed validation dialog display issues
-- Improved error handling for missing dependencies
-- Better handling of edge cases in image preview
-
-**Full Details:** See [CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)
-
----
-
-### Version 0.5.0
-**Release Date**: January 2025
-
-**New Features:**
-- Enhanced LazyImport system with improved class detection
-- Better handling of modules with multiple classes
+### v0.5.0 (January 2025)
+- Enhanced LazyImport system
+- Better class detection for modules
 - Improved module loading reliability
 
-**Improvements:**
-- Better error diagnostics for module loading
-- Enhanced logging for troubleshooting
-- Performance optimizations
-
-**Bug Fixes:**
-- Fixed ConnectionValidator class loading issue
-- Improved module import reliability
-- Better handling of missing optional dependencies
-
-### Version 0.4.0
-**Release Date**: December 2024
-
-**Major Features:**
+### v0.4.0 (December 2024)
 - Connection testing and validation
 - Stress testing capabilities
 - Transmission history tracking
 - Performance benchmarking
 - Parallel transmission manager
 
-### Version 0.3.0
-**Release Date**: November 2024
-
-**Major Features:**
+### v0.3.0 (November 2024)
 - Server Presets management
-- Tag Viewer with search and export
+- Tag Viewer with search/export
 - VR Validator
 - Random DICOM Generator
 
-### Version 0.2.0
-**Release Date**: October 2024
-
-**Major Features:**
+### v0.2.0 (October 2024)
 - Remote DICOM transmission (C-STORE)
 - DICOM file loading and organization
 - Image loading and preview
 
-### Version 0.1.0
-**Release Date**: September 2024
-
-**Initial Release:**
+### v0.1.0 (September 2024)
+- Initial release
 - Basic DICOM creation
-- Patient/Study/Series metadata management
-- Save DICOM files
+- Patient/Study/Series metadata
 
 ## Author
 
@@ -616,57 +414,44 @@ MIT License. See `LICENSE` for details.
 
 - **GitHub**: https://github.com/piotrrozentreter/dcmcreator
 - **Issues**: Report bugs via GitHub Issues
-- **Internal Support**: Contact development team
 
 ## Troubleshooting
 
 ### EXE Won't Start
-- Windows may block unsigned executables - click "More info" -> "Run anyway"
+- Windows may block unsigned executables - click "More info" → "Run anyway"
 - Check antivirus software settings
 - Run from command line for error messages: `"DICOM Creator.exe"`
 
-### Slow Startup
-- First run takes 15-30 seconds (unpacking files)
-- Subsequent runs are faster (5-10 seconds)
-- Normal behavior for PyInstaller executables
-
-### Dependencies Missing
-- Ensure Python 3.9+ is installed
-- Run `pip install -r requirements.txt` to install dependencies
-- Check that pydicom and pynetdicom are properly installed
-
 ### Connection Issues
-- Use "Connection Test" tab to validate server connectivity
+- Use **Connection Test** tab to validate server connectivity
 - Check firewall and network settings
 - Verify server IP and port are correct
 - Try saving and loading a Server Preset
 
-### Module Loading Issues (v0.5.0+)
+### SSL/TLS Certificate Issues (v0.7.0)
+- Ensure certificate files are in correct format (PEM, CRT, KEY, etc.)
+- Verify certificate paths in TLS Settings dialog
+- Check that certificates are valid and not expired
+- Review error messages for specific certificate validation issues
+
+### Validation Issues
+- Check that `src/VR.xml` exists in your installation
+- Review validation error messages for specific issues
+- Common issues: incorrect date format (YYYYMMDD), invalid VR values
+- Fields with warnings can still be saved if needed
+
+### Dependencies Missing
+- Ensure Python 3.9+ is installed
+- Run `pip install -r requirements.txt` to install dependencies
+- For building: `pip install -r build-requirements.txt`
+
+### Module Loading Issues
 - Check log files for detailed error messages
 - Verify all dependencies are installed
-- Try reinstalling with `pip install -r requirements.txt --force-reinstall`
-- Contact support if LazyImport errors persist
+- Try reinstalling: `pip install -r requirements.txt --force-reinstall`
+- Update to latest version for LazyImport fixes
 
-### Validation Issues (v0.6.0)
-- Check that `src/VR.xml` exists in your installation
-- VR Validator requires the complete DICOM dictionary
-- Review validation error messages for specific remediation steps
-- Fields marked with warnings can still be saved if needed
+---
 
-### Common Error Messages
-
-#### "VRValidator not available"
-- VR.xml file missing from installation
-- Check that `src/VR.xml` exists
-- Rebuild or reinstall the application
-
-#### "Connection Validator could not be loaded"
-- Fixed in v0.5.0 with enhanced LazyImport
-- Update to latest version
-- Check that `connection_validator.py` is present
-
-#### "Validation errors found"
-- Review the validation report dialog (v0.6.0)
-- Common issues: incorrect date format (YYYYMMDD), invalid VR values
-- Fix issues or click "Continue" if warnings only
+**Happy DICOM Creating! 🏥**
 
