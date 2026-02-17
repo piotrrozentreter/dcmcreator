@@ -367,37 +367,37 @@ dcmcreator/
 - Improved module loading reliability
 - 100% backward compatible with v0.6.0
 
-### v0.6.0 (January 2025)
+### v0.6.0 (January 2026)
 - Real-time VR validation system
 - Validation report dialogs
 - DICOMDIR support
 - Private tag preservation
 - Pre-save and pre-send validation
 
-### v0.5.0 (January 2025)
+### v0.5.0 (January 2026)
 - Enhanced LazyImport system
 - Better class detection for modules
 - Improved module loading reliability
 
-### v0.4.0 (December 2024)
+### v0.4.0 (December 2025)
 - Connection testing and validation
 - Stress testing capabilities
 - Transmission history tracking
 - Performance benchmarking
 - Parallel transmission manager
 
-### v0.3.0 (November 2024)
+### v0.3.0
 - Server Presets management
 - Tag Viewer with search/export
 - VR Validator
 - Random DICOM Generator
 
-### v0.2.0 (October 2024)
+### v0.2.0
 - Remote DICOM transmission (C-STORE)
 - DICOM file loading and organization
 - Image loading and preview
 
-### v0.1.0 (September 2024)
+### v0.1.0
 - Initial release
 - Basic DICOM creation
 - Patient/Study/Series metadata
