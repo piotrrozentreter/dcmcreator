@@ -47,12 +47,38 @@ def handle_released(event):
 def handle_rejected(event):
     """Handle when an association is rejected"""
     print(f"✗ Association rejected")
-    print(f"  Reason: {event.result}")
+    print(f"  Source: {event.address if hasattr(event, 'address') else 'unknown'}:{event.port if hasattr(event, 'port') else '?'}")
+    print(f"  Reason: {event.result if hasattr(event, 'result') else 'unknown'}")
+    
+    # Try to get more details
+    try:
+        if hasattr(event, 'assoc'):
+            assoc = event.assoc
+            print(f"  Calling AE: {assoc.requestor.ae_title if hasattr(assoc.requestor, 'ae_title') else 'unknown'}")
+            print(f"  Called AE: {assoc.acceptor.ae_title if hasattr(assoc.acceptor, 'ae_title') else 'unknown'}")
+            
+            # Check presentation contexts
+            if hasattr(assoc, 'requested_contexts'):
+                print(f"  Requested contexts: {len(assoc.requested_contexts)}")
+    except Exception as e:
+        print(f"  (Could not get details: {e})")
+    
     print()
 
 def handle_aborted(event):
     """Handle when an association is aborted"""
     print(f"✗ Association aborted")
+    print(f"  Source: {event.address if hasattr(event, 'address') else 'unknown'}:{event.port if hasattr(event, 'port') else '?'}")
+    print()
+
+def handle_connection_opened(event):
+    """Handle when a connection is opened (before association)"""
+    print(f"→ TCP connection opened from {event.address}:{event.port}")
+    print()
+
+def handle_connection_closed(event):
+    """Handle when a connection is closed"""
+    print(f"← TCP connection closed from {event.address if hasattr(event, 'address') else 'unknown'}")
     print()
 
 def main():
@@ -65,10 +91,13 @@ def main():
     print("Configuring TLS...")
     ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     ssl_context.load_cert_chain('server_cert.pem', 'server_key.pem')
-    ssl_context.load_verify_locations('ca_cert.pem')
+    
+    # For self-signed testing: don't verify client certificates
+    # In production: use CERT_REQUIRED with proper CA validation
     ssl_context.check_hostname = False
-    ssl_context.verify_mode = ssl.CERT_OPTIONAL  # For testing
-    print("✓ TLS configured")
+    ssl_context.verify_mode = ssl.CERT_NONE  # Changed from CERT_OPTIONAL
+    
+    print("✓ TLS configured (client verification disabled for testing)")
     print()
     
     # Setup DICOM AE
@@ -88,6 +117,8 @@ def main():
         (evt.EVT_RELEASED, handle_released),
         (evt.EVT_REJECTED, handle_rejected),
         (evt.EVT_ABORTED, handle_aborted),
+        (evt.EVT_CONN_OPEN, handle_connection_opened),
+        (evt.EVT_CONN_CLOSE, handle_connection_closed),
     ]
     
     print("="*60)

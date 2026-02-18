@@ -42,12 +42,13 @@ def find_best_openssl():
     return 'openssl'
 
 def create_minimal_openssl_config():
-    """Create minimal OpenSSL configuration file"""
+    """Create minimal OpenSSL configuration file with CA extensions"""
     config_content = """# Minimal OpenSSL Configuration
 [ req ]
 default_bits = 2048
 distinguished_name = req_distinguished_name
 prompt = no
+x509_extensions = v3_ca
 
 [ req_distinguished_name ]
 C = US
@@ -55,6 +56,12 @@ ST = State
 L = City
 O = TestOrg
 CN = DICOM Test
+
+[ v3_ca ]
+basicConstraints = critical,CA:TRUE
+keyUsage = critical,keyCertSign,cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer
 """
     config_path = os.path.join(os.getcwd(), 'openssl_minimal.cnf')
     with open(config_path, 'w') as f:
@@ -136,7 +143,7 @@ def main():
     ):
         return False
     
-    # Create CA certificate
+    # Create CA certificate with proper extensions (v3_ca defined in config)
     if not run_openssl(
         ['req', '-new', '-x509', '-days', '3650', 
          '-key', 'ca_key.pem', '-out', 'ca_cert.pem',

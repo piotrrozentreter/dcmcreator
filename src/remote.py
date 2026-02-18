@@ -87,19 +87,12 @@ def _create_tls_context(tls_config: Dict[str, Any], logger=None, on_message: Cal
     if not tls_config:
         tls_config = {}
     
-    # Determine TLS protocol version
-    tls_version = tls_config.get('tls_version', 'TLSv1.2')
-    if tls_version == 'TLSv1.3':
-        protocol = ssl.PROTOCOL_TLS_CLIENT
-    elif tls_version == 'TLSv1.2':
-        protocol = ssl.PROTOCOL_TLS_CLIENT
-    elif tls_version == 'TLSv1.1':
-        protocol = ssl.PROTOCOL_TLS_CLIENT
-    else:
-        protocol = ssl.PROTOCOL_TLS_CLIENT
+    # Create SSL context for TLS client
+    # Use PROTOCOL_TLS_CLIENT which supports TLS 1.0+ and auto-negotiates the highest version
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
     
-    # Create SSL context
-    context = ssl.SSLContext(protocol)
+    # Get requested minimum TLS version (default: TLSv1.2 per industry standards)
+    tls_version = tls_config.get('tls_version', 'TLSv1.2')
     
     # Set minimum TLS version
     if hasattr(ssl, 'TLSVersion'):
@@ -110,14 +103,45 @@ def _create_tls_context(tls_config: Dict[str, Any], logger=None, on_message: Cal
         elif tls_version == 'TLSv1.1':
             context.minimum_version = ssl.TLSVersion.TLSv1_1
     
-    # Configure certificate verification
+    # Security hardening for enterprise environments
+    # Disable SSL compression to prevent CRIME attack (CVE-2012-4929)
+    context.options |= ssl.OP_NO_COMPRESSION
+    
+    # Disable SSLv2 and SSLv3 (known vulnerabilities)
+    context.options |= ssl.OP_NO_SSLv2
+    context.options |= ssl.OP_NO_SSLv3
+    
+    # Enable post-handshake authentication for TLS 1.3
+    if hasattr(ssl, 'OP_NO_TLSv1_3'):
+        # Only if TLS 1.3 is supported
+        try:
+            context.post_handshake_auth = True
+        except AttributeError:
+            pass  # Not available in older Python versions
+    
+    # Configure certificate verification mode
+    # Priority: allow_self_signed > verify_server settings
+    allow_self_signed = tls_config.get('allow_self_signed', False)
     verify_server = tls_config.get('verify_server', True)
-    if verify_server:
-        context.check_hostname = tls_config.get('verify_hostname', True)
+    verify_hostname = tls_config.get('verify_hostname', True)
+    
+    if allow_self_signed:
+        # Self-signed mode: disable strict verification (for testing only)
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_OPTIONAL
+        if on_message:
+            on_message("TLS: Self-signed certificates allowed (testing mode)")
+    elif verify_server:
+        # Production mode: strict verification
+        context.check_hostname = verify_hostname
         context.verify_mode = ssl.CERT_REQUIRED
         if on_message:
-            on_message("TLS: Server certificate verification enabled")
+            msg = "TLS: Server certificate verification enabled"
+            if verify_hostname:
+                msg += " (with hostname verification)"
+            on_message(msg)
     else:
+        # No verification (not recommended)
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
         if on_message:
@@ -143,13 +167,6 @@ def _create_tls_context(tls_config: Dict[str, Any], logger=None, on_message: Cal
         except Exception as e:
             if logger:
                 logger.warning(f"Failed to load default CA certificates: {e}")
-    
-    # Allow self-signed certificates if requested
-    if tls_config.get('allow_self_signed', False):
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_OPTIONAL
-        if on_message:
-            on_message("TLS: Self-signed certificates allowed")
     
     # Load client certificate and private key
     cert_file = tls_config.get('cert_file')
