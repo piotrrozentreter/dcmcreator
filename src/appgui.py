@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.7.0\n"
+APP_TITLE = "DICOM Creator v0.7.2\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -352,7 +352,7 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.patient_frame, "Patient Name", self.patient_vars["PatientName"], 0)
         self._add_labeled_entry(self.patient_frame, "Patient ID", self.patient_vars["PatientID"], 1)
         self._add_labeled_entry(self.patient_frame, "Birth Date (YYYYMMDD)", self.patient_vars["PatientBirthDate"], 2)
-        self._add_labeled_entry(self.patient_frame, "Sex (M/F/O)", self.patient_vars["PatientSex"], 3)
+        self._add_labeled_entry(self.patient_frame, "Sex (M/F)", self.patient_vars["PatientSex"], 3)
         self._add_labeled_entry(self.patient_frame, "Patient Age (e.g., 032Y)", self.patient_vars["PatientAge"], 4)
         self._add_labeled_entry(self.patient_frame, "Patient Weight (kg)", self.patient_vars["PatientWeight"], 5)
         self._add_labeled_entry(self.patient_frame, "Patient Size/Height (m)", self.patient_vars["PatientSize"], 6)
@@ -384,11 +384,11 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(self.study_frame, "Study Description", self.study_vars["StudyDescription"], 3)
         self._add_labeled_entry(self.study_frame, "Accession Number", self.study_vars["AccessionNumber"], 4)
         self._add_labeled_entry(self.study_frame, "Study ID", self.study_vars["StudyID"], 5)
-        with_patient_id = ["ReferringPhysicianName", "ReadingPhysicianName"]
-        for i, (label, var) in enumerate(self.study_vars.items()):
-            if label in with_patient_id:
-                continue
-            self._add_labeled_entry(self.study_frame, label.replace("Name", " Physician Name"), var, i+7)
+        self._add_labeled_entry(self.study_frame, "Referring Physician Name", self.study_vars["ReferringPhysicianName"], 6)
+        self._add_labeled_entry(self.study_frame, "Reading Physician Name", self.study_vars["ReadingPhysicianName"], 7)
+        self._add_labeled_entry(self.study_frame, "Reason For Study", self.study_vars["ReasonForStudy"], 8)
+        self._add_labeled_entry(self.study_frame, "Admitting Diagnoses Description", self.study_vars["AdmittingDiagnosesDescription"], 9)
+        self._add_labeled_entry(self.study_frame, "Study Patient Location", self.study_vars["StudyPatientLocation"], 10)
 
     def _build_series_fields(self):
         """Build series metadata form fields."""
@@ -1876,10 +1876,10 @@ class DicomCreatorApp(tk.Tk):
 
     def _update_datasets_with_form_values(self, grouped):
         """Update loaded DICOM datasets with current form field values.
-        
+
         Args:
             grouped: Dictionary of {study_uid: {series_uid: [(ds, pixel_array)]}}
-            
+
         Returns:
             Updated grouped dictionary with form values applied to datasets
         """
@@ -1887,101 +1887,190 @@ class DicomCreatorApp(tk.Tk):
             # Create a copy to avoid modifying the original
             import copy
             updated_grouped = {}
-            
+            uids_changed = False
+
             for study_uid, series_map in grouped.items():
                 updated_series_map = {}
-                
+
                 for series_uid, instances in series_map.items():
                     updated_instances = []
-                    
+
                     for ds, pixel_array in instances:
                         # Create a shallow copy of the dataset
                         updated_ds = copy.copy(ds)
-                        
-                        # Update patient fields
-                        patient_name = self.patient_vars["PatientName"].get().strip()
-                        if patient_name:
-                            updated_ds.PatientName = patient_name
-                        
-                        patient_id = self.patient_vars["PatientID"].get().strip()
-                        if patient_id:
-                            updated_ds.PatientID = patient_id
-                        
-                        patient_birth_date = self.patient_vars["PatientBirthDate"].get().strip()
-                        if patient_birth_date:
-                            updated_ds.PatientBirthDate = patient_birth_date
-                        
-                        patient_sex = self.patient_vars["PatientSex"].get().strip()
-                        if patient_sex:
-                            updated_ds.PatientSex = patient_sex
-                        
-                        patient_age = self.patient_vars["PatientAge"].get().strip()
-                        if patient_age:
-                            updated_ds.PatientAge = patient_age
-                        
-                        patient_weight = self.patient_vars["PatientWeight"].get().strip()
-                        if patient_weight:
-                            updated_ds.PatientWeight = patient_weight
-                        
-                        patient_size = self.patient_vars["PatientSize"].get().strip()
-                        if patient_size:
-                            updated_ds.PatientSize = patient_size
-                        
-                        patient_comments = self.patient_vars["PatientComments"].get().strip()
-                        if patient_comments:
-                            updated_ds.PatientComments = patient_comments
-                        
-                        # Update study fields
-                        study_date = self.study_vars["StudyDate"].get().strip()
-                        if study_date:
-                            updated_ds.StudyDate = study_date
-                        
-                        study_time = self.study_vars["StudyTime"].get().strip()
-                        if study_time:
-                            updated_ds.StudyTime = study_time
-                        
-                        study_desc = self.study_vars["StudyDescription"].get().strip()
-                        if study_desc:
-                            updated_ds.StudyDescription = study_desc
-                        
-                        accession = self.study_vars["AccessionNumber"].get().strip()
-                        if accession:
-                            updated_ds.AccessionNumber = accession
-                        
-                        study_id = self.study_vars["StudyID"].get().strip()
-                        if study_id:
-                            updated_ds.StudyID = study_id
-                        
-                        # Update series fields
-                        series_num = self.series_vars["SeriesNumber"].get().strip()
-                        if series_num:
-                            updated_ds.SeriesNumber = series_num
-                        
-                        modality = self.series_vars["Modality"].get().strip()
-                        if modality:
-                            updated_ds.Modality = modality
-                        
-                        series_desc = self.series_vars["SeriesDescription"].get().strip()
-                        if series_desc:
-                            updated_ds.SeriesDescription = series_desc
-                        
-                        body_part = self.series_vars["BodyPartExamined"].get().strip()
-                        if body_part:
-                            updated_ds.BodyPartExamined = body_part
-                        
-                        protocol = self.series_vars["ProtocolName"].get().strip()
-                        if protocol:
-                            updated_ds.ProtocolName = protocol
-                        
+
+                        # Update ALL patient fields (including empty values to allow clearing)
+                        updated_ds.PatientName = self.patient_vars["PatientName"].get().strip()
+                        updated_ds.PatientID = self.patient_vars["PatientID"].get().strip()
+
+                        val = self.patient_vars["PatientBirthDate"].get().strip()
+                        if val:
+                            updated_ds.PatientBirthDate = val
+
+                        val = self.patient_vars["PatientSex"].get().strip()
+                        if val:
+                            updated_ds.PatientSex = val
+
+                        val = self.patient_vars["PatientAge"].get().strip()
+                        if val:
+                            updated_ds.PatientAge = val
+
+                        val = self.patient_vars["PatientWeight"].get().strip()
+                        if val:
+                            updated_ds.PatientWeight = val
+
+                        val = self.patient_vars["PatientSize"].get().strip()
+                        if val:
+                            updated_ds.PatientSize = val
+
+                        val = self.patient_vars["PatientComments"].get().strip()
+                        if val:
+                            updated_ds.PatientComments = val
+
+                        val = self.patient_vars["PatientMothersBirthName"].get().strip()
+                        if val:
+                            updated_ds.PatientMotherBirthName = val
+
+                        val = self.patient_vars["PatientDeathDateTime"].get().strip()
+                        if val:
+                            updated_ds.PatientDeathDateTime = val
+
+                        val = self.patient_vars["PatientBirthTime"].get().strip()
+                        if val:
+                            updated_ds.PatientBirthTime = val
+
+                        val = self.patient_vars["PatientAddress"].get().strip()
+                        if val:
+                            updated_ds.PatientAddress = val
+
+                        val = self.patient_vars["PatientTelephoneNumbers"].get().strip()
+                        if val:
+                            updated_ds.PatientTelephoneNumbers = val
+
+                        # Update ALL study fields (including UIDs!)
+                        new_study_uid = self.study_vars["StudyInstanceUID"].get().strip()
+                        if new_study_uid and new_study_uid != study_uid:
+                            updated_ds.StudyInstanceUID = new_study_uid
+                            uids_changed = True
+
+                        val = self.study_vars["StudyDate"].get().strip()
+                        if val:
+                            updated_ds.StudyDate = val
+
+                        val = self.study_vars["StudyTime"].get().strip()
+                        if val:
+                            updated_ds.StudyTime = val
+
+                        val = self.study_vars["StudyDescription"].get().strip()
+                        if val:
+                            updated_ds.StudyDescription = val
+
+                        val = self.study_vars["AccessionNumber"].get().strip()
+                        if val:
+                            updated_ds.AccessionNumber = val
+
+                        val = self.study_vars["StudyID"].get().strip()
+                        if val:
+                            updated_ds.StudyID = val
+
+                        val = self.study_vars["ReferringPhysicianName"].get().strip()
+                        if val:
+                            updated_ds.ReferringPhysicianName = val
+
+                        val = self.study_vars["ReadingPhysicianName"].get().strip()
+                        if val:
+                            updated_ds.NameOfPhysiciansReadingStudy = val
+
+                        val = self.study_vars["ReasonForStudy"].get().strip()
+                        if val:
+                            updated_ds.ReasonForStudy = val
+
+                        val = self.study_vars["AdmittingDiagnosesDescription"].get().strip()
+                        if val:
+                            updated_ds.AdmittingDiagnosesDescription = val
+
+                        val = self.study_vars["StudyPatientLocation"].get().strip()
+                        if val:
+                            updated_ds.StudyPatientLocation = val
+
+                        # Update ALL series fields (including UIDs!)
+                        new_series_uid = self.series_vars["SeriesInstanceUID"].get().strip()
+                        if new_series_uid and new_series_uid != series_uid:
+                            updated_ds.SeriesInstanceUID = new_series_uid
+                            uids_changed = True
+
+                        val = self.series_vars["SeriesNumber"].get().strip()
+                        if val:
+                            updated_ds.SeriesNumber = val
+
+                        val = self.series_vars["Modality"].get().strip()
+                        if val:
+                            updated_ds.Modality = val
+
+                        val = self.series_vars["SeriesDescription"].get().strip()
+                        if val:
+                            updated_ds.SeriesDescription = val
+
+                        val = self.series_vars["BodyPartExamined"].get().strip()
+                        if val:
+                            updated_ds.BodyPartExamined = val
+
+                        val = self.series_vars["ProtocolName"].get().strip()
+                        if val:
+                            updated_ds.ProtocolName = val
+
+                        val = self.series_vars["SeriesDate"].get().strip()
+                        if val:
+                            updated_ds.SeriesDate = val
+
+                        val = self.series_vars["SeriesTime"].get().strip()
+                        if val:
+                            updated_ds.SeriesTime = val
+
+                        val = self.series_vars["PerformingPhysicianName"].get().strip()
+                        if val:
+                            updated_ds.PerformingPhysicianName = val
+
+                        val = self.series_vars["OperatorsName"].get().strip()
+                        if val:
+                            updated_ds.OperatorsName = val
+
+                        val = self.series_vars["Laterality"].get().strip()
+                        if val:
+                            updated_ds.Laterality = val
+
                         updated_instances.append((updated_ds, pixel_array))
-                    
-                    updated_series_map[series_uid] = updated_instances
-                
-                updated_grouped[study_uid] = updated_series_map
-            
+
+                    # Use new series UID if it was changed, otherwise use original
+                    final_series_uid = series_uid
+                    if updated_instances:
+                        first_ds, _ = updated_instances[0]
+                        final_series_uid = str(getattr(first_ds, 'SeriesInstanceUID', series_uid))
+
+                    updated_series_map[final_series_uid] = updated_instances
+
+                # Use new study UID if it was changed, otherwise use original
+                final_study_uid = study_uid
+                if updated_series_map:
+                    first_series_uid = list(updated_series_map.keys())[0]
+                    first_instances = updated_series_map[first_series_uid]
+                    if first_instances:
+                        first_ds, _ = first_instances[0]
+                        final_study_uid = str(getattr(first_ds, 'StudyInstanceUID', study_uid))
+
+                updated_grouped[final_study_uid] = updated_series_map
+
+            # Update internal state if UIDs changed
+            if uids_changed:
+                self.logger.info("Study/Series UIDs were changed - updating internal state")
+                # Update the main grouped_dicom structure
+                self.grouped_dicom = updated_grouped
+                # Rebuild the tree view with new UIDs
+                self.after(100, lambda: self._populate_dicom_tree(updated_grouped))
+
             self.logger.info("Updated loaded DICOM datasets with current form values")
             return updated_grouped
-            
+
         except Exception as e:
             self.logger.exception("Failed to update datasets with form values")
             # On error, return original grouped data
