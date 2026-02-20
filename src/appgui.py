@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.8.0\n"
+APP_TITLE = "DICOM Creator v0.9.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -119,6 +119,7 @@ class DicomCreatorApp(tk.Tk):
         self.grouped_dicom = {}
         self.selected_study_uid = None
         self.selected_series_uid = None
+        self.query_results = []  # Store C-FIND results for C-GET/C-MOVE
         
         # Server presets
         try:
@@ -654,6 +655,8 @@ class DicomCreatorApp(tk.Tk):
 
         ttk.Button(btn_frame, text="Query PACS", command=self._execute_query,
                   style="Accent.TButton" if hasattr(ttk, "Accent") else "").pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Check Capabilities", command=self._check_pacs_capabilities).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Download Study (C-GET)", command=self._download_selected_study).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_frame, text="Clear Results", command=self._clear_query_results).pack(side=tk.LEFT, padx=2)
         ttk.Button(btn_frame, text="Clear Form", command=self._clear_query_form).pack(side=tk.LEFT, padx=2)
 
@@ -805,6 +808,9 @@ class DicomCreatorApp(tk.Tk):
         for item in self.query_results_tree.get_children():
             self.query_results_tree.delete(item)
 
+        # Store results for later use (C-GET/C-MOVE)
+        self.query_results = results
+
         if not success:
             self.query_status_label.config(text=f"Query failed: {message}")
             messagebox.showerror(APP_TITLE, f"Query failed: {message}")
@@ -826,7 +832,7 @@ class DicomCreatorApp(tk.Tk):
                 result.accession_number
             )
 
-            # Insert with level as tree text
+            # Insert with level as tree text, store index for retrieval
             self.query_results_tree.insert(
                 "", "end", 
                 text=result.level,
@@ -854,23 +860,225 @@ class DicomCreatorApp(tk.Tk):
         self.query_modality.set("")
         self.query_level.set("STUDY")
 
-    def _on_query_result_double_click(self, event):
-        """Handle double-click on query result (placeholder for future C-GET)."""
-        selection = self.query_results_tree.selection()
-        if not selection:
+    def _check_pacs_capabilities(self):
+        """Check PACS support for C-GET and C-MOVE."""
+        if DicomQueryHandler is None:
+            messagebox.showerror(APP_TITLE, "Query module not available")
             return
 
-        item = self.query_results_tree.item(selection[0])
-        values = item['values']
+        # Get server settings
+        server = self.query_server.get().strip()
+        port_str = self.query_port.get().strip()
+        calling_ae = self.query_calling_ae.get().strip()
+        called_ae = self.query_called_ae.get().strip()
 
-        messagebox.showinfo(
-            APP_TITLE,
-            f"C-GET (Download) Feature\n\n"
-            f"This will download the selected study/series.\n\n"
-            f"Patient: {values[1]}\n"
-            f"Study: {values[3]}\n\n"
-            f"C-GET functionality coming in next phase!"
-        )
+        if not server or not port_str:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            messagebox.showerror(APP_TITLE, "Port must be a number")
+            return
+
+        # Show progress
+        self.query_status_label.config(text="Checking PACS capabilities...")
+        self.update_idletasks()
+
+        def check_worker():
+            """Perform capability check in background thread."""
+            try:
+                handler_cls = DicomQueryHandler._load_class()
+                if handler_cls is None:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, "Failed to load query handler"))
+                    return
+
+                handler = handler_cls(logger=self.logger)
+
+                c_get_support, c_move_support, message = handler.check_retrieve_support(
+                    server=server,
+                    port=port,
+                    calling_ae=calling_ae,
+                    called_ae=called_ae
+                )
+
+                # Update UI in main thread
+                def show_result():
+                    self.query_status_label.config(text="Capability check complete")
+
+                    # Build detailed message
+                    result_msg = f"PACS Capabilities Check\n"
+                    result_msg += f"=" * 39 + "\n\n"
+                    result_msg += f"Server: {server}:{port}\n"
+                    result_msg += f"Called AE: {called_ae}\n\n"
+                    result_msg += f"{'✅' if c_get_support else '❌'} C-GET Support: {'Yes' if c_get_support else 'No'}\n"
+                    result_msg += f"{'✅' if c_move_support else '❌'} C-MOVE Support: {'Yes' if c_move_support else 'No'}\n\n"
+
+                    if c_get_support:
+                        result_msg += "You can download studies using C-GET.\n"
+                        result_msg += "Click 'Download Study (C-GET)' to download.\n\n"
+
+                    if c_move_support:
+                        result_msg += "You can move studies using C-MOVE.\n"
+                        result_msg += "Use Python API: handler.c_move_study(...)\n\n"
+
+                    if not c_get_support and not c_move_support:
+                        result_msg += "⚠️ This PACS does not support retrieval.\n\n"
+                        result_msg += "Options:\n"
+                        result_msg += "• Use PACS web viewer to download\n"
+                        result_msg += "• Contact PACS administrator\n"
+                        result_msg += "• Check PACS documentation\n"
+
+                    messagebox.showinfo(APP_TITLE, result_msg)
+
+                self.after(0, show_result)
+
+            except Exception as e:
+                self.logger.exception("Capability check failed")
+                self.after(0, lambda: self.query_status_label.config(text="Capability check failed"))
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Check failed: {e}"))
+
+        # Start check in background thread
+        t = threading.Thread(target=check_worker, daemon=True)
+        t.start()
+
+    def _on_query_result_double_click(self, event):
+        """Handle double-click on query result - download study."""
+        self._download_selected_study()
+
+    def _download_selected_study(self):
+        """Download the selected study using C-GET."""
+        selection = self.query_results_tree.selection()
+        if not selection:
+            messagebox.showwarning(APP_TITLE, "Please select a study to download")
+            return
+
+        # Get the result index from tags
+        item = self.query_results_tree.item(selection[0])
+        tags = item['tags']
+
+        # Extract index from result_N tag
+        result_index = None
+        for tag in tags:
+            if tag.startswith('result_'):
+                result_index = int(tag.split('_')[1])
+                break
+
+        if result_index is None or result_index >= len(self.query_results):
+            messagebox.showerror(APP_TITLE, "Could not find study details")
+            return
+
+        result = self.query_results[result_index]
+
+        # Check if we have Study UID
+        if not result.study_uid:
+            messagebox.showerror(
+                APP_TITLE,
+                "Study UID not available in query results.\n\n"
+                "The study must have a valid Study Instance UID to download."
+            )
+            return
+
+        # Ask for output directory
+        output_dir = filedialog.askdirectory(title="Select download directory")
+        if not output_dir:
+            return
+
+        # Show progress dialog
+        progress_window = tk.Toplevel(self)
+        progress_window.title("Downloading Study")
+        progress_window.geometry("450x200")
+        progress_window.transient(self)
+        progress_window.grab_set()
+
+        title_label = ttk.Label(progress_window, text="Downloading DICOM Study", font=("Arial", 12, "bold"))
+        title_label.pack(pady=10)
+
+        info_frame = ttk.Frame(progress_window)
+        info_frame.pack(fill=tk.X, padx=20, pady=5)
+        ttk.Label(info_frame, text=f"Patient: {result.patient_name} ({result.patient_id})", anchor="w").pack(fill=tk.X)
+        ttk.Label(info_frame, text=f"Study: {result.study_description}", anchor="w").pack(fill=tk.X)
+        ttk.Label(info_frame, text=f"Date: {result.study_date}", anchor="w").pack(fill=tk.X)
+
+        progress_var = tk.StringVar(value="Initializing C-GET...")
+        progress_label = ttk.Label(progress_window, textvariable=progress_var)
+        progress_label.pack(pady=5)
+
+        progress_bar = ttk.Progressbar(progress_window, mode='indeterminate')
+        progress_bar.pack(fill=tk.X, padx=20, pady=5)
+        progress_bar.start(10)
+
+        status_label = ttk.Label(progress_window, text="", foreground="blue")
+        status_label.pack(pady=5)
+
+        def progress_callback(received, total, status):
+            """Update progress display."""
+            try:
+                progress_var.set(f"Received: {received} files")
+                status_label.config(text=status)
+                progress_window.update()
+            except:
+                pass
+
+        def download_worker():
+            """Perform C-GET in background thread."""
+            try:
+                handler_cls = DicomQueryHandler._load_class()
+                if handler_cls is None:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, "Failed to load query handler"))
+                    return
+
+                handler = handler_cls(logger=self.logger)
+
+                server = self.query_server.get().strip()
+                port = int(self.query_port.get().strip())
+                calling_ae = self.query_calling_ae.get().strip()
+                called_ae = self.query_called_ae.get().strip()
+
+                success, count, message = handler.c_get_study(
+                    server=server,
+                    port=port,
+                    calling_ae=calling_ae,
+                    called_ae=called_ae,
+                    study_uid=result.study_uid,
+                    output_dir=output_dir,
+                    on_progress=progress_callback
+                )
+
+                # Update UI in main thread
+                def show_result():
+                    progress_window.destroy()
+                    if success:
+                        msg = f"Download Complete!\n\n"
+                        msg += f"Downloaded: {count} files\n"
+                        msg += f"Location: {output_dir}\n\n"
+                        msg += f"Study: {result.study_description}\n"
+                        msg += f"Patient: {result.patient_name}"
+                        messagebox.showinfo(APP_TITLE, msg)
+
+                        # Ask if user wants to load the downloaded files
+                        if messagebox.askyesno(APP_TITLE, "Would you like to load the downloaded files?"):
+                            try:
+                                from .dcm import load_dicom_grouped
+                            except:
+                                from dcm import load_dicom_grouped
+
+                            grouped = load_dicom_grouped(output_dir)
+                            self._populate_dicom_tree(grouped)
+                    else:
+                        messagebox.showerror(APP_TITLE, f"Download failed:\n\n{message}")
+
+                self.after(0, show_result)
+
+            except Exception as e:
+                self.logger.exception("C-GET download failed")
+                self.after(0, lambda: progress_window.destroy())
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Download error: {e}"))
+
+        # Start download in background thread
+        t = threading.Thread(target=download_worker, daemon=True)
+        t.start()
 
     def _build_test_tab(self):
         """Build Test/Generator tab for creating and testing bulk DICOM transmission."""

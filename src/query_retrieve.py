@@ -9,17 +9,23 @@ from datetime import datetime
 from dataclasses import dataclass
 
 try:
-    from pynetdicom import AE, evt, debug_logger
+    from pynetdicom import AE, evt, debug_logger, StoragePresentationContexts
     from pynetdicom.sop_class import (
         PatientRootQueryRetrieveInformationModelFind,
         StudyRootQueryRetrieveInformationModelFind,
+        PatientRootQueryRetrieveInformationModelMove,
+        StudyRootQueryRetrieveInformationModelMove,
+        PatientRootQueryRetrieveInformationModelGet,
+        StudyRootQueryRetrieveInformationModelGet,
     )
     from pydicom.dataset import Dataset
+    import os
     PYNETDICOM_AVAILABLE = True
 except ImportError:
     PYNETDICOM_AVAILABLE = False
     AE = None
     Dataset = None
+    StoragePresentationContexts = None
 
 
 @dataclass
@@ -481,3 +487,397 @@ class DicomQueryHandler:
         """Clear stored query results."""
         self.last_results = []
         self.last_query_params = {}
+
+    def check_retrieve_support(
+        self,
+        server: str,
+        port: int,
+        calling_ae: str,
+        called_ae: str,
+        query_model: str = "StudyRoot"
+    ) -> Tuple[bool, bool, str]:
+        """
+        Check if PACS supports C-GET and/or C-MOVE operations.
+
+        Args:
+            server: PACS server IP/hostname
+            port: PACS port
+            calling_ae: This application's AE title
+            called_ae: PACS AE title
+            query_model: Query model (StudyRoot or PatientRoot)
+
+        Returns:
+            Tuple of (c_get_supported: bool, c_move_supported: bool, message: str)
+        """
+        if not PYNETDICOM_AVAILABLE:
+            return False, False, "pynetdicom is not available"
+
+        self.logger.info(f"Checking retrieve support: {server}:{port}")
+
+        try:
+            # Create Application Entity
+            ae = AE(ae_title=calling_ae)
+
+            # Add presentation contexts for both C-GET and C-MOVE
+            if query_model == "PatientRoot":
+                ae.add_requested_context(PatientRootQueryRetrieveInformationModelGet)
+                ae.add_requested_context(PatientRootQueryRetrieveInformationModelMove)
+            else:
+                ae.add_requested_context(StudyRootQueryRetrieveInformationModelGet)
+                ae.add_requested_context(StudyRootQueryRetrieveInformationModelMove)
+
+            # Establish association
+            assoc = ae.associate(server, port, ae_title=called_ae)
+
+            if assoc.is_established:
+                # Check accepted contexts
+                c_get_supported = False
+                c_move_supported = False
+
+                for context in assoc.accepted_contexts:
+                    abstract_syntax_str = str(context.abstract_syntax)
+                    if 'GET' in abstract_syntax_str:
+                        c_get_supported = True
+                    if 'MOVE' in abstract_syntax_str:
+                        c_move_supported = True
+
+                assoc.release()
+
+                if c_get_supported and c_move_supported:
+                    msg = "PACS supports both C-GET and C-MOVE"
+                elif c_get_supported:
+                    msg = "PACS supports C-GET only (C-MOVE not available)"
+                elif c_move_supported:
+                    msg = "PACS supports C-MOVE only (C-GET not available)"
+                else:
+                    msg = "PACS does not support C-GET or C-MOVE"
+
+                self.logger.info(msg)
+                return c_get_supported, c_move_supported, msg
+            else:
+                return False, False, "Failed to establish association with PACS"
+
+        except Exception as e:
+            error_msg = f"Failed to check retrieve support: {str(e)}"
+            self.logger.exception("Retrieve support check failed")
+            return False, False, error_msg
+
+    def c_get_study(
+        self,
+        server: str,
+        port: int,
+        calling_ae: str,
+        called_ae: str,
+        study_uid: str,
+        output_dir: str,
+        query_model: str = "StudyRoot",
+        on_progress: Optional[callable] = None
+    ) -> Tuple[bool, int, str]:
+        """
+        Download a study from PACS using C-GET.
+
+        Args:
+            server: PACS server IP/hostname
+            port: PACS port
+            calling_ae: This application's AE title
+            called_ae: PACS AE title
+            study_uid: Study Instance UID to retrieve
+            output_dir: Directory to save downloaded files
+            query_model: Query model (StudyRoot or PatientRoot)
+            on_progress: Optional callback for progress updates (received, total, status)
+
+        Returns:
+            Tuple of (success: bool, files_downloaded: int, message: str)
+        """
+        if not PYNETDICOM_AVAILABLE:
+            return False, 0, "pynetdicom is not available"
+
+        self.logger.info(f"Starting C-GET for Study: {study_uid}")
+        self.logger.info(f"Target: {server}:{port}, Output: {output_dir}")
+
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+
+        files_received = []
+
+        def handle_store(event):
+            """Handle incoming C-STORE from C-GET response."""
+            try:
+                ds = event.dataset
+                ds.file_meta = event.file_meta
+
+                # Generate filename from SOP Instance UID
+                sop_instance_uid = ds.SOPInstanceUID
+                filename = f"{sop_instance_uid}.dcm"
+                filepath = os.path.join(output_dir, filename)
+
+                # Save the file
+                ds.save_as(filepath, write_like_original=False)
+                files_received.append(filepath)
+
+                self.logger.info(f"Received file {len(files_received)}: {filename}")
+
+                # Call progress callback if provided
+                if on_progress:
+                    on_progress(len(files_received), -1, f"Received: {filename}")
+
+                return 0x0000  # Success
+            except Exception as e:
+                self.logger.error(f"Failed to store file: {e}")
+                return 0xC000  # Unable to process
+
+        try:
+            # Create Application Entity
+            ae = AE(ae_title=calling_ae)
+
+            # Add presentation context for C-GET
+            if query_model == "PatientRoot":
+                ae.add_requested_context(PatientRootQueryRetrieveInformationModelGet)
+            else:
+                ae.add_requested_context(StudyRootQueryRetrieveInformationModelGet)
+
+            # Add all storage presentation contexts for receiving files
+            if StoragePresentationContexts:
+                for context in StoragePresentationContexts:
+                    ae.add_requested_context(context.abstract_syntax)
+
+            # Build C-GET identifier
+            identifier = Dataset()
+            identifier.QueryRetrieveLevel = 'STUDY'
+            identifier.StudyInstanceUID = study_uid
+
+            # Establish association
+            self.logger.info(f"Establishing association with {server}:{port}")
+
+            handlers = [(evt.EVT_C_STORE, handle_store)]
+
+            assoc = ae.associate(
+                server,
+                port,
+                ae_title=called_ae,
+                evt_handlers=handlers
+            )
+
+            if assoc.is_established:
+                self.logger.info("Association established, sending C-GET request")
+
+                # Check if C-GET is supported by checking accepted contexts
+                cget_supported = False
+                for context in assoc.accepted_contexts:
+                    if 'GET' in str(context.abstract_syntax):
+                        cget_supported = True
+                        break
+
+                if not cget_supported:
+                    assoc.release()
+                    error_msg = (
+                        "C-GET not supported by PACS\n\n"
+                        "This PACS does not accept C-GET requests.\n\n"
+                        "Possible solutions:\n"
+                        "1. Use C-MOVE instead (requires destination AE setup)\n"
+                        "2. Ask PACS administrator to enable C-GET support\n"
+                        "3. Use PACS web interface or vendor tools to download\n\n"
+                        "Technical details:\n"
+                        "The PACS rejected the 'Query/Retrieve Information Model - GET' "
+                        "presentation context during association negotiation."
+                    )
+                    self.logger.error("C-GET not supported by PACS - no accepted GET contexts")
+                    return False, 0, error_msg
+
+                # Send C-GET request
+                try:
+                    if query_model == "PatientRoot":
+                        responses = assoc.send_c_get(
+                            identifier,
+                            PatientRootQueryRetrieveInformationModelGet
+                        )
+                    else:
+                        responses = assoc.send_c_get(
+                            identifier,
+                            StudyRootQueryRetrieveInformationModelGet
+                        )
+                except ValueError as ve:
+                    # Handle case where pynetdicom raises ValueError for unsupported context
+                    assoc.release()
+                    error_msg = (
+                        "C-GET not supported by PACS\n\n"
+                        f"Error: {str(ve)}\n\n"
+                        "This PACS does not support C-GET operations.\n\n"
+                        "Alternative options:\n"
+                        "• Use C-MOVE (requires PACS configuration)\n"
+                        "• Download via PACS web viewer\n"
+                        "• Contact PACS administrator"
+                    )
+                    self.logger.error(f"C-GET ValueError: {ve}")
+                    return False, 0, error_msg
+
+                # Process responses
+                for status, sub_op_dataset in responses:
+                    if status:
+                        status_code = status.Status
+
+                        if status_code in (0xFF00, 0xFF01):
+                            # Pending - sub-operations continuing
+                            remaining = getattr(status, 'NumberOfRemainingSuboperations', 0)
+                            completed = getattr(status, 'NumberOfCompletedSuboperations', 0)
+                            failed = getattr(status, 'NumberOfFailedSuboperations', 0)
+                            warning = getattr(status, 'NumberOfWarningSuboperations', 0)
+
+                            self.logger.debug(
+                                f"C-GET Progress: Completed={completed}, "
+                                f"Remaining={remaining}, Failed={failed}, Warning={warning}"
+                            )
+
+                            if on_progress:
+                                total = completed + remaining + failed + warning
+                                on_progress(completed, total, "Downloading...")
+
+                        elif status_code == 0x0000:
+                            # Success
+                            self.logger.info("C-GET completed successfully")
+                            break
+                        else:
+                            # Error
+                            error_msg = self._interpret_status_code(status_code)
+                            self.logger.warning(f"C-GET status: 0x{status_code:04X} - {error_msg}")
+
+                # Release association
+                assoc.release()
+                self.logger.info("Association released")
+
+                if len(files_received) > 0:
+                    return True, len(files_received), f"Downloaded {len(files_received)} files"
+                else:
+                    return False, 0, "No files received from PACS"
+
+            else:
+                return False, 0, "Failed to establish association with PACS"
+
+        except Exception as e:
+            error_msg = f"C-GET failed: {str(e)}"
+            self.logger.exception("C-GET exception")
+            return False, len(files_received), error_msg
+
+    def c_move_study(
+        self,
+        server: str,
+        port: int,
+        calling_ae: str,
+        called_ae: str,
+        study_uid: str,
+        move_destination: str,
+        query_model: str = "StudyRoot",
+        on_progress: Optional[callable] = None
+    ) -> Tuple[bool, int, str]:
+        """
+        Request PACS to send a study to another DICOM node using C-MOVE.
+
+        Args:
+            server: PACS server IP/hostname
+            port: PACS port
+            calling_ae: This application's AE title
+            called_ae: PACS AE title
+            study_uid: Study Instance UID to retrieve
+            move_destination: AE title of destination node (must be known to PACS)
+            query_model: Query model (StudyRoot or PatientRoot)
+            on_progress: Optional callback for progress updates
+
+        Returns:
+            Tuple of (success: bool, files_moved: int, message: str)
+        """
+        if not PYNETDICOM_AVAILABLE:
+            return False, 0, "pynetdicom is not available"
+
+        self.logger.info(f"Starting C-MOVE for Study: {study_uid}")
+        self.logger.info(f"Source: {server}:{port}, Destination: {move_destination}")
+
+        try:
+            # Create Application Entity
+            ae = AE(ae_title=calling_ae)
+
+            # Add presentation context for C-MOVE
+            if query_model == "PatientRoot":
+                ae.add_requested_context(PatientRootQueryRetrieveInformationModelMove)
+            else:
+                ae.add_requested_context(StudyRootQueryRetrieveInformationModelMove)
+
+            # Build C-MOVE identifier
+            identifier = Dataset()
+            identifier.QueryRetrieveLevel = 'STUDY'
+            identifier.StudyInstanceUID = study_uid
+
+            # Establish association
+            self.logger.info(f"Establishing association with {server}:{port}")
+
+            assoc = ae.associate(
+                server,
+                port,
+                ae_title=called_ae
+            )
+
+            if assoc.is_established:
+                self.logger.info(f"Association established, sending C-MOVE request to {move_destination}")
+
+                # Send C-MOVE request
+                if query_model == "PatientRoot":
+                    responses = assoc.send_c_move(
+                        identifier,
+                        move_destination,
+                        PatientRootQueryRetrieveInformationModelMove
+                    )
+                else:
+                    responses = assoc.send_c_move(
+                        identifier,
+                        move_destination,
+                        StudyRootQueryRetrieveInformationModelMove
+                    )
+
+                # Process responses
+                completed_count = 0
+                for status, sub_op_dataset in responses:
+                    if status:
+                        status_code = status.Status
+
+                        if status_code in (0xFF00, 0xFF01):
+                            # Pending - sub-operations continuing
+                            remaining = getattr(status, 'NumberOfRemainingSuboperations', 0)
+                            completed = getattr(status, 'NumberOfCompletedSuboperations', 0)
+                            failed = getattr(status, 'NumberOfFailedSuboperations', 0)
+                            warning = getattr(status, 'NumberOfWarningSuboperations', 0)
+
+                            completed_count = completed
+
+                            self.logger.debug(
+                                f"C-MOVE Progress: Completed={completed}, "
+                                f"Remaining={remaining}, Failed={failed}, Warning={warning}"
+                            )
+
+                            if on_progress:
+                                total = completed + remaining + failed + warning
+                                on_progress(completed, total, "Moving...")
+
+                        elif status_code == 0x0000:
+                            # Success
+                            self.logger.info("C-MOVE completed successfully")
+                            break
+                        else:
+                            # Error
+                            error_msg = self._interpret_status_code(status_code)
+                            self.logger.warning(f"C-MOVE status: 0x{status_code:04X} - {error_msg}")
+
+                # Release association
+                assoc.release()
+                self.logger.info("Association released")
+
+                if completed_count > 0:
+                    return True, completed_count, f"Moved {completed_count} instances"
+                else:
+                    return False, 0, "No instances moved"
+
+            else:
+                return False, 0, "Failed to establish association with PACS"
+
+        except Exception as e:
+            error_msg = f"C-MOVE failed: {str(e)}"
+            self.logger.exception("C-MOVE exception")
+            return False, 0, error_msg
