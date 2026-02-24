@@ -109,9 +109,9 @@ class ServerPresetsManager:
         
         return True, ""
     
-    def create_preset(self, name, server, port, calling_ae=None, called_ae=None, use_tls=False, tls_config=None):
+    def create_preset(self, name, server, port, calling_ae=None, called_ae=None, use_tls=False, tls_config=None, compression='none'):
         """Create and save a new preset with full validation.
-        
+
         Args:
             name: Preset name
             server: Server IP or hostname
@@ -120,6 +120,7 @@ class ServerPresetsManager:
             called_ae: Called AE title (optional, defaults to ANY-SCP)
             use_tls: Whether to use TLS/SSL (optional, defaults to False)
             tls_config: TLS configuration dictionary (optional)
+            compression: Compression option key (optional, defaults to 'none')
             
         Returns:
             Tuple: (success, message)
@@ -158,7 +159,8 @@ class ServerPresetsManager:
                 'calling_ae': str(calling_ae or 'DCMCREATOR').strip(),
                 'called_ae': str(called_ae or 'ANY-SCP').strip(),
                 'use_tls': use_tls,
-                'tls_config': tls_config
+                'tls_config': tls_config,
+                'compression': compression or 'none',
             }
             
             if self._save_presets():
@@ -169,9 +171,9 @@ class ServerPresetsManager:
         except Exception as e:
             return False, f"Error creating preset: {str(e)}"
     
-    def update_preset(self, name, server=None, port=None, calling_ae=None, called_ae=None, use_tls=None, tls_config=None):
+    def update_preset(self, name, server=None, port=None, calling_ae=None, called_ae=None, use_tls=None, tls_config=None, compression=None):
         """Update an existing preset.
-        
+
         Args:
             name: Preset name to update
             server: New server (optional)
@@ -180,6 +182,7 @@ class ServerPresetsManager:
             called_ae: New called AE (optional)
             use_tls: Whether to use TLS/SSL (optional)
             tls_config: TLS configuration dictionary (optional)
+            compression: Compression option key (optional)
             
         Returns:
             Tuple: (success, message)
@@ -197,7 +200,8 @@ class ServerPresetsManager:
             'calling_ae': calling_ae if calling_ae else current['calling_ae'],
             'called_ae': called_ae if called_ae else current['called_ae'],
             'use_tls': use_tls if use_tls is not None else current.get('use_tls', False),
-            'tls_config': tls_config if tls_config is not None else current.get('tls_config')
+            'tls_config': tls_config if tls_config is not None else current.get('tls_config'),
+            'compression': compression if compression is not None else current.get('compression', 'none'),
         }
         
         # Validate
@@ -213,7 +217,8 @@ class ServerPresetsManager:
                 'calling_ae': str(new_config['calling_ae']).strip(),
                 'called_ae': str(new_config['called_ae']).strip(),
                 'use_tls': new_config['use_tls'],
-                'tls_config': new_config['tls_config']
+                'tls_config': new_config['tls_config'],
+                'compression': new_config['compression'],
             }
             
             if self._save_presets():

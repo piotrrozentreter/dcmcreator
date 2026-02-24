@@ -60,6 +60,15 @@ def remote_unavailable_reason() -> str:
     return ", ".join(reasons) or "unknown"
 
 
+try:
+    from .dicom_compression import DicomCompressor
+except ImportError:
+    from dicom_compression import DicomCompressor
+
+# Re-export for callers that import COMPRESSION_OPTIONS directly from this module.
+COMPRESSION_OPTIONS = DicomCompressor.OPTIONS
+
+
 def _create_tls_context(tls_config: Dict[str, Any], logger=None, on_message: Callable[[str], None] = None) -> ssl.SSLContext:
     """
     Create an SSL context from TLS configuration.
@@ -221,7 +230,8 @@ def send_grouped_dicom(
     config: {
         server, port, calling_ae, called_ae,
         use_tls (bool): Enable TLS/SSL connection,
-        tls_config (dict): TLS configuration (cert_file, key_file, ca_file, etc.)
+        tls_config (dict): TLS configuration (cert_file, key_file, ca_file, etc.),
+        compression (str): Pixel-data compression – "none" (default) or "rle"
     }
     logger: optional logger for errors
     on_message: optional callback to append status messages
@@ -251,6 +261,10 @@ def send_grouped_dicom(
             common_ts = [TS_ExplicitLE, TS_ImplicitLE]
     except Exception:
         common_ts = []
+
+    # Determine target transfer syntax for requested compression
+    compression = config.get("compression", "none") or "none"
+    rle_ts_uid = DicomCompressor.transfer_syntax_uid(compression)
 
     # Collect SOP Class UIDs and their Transfer Syntaxes from datasets
     sop_contexts = {}  # {sop_uid: set(transfer_syntaxes)}
@@ -283,25 +297,31 @@ def send_grouped_dicom(
     # Report and request contexts for each SOP Class UID with its transfer syntaxes
     if on_message:
         on_message(f"Preparing presentation contexts for {len(sop_contexts)} SOP classes")
-    
+        if compression != "none":
+            label = DicomCompressor.OPTIONS.get(compression, (compression, None))[0]
+            on_message(f"Compression: {label}")
+
     for sop_uid, ts_set in sop_contexts.items():
         sop_name = get_sop_name(sop_uid)
         if on_message:
             on_message(f"  - {sop_name}")
-        
+
         # If we found specific transfer syntaxes, use them; otherwise use common ones
         if ts_set:
             # Add the dataset's actual transfer syntaxes
             transfer_syntaxes = list(ts_set)
+            # Prepend the target compressed TS so the SCP prefers it
+            if rle_ts_uid and rle_ts_uid not in transfer_syntaxes:
+                transfer_syntaxes.insert(0, rle_ts_uid)
             # Also add common uncompressed transfer syntaxes as fallback
             if common_ts:
                 transfer_syntaxes.extend(common_ts)
             ae.add_requested_context(sop_uid, transfer_syntax=transfer_syntaxes)
             if on_message and len(ts_set) > 0:
                 on_message(f"    Transfer syntaxes: {len(ts_set)} from dataset + {len(common_ts)} fallback")
-        elif common_ts:
-            # No specific transfer syntax found, use common ones
-            ae.add_requested_context(sop_uid, transfer_syntax=common_ts)
+        elif rle_ts_uid or common_ts:
+            ts_list = ([rle_ts_uid] if rle_ts_uid else []) + list(common_ts)
+            ae.add_requested_context(sop_uid, transfer_syntax=ts_list)
         else:
             # No transfer syntaxes available at all
             ae.add_requested_context(sop_uid)
@@ -465,14 +485,23 @@ def send_grouped_dicom(
                     # Check association is still active before sending
                     if not assoc.is_established:
                         raise RuntimeError("Association was closed by server before C-STORE")
-                    
+
+                    # Apply compression if configured; work on a copy to preserve original
+                    if compression != "none":
+                        try:
+                            ds_to_send = DicomCompressor.compress(ds, compression)
+                        except Exception as e:
+                            raise RuntimeError(f"Compression failed for {sop_name}: {e}") from e
+                    else:
+                        ds_to_send = ds
+
                     # Send with timing (avoid calling _estimate_dataset_bytes before send)
                     start_time = time.time()
-                    status = assoc.send_c_store(ds)
+                    status = assoc.send_c_store(ds_to_send)
                     duration = time.time() - start_time
-                    
+
                     # Estimate size after successful send (for logging)
-                    size_bytes = _estimate_dataset_bytes(ds)
+                    size_bytes = _estimate_dataset_bytes(ds_to_send)
                     total += 1
                     
                     if status is None:

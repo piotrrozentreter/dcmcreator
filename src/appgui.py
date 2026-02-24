@@ -95,6 +95,11 @@ except ImportError:
 # Logic handler
 DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
+try:
+    from .dicom_compression import DicomCompressor
+except ImportError:
+    from dicom_compression import DicomCompressor
+
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
     Provides tabs for Patient/Study/Series metadata, image loading, DICOM loading, and saving.
@@ -497,6 +502,7 @@ class DicomCreatorApp(tk.Tk):
             "preset_name": tk.StringVar(),
             "skip_c_echo": tk.BooleanVar(value=False),
             "use_tls": tk.BooleanVar(value=False),
+            "compression": tk.StringVar(value=DicomCompressor.OPTIONS["none"][0]),
         }
         
         # TLS configuration storage
@@ -536,6 +542,21 @@ class DicomCreatorApp(tk.Tk):
         self._add_labeled_entry(config_frame, "Called AE Title", self.remote_vars["called_ae"], 3)
         ttk.Checkbutton(config_frame, text="Skip C-ECHO", variable=self.remote_vars["skip_c_echo"]).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=5)
         ttk.Checkbutton(config_frame, text="Use TLS/SSL", variable=self.remote_vars["use_tls"]).grid(row=5, column=0, columnspan=2, sticky="w", padx=5, pady=5)
+
+        comp_frame = ttk.Frame(config_frame)
+        comp_frame.grid(row=6, column=0, sticky="ew", padx=10, pady=5)
+        config_frame.columnconfigure(0, weight=1)
+        ttk.Label(comp_frame, text="Compression", width=30).pack(side=tk.LEFT)
+        _comp_labels = [DicomCompressor.OPTIONS["none"][0]] + [
+            lbl for key, (lbl, _) in DicomCompressor.OPTIONS.items() if key != "none"
+        ]
+        ttk.Combobox(
+            comp_frame,
+            textvariable=self.remote_vars["compression"],
+            values=_comp_labels,
+            state="readonly",
+            width=25,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
@@ -2330,6 +2351,11 @@ class DicomCreatorApp(tk.Tk):
         except Exception:
             pass
 
+        _comp_label = self.remote_vars["compression"].get()
+        _comp_key = next(
+            (k for k, (lbl, _) in DicomCompressor.OPTIONS.items() if lbl == _comp_label),
+            "none"
+        )
         config = {
             "server": server,
             "port": port,
@@ -2338,6 +2364,7 @@ class DicomCreatorApp(tk.Tk):
             "skip_c_echo": bool(self.remote_vars["skip_c_echo"].get()),
             "use_tls": bool(self.remote_vars["use_tls"].get()),
             "tls_config": self.tls_config if self.remote_vars["use_tls"].get() else None,
+            "compression": _comp_key,
         }
 
         def post_message(msg: str):
@@ -2667,6 +2694,10 @@ class DicomCreatorApp(tk.Tk):
                     # Load TLS config if present
                     if 'tls_config' in preset and preset['tls_config']:
                         self.tls_config = preset['tls_config']
+                    # Load compression setting
+                    _comp_key = preset.get('compression', 'none')
+                    _comp_label = DicomCompressor.OPTIONS.get(_comp_key, DicomCompressor.OPTIONS["none"])[0]
+                    self.remote_vars["compression"].set(_comp_label)
         except Exception as e:
             self.logger.exception("Failed to load preset")
 
@@ -2713,7 +2744,11 @@ class DicomCreatorApp(tk.Tk):
             # Load TLS config if present
             if 'tls_config' in preset and preset['tls_config']:
                 self.tls_config = preset['tls_config']
-            
+            # Load compression setting
+            _comp_key = preset.get('compression', 'none')
+            _comp_label = DicomCompressor.OPTIONS.get(_comp_key, DicomCompressor.OPTIONS["none"])[0]
+            self.remote_vars["compression"].set(_comp_label)
+
             self._append_remote_message(f"Loaded preset: {name}")
             messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
         except Exception as e:
@@ -2736,6 +2771,11 @@ class DicomCreatorApp(tk.Tk):
             port = self.remote_vars["port"].get().strip()
             calling_ae = self.remote_vars["calling_ae"].get().strip()
             called_ae = self.remote_vars["called_ae"].get().strip()
+            _comp_label = self.remote_vars["compression"].get()
+            _comp_key = next(
+                (k for k, (lbl, _) in DicomCompressor.OPTIONS.items() if lbl == _comp_label),
+                "none"
+            )
             
             # Validate required fields
             if not server:
@@ -2809,7 +2849,8 @@ class DicomCreatorApp(tk.Tk):
                     calling_ae=calling_ae,
                     called_ae=called_ae,
                     use_tls=self.remote_vars["use_tls"].get(),
-                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None,
+                    compression=_comp_key,
                 )
                 
                 if success:
@@ -2828,7 +2869,8 @@ class DicomCreatorApp(tk.Tk):
                     calling_ae=calling_ae,
                     called_ae=called_ae,
                     use_tls=self.remote_vars["use_tls"].get(),
-                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None,
+                    compression=_comp_key,
                 )
                 
                 if success:
