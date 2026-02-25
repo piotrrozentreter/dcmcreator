@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.7.2\n"
+APP_TITLE = "DICOM Creator v0.9.0\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -68,6 +68,9 @@ TransmissionHistory = LazyImport(".transmission_history", "transmission_history"
 PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
 ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
 
+# Query/Retrieve module (optional)
+DicomQueryHandler = LazyImport(".query_retrieve", "query_retrieve")
+
 # Validator
 VRValidator = LazyImport(".vr_validator", "vr_validator")
 
@@ -89,8 +92,22 @@ except ImportError:
     except ImportError:
         TagViewerDialog = None
 
+# Import HL7Tab for HL7/FHIR integration
+try:
+    from .hl7_tab import HL7Tab
+except ImportError:
+    try:
+        from hl7_tab import HL7Tab
+    except ImportError:
+        HL7Tab = None
+
 # Logic handler
 DicomLogicHandler = LazyImport(".app_logic", "app_logic")
+
+try:
+    from .dicom_compression import DicomCompressor
+except ImportError:
+    from dicom_compression import DicomCompressor
 
 class DicomCreatorApp(tk.Tk):
     """Main application window for DICOM creation and editing.
@@ -116,6 +133,7 @@ class DicomCreatorApp(tk.Tk):
         self.grouped_dicom = {}
         self.selected_study_uid = None
         self.selected_series_uid = None
+        self.query_results = []  # Store C-FIND results for C-GET/C-MOVE
         
         # Server presets
         try:
@@ -163,6 +181,8 @@ class DicomCreatorApp(tk.Tk):
             "Load DICOM": tk.BooleanVar(value=True),
             "Save": tk.BooleanVar(value=True),
             "Remote": tk.BooleanVar(value=True),
+            "Query PACS": tk.BooleanVar(value=True),
+            "HL7": tk.BooleanVar(value=True),
             "Test/Generate": tk.BooleanVar(value=False),
             "Connection Test": tk.BooleanVar(value=False),
             "Stress Test": tk.BooleanVar(value=False),
@@ -195,6 +215,8 @@ class DicomCreatorApp(tk.Tk):
         remote_menu = tk.Menu(menubar, tearoff=False)
         remote_menu.add_command(label="Send to Remote", command=lambda: self.send_remote(), accelerator="Ctrl+R")
         remote_menu.add_separator()
+        remote_menu.add_command(label="Query PACS (C-FIND)...", command=self._switch_to_query_tab, accelerator="Ctrl+Q")
+        remote_menu.add_separator()
         remote_menu.add_command(label="TLS Settings...", command=self.show_tls_settings)
         menubar.add_cascade(label="Remote", menu=remote_menu)
 
@@ -208,6 +230,8 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_checkbutton(label="Load DICOM", variable=self.tab_visibility["Load DICOM"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Save", variable=self.tab_visibility["Save"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Remote", variable=self.tab_visibility["Remote"], command=self._update_tab_visibility)
+        view_menu.add_checkbutton(label="Query PACS", variable=self.tab_visibility["Query PACS"], command=self._update_tab_visibility)
+        view_menu.add_checkbutton(label="HL7", variable=self.tab_visibility["HL7"], command=self._update_tab_visibility)
         view_menu.add_separator()
         view_menu.add_command(label="Test Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Test/Generate", variable=self.tab_visibility["Test/Generate"], command=self._update_tab_visibility)
@@ -246,6 +270,7 @@ class DicomCreatorApp(tk.Tk):
         self.bind_all("<Control-s>", lambda e: self.save_dicom())
         self.bind_all("<Control-V>", lambda e: self.validate_current_data())
         self.bind_all("<Control-r>", lambda e: self.send_remote())
+        self.bind_all("<Control-q>", lambda e: self._switch_to_query_tab())
 
         # Tabbed container for different sections
         container = ttk.Notebook(self)
@@ -260,8 +285,10 @@ class DicomCreatorApp(tk.Tk):
         self.load_dcm_frame = ttk.Frame(container)
         self.save_frame = ttk.Frame(container)
         self.remote_frame = ttk.Frame(container)
+        self.query_frame = ttk.Frame(container)
+        self.hl7_frame = ttk.Frame(container)
         self.test_frame = ttk.Frame(container)
-        
+
         # Test tabs
         self.connection_test_frame = ttk.Frame(container)
         self.stress_test_frame = ttk.Frame(container)
@@ -277,6 +304,8 @@ class DicomCreatorApp(tk.Tk):
         self.tab_frames["Load DICOM"] = (self.load_dcm_frame, "Load DICOM")
         self.tab_frames["Save"] = (self.save_frame, "Save")
         self.tab_frames["Remote"] = (self.remote_frame, "Remote")
+        self.tab_frames["Query PACS"] = (self.query_frame, "Query PACS")
+        self.tab_frames["HL7"] = (self.hl7_frame, "HL7")
         self.tab_frames["Test/Generate"] = (self.test_frame, "Test/Generate")
         self.tab_frames["Connection Test"] = (self.connection_test_frame, "Connection Test")
         self.tab_frames["Stress Test"] = (self.stress_test_frame, "Stress Test")
@@ -291,6 +320,8 @@ class DicomCreatorApp(tk.Tk):
         container.add(self.load_dcm_frame, text="Load DICOM")
         container.add(self.save_frame, text="Save")
         container.add(self.remote_frame, text="Remote")
+        container.add(self.query_frame, text="Query PACS")
+        container.add(self.hl7_frame, text="HL7")
         container.add(self.test_frame, text="Test/Generate")
         container.add(self.connection_test_frame, text="Connection Test")
         container.add(self.stress_test_frame, text="Stress Test")
@@ -318,7 +349,13 @@ class DicomCreatorApp(tk.Tk):
         
         # Remote tab
         self._build_remote_ui()
-        
+
+        # Query PACS tab
+        self._build_query_pacs_tab()
+
+        # HL7 / FHIR tab
+        self._build_hl7_tab()
+
         # Test/Generate tab
         self._build_test_tab()
         
@@ -482,6 +519,7 @@ class DicomCreatorApp(tk.Tk):
             "preset_name": tk.StringVar(),
             "skip_c_echo": tk.BooleanVar(value=False),
             "use_tls": tk.BooleanVar(value=False),
+            "compression": tk.StringVar(value=DicomCompressor.OPTIONS["none"][0]),
         }
         
         # TLS configuration storage
@@ -522,6 +560,21 @@ class DicomCreatorApp(tk.Tk):
         ttk.Checkbutton(config_frame, text="Skip C-ECHO", variable=self.remote_vars["skip_c_echo"]).grid(row=4, column=0, columnspan=2, sticky="w", padx=5, pady=5)
         ttk.Checkbutton(config_frame, text="Use TLS/SSL", variable=self.remote_vars["use_tls"]).grid(row=5, column=0, columnspan=2, sticky="w", padx=5, pady=5)
 
+        comp_frame = ttk.Frame(config_frame)
+        comp_frame.grid(row=6, column=0, sticky="ew", padx=10, pady=5)
+        config_frame.columnconfigure(0, weight=1)
+        ttk.Label(comp_frame, text="Compression", width=30).pack(side=tk.LEFT)
+        _comp_labels = [DicomCompressor.OPTIONS["none"][0]] + [
+            lbl for key, (lbl, _) in DicomCompressor.OPTIONS.items() if key != "none"
+        ]
+        ttk.Combobox(
+            comp_frame,
+            textvariable=self.remote_vars["compression"],
+            values=_comp_labels,
+            state="readonly",
+            width=25,
+        ).pack(side=tk.LEFT, fill=tk.X, expand=True)
+
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
         btn_row.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
@@ -537,6 +590,540 @@ class DicomCreatorApp(tk.Tk):
         self.remote_messages = tk.Text(msg_row, height=8, wrap="word")
         self.remote_messages.pack(fill=tk.BOTH, expand=True)
         self.remote_messages.configure(state=tk.DISABLED)
+
+    def _build_query_pacs_tab(self):
+        """Build Query PACS tab for C-FIND queries."""
+        if DicomQueryHandler is None:
+            label = ttk.Label(self.query_frame, text="Query/Retrieve module not available")
+            label.pack(padx=10, pady=10)
+            return
+
+        # Title
+        title_frame = ttk.Frame(self.query_frame)
+        title_frame.pack(fill=tk.X, padx=10, pady=5)
+        ttk.Label(title_frame, text="DICOM Query (C-FIND)", font=("Arial", 12, "bold")).pack()
+
+        # Server Configuration Section (can use presets from Remote tab)
+        server_frame = ttk.LabelFrame(self.query_frame, text="PACS Server Configuration", padding=10)
+        server_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        server_inner = ttk.Frame(server_frame)
+        server_inner.pack(fill=tk.X)
+        server_inner.columnconfigure(1, weight=1)
+
+        ttk.Label(server_inner, text="Server:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        self.query_server = tk.StringVar()
+        ttk.Entry(server_inner, textvariable=self.query_server).grid(row=0, column=1, sticky="ew", padx=5)
+
+        ttk.Label(server_inner, text="Port:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        self.query_port = tk.StringVar(value="104")
+        ttk.Entry(server_inner, textvariable=self.query_port, width=10).grid(row=1, column=1, sticky="w", padx=5)
+
+        ttk.Label(server_inner, text="Calling AE:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        self.query_calling_ae = tk.StringVar(value="DCMCREATOR")
+        ttk.Entry(server_inner, textvariable=self.query_calling_ae).grid(row=2, column=1, sticky="ew", padx=5)
+
+        ttk.Label(server_inner, text="Called AE:").grid(row=3, column=0, sticky="w", padx=5, pady=2)
+        self.query_called_ae = tk.StringVar(value="ANY-SCP")
+        ttk.Entry(server_inner, textvariable=self.query_called_ae).grid(row=3, column=1, sticky="ew", padx=5)
+
+        # Copy from Remote button
+        ttk.Button(server_inner, text="Copy from Remote Tab", 
+                  command=self._copy_remote_to_query).grid(row=4, column=1, sticky="e", padx=5, pady=5)
+
+        # Search Criteria Section
+        search_frame = ttk.LabelFrame(self.query_frame, text="Search Criteria", padding=10)
+        search_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        search_inner = ttk.Frame(search_frame)
+        search_inner.pack(fill=tk.X)
+        search_inner.columnconfigure(1, weight=1)
+        search_inner.columnconfigure(3, weight=1)
+
+        # Query Level
+        ttk.Label(search_inner, text="Query Level:").grid(row=0, column=0, sticky="w", padx=5, pady=2)
+        self.query_level = tk.StringVar(value="STUDY")
+        query_level_combo = ttk.Combobox(search_inner, textvariable=self.query_level, 
+                                        values=["PATIENT", "STUDY", "SERIES", "IMAGE"],
+                                        state="readonly", width=15)
+        query_level_combo.grid(row=0, column=1, sticky="w", padx=5)
+
+        # Patient Name
+        ttk.Label(search_inner, text="Patient Name:").grid(row=1, column=0, sticky="w", padx=5, pady=2)
+        self.query_patient_name = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_patient_name).grid(row=1, column=1, sticky="ew", padx=5)
+
+        # Patient ID
+        ttk.Label(search_inner, text="Patient ID:").grid(row=1, column=2, sticky="w", padx=5, pady=2)
+        self.query_patient_id = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_patient_id).grid(row=1, column=3, sticky="ew", padx=5)
+
+        # Study Date Range
+        ttk.Label(search_inner, text="Study Date From:").grid(row=2, column=0, sticky="w", padx=5, pady=2)
+        self.query_study_date_from = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_study_date_from, 
+                 width=12).grid(row=2, column=1, sticky="w", padx=5)
+
+        ttk.Label(search_inner, text="To:").grid(row=2, column=2, sticky="w", padx=5, pady=2)
+        self.query_study_date_to = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_study_date_to, 
+                 width=12).grid(row=2, column=3, sticky="w", padx=5)
+
+        # Study Description
+        ttk.Label(search_inner, text="Study Description:").grid(row=3, column=0, sticky="w", padx=5, pady=2)
+        self.query_study_desc = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_study_desc).grid(row=3, column=1, sticky="ew", padx=5)
+
+        # Accession Number
+        ttk.Label(search_inner, text="Accession #:").grid(row=3, column=2, sticky="w", padx=5, pady=2)
+        self.query_accession = tk.StringVar()
+        ttk.Entry(search_inner, textvariable=self.query_accession).grid(row=3, column=3, sticky="ew", padx=5)
+
+        # Modality
+        ttk.Label(search_inner, text="Modality:").grid(row=4, column=0, sticky="w", padx=5, pady=2)
+        self.query_modality = tk.StringVar()
+        modality_combo = ttk.Combobox(search_inner, textvariable=self.query_modality,
+                                      values=["", "CT", "MR", "US", "CR", "DX", "MG", "NM", "PT", "XA"],
+                                      width=10)
+        modality_combo.grid(row=4, column=1, sticky="w", padx=5)
+
+        # Action Buttons
+        btn_frame = ttk.Frame(self.query_frame)
+        btn_frame.pack(fill=tk.X, padx=10, pady=5)
+
+        ttk.Button(btn_frame, text="Query PACS", command=self._execute_query,
+                  style="Accent.TButton" if hasattr(ttk, "Accent") else "").pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Check Capabilities", command=self._check_pacs_capabilities).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Download Study (C-GET)", command=self._download_selected_study).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Clear Results", command=self._clear_query_results).pack(side=tk.LEFT, padx=2)
+        ttk.Button(btn_frame, text="Clear Form", command=self._clear_query_form).pack(side=tk.LEFT, padx=2)
+
+        # Results Section
+        results_frame = ttk.LabelFrame(self.query_frame, text="Query Results", padding=10)
+        results_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+
+        # Results tree with scrollbars
+        tree_container = ttk.Frame(results_frame)
+        tree_container.pack(fill=tk.BOTH, expand=True)
+        tree_container.rowconfigure(0, weight=1)
+        tree_container.columnconfigure(0, weight=1)
+
+        # Define columns based on query level
+        columns = ("patient_id", "patient_name", "study_date", "study_desc", "modality", "accession")
+        self.query_results_tree = ttk.Treeview(tree_container, columns=columns, show="tree headings", height=12)
+
+        # Configure columns
+        self.query_results_tree.heading("#0", text="Level")
+        self.query_results_tree.heading("patient_id", text="Patient ID")
+        self.query_results_tree.heading("patient_name", text="Patient Name")
+        self.query_results_tree.heading("study_date", text="Study Date")
+        self.query_results_tree.heading("study_desc", text="Study Description")
+        self.query_results_tree.heading("modality", text="Modality")
+        self.query_results_tree.heading("accession", text="Accession #")
+
+        self.query_results_tree.column("#0", width=80, anchor="center")
+        self.query_results_tree.column("patient_id", width=100, anchor="w")
+        self.query_results_tree.column("patient_name", width=150, anchor="w")
+        self.query_results_tree.column("study_date", width=100, anchor="center")
+        self.query_results_tree.column("study_desc", width=200, anchor="w")
+        self.query_results_tree.column("modality", width=60, anchor="center")
+        self.query_results_tree.column("accession", width=100, anchor="w")
+
+        # Scrollbars
+        vsb = ttk.Scrollbar(tree_container, orient="vertical", command=self.query_results_tree.yview)
+        hsb = ttk.Scrollbar(tree_container, orient="horizontal", command=self.query_results_tree.xview)
+        self.query_results_tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+
+        self.query_results_tree.grid(row=0, column=0, sticky="nsew")
+        vsb.grid(row=0, column=1, sticky="ns")
+        hsb.grid(row=1, column=0, sticky="ew")
+
+        # Status label
+        self.query_status_label = ttk.Label(results_frame, text="No query executed yet")
+        self.query_status_label.pack(fill=tk.X, pady=5)
+
+        # Double-click to load study (future C-GET integration)
+        self.query_results_tree.bind("<Double-Button-1>", self._on_query_result_double_click)
+
+    def _copy_remote_to_query(self):
+        """Copy server settings from Remote tab to Query PACS tab."""
+        try:
+            self.query_server.set(self.remote_vars["server"].get())
+            self.query_port.set(self.remote_vars["port"].get())
+            self.query_calling_ae.set(self.remote_vars["calling_ae"].get())
+            self.query_called_ae.set(self.remote_vars["called_ae"].get())
+            messagebox.showinfo(APP_TITLE, "Server settings copied from Remote tab")
+        except Exception as e:
+            self.logger.exception("Failed to copy remote settings")
+            messagebox.showerror(APP_TITLE, f"Failed to copy settings: {e}")
+
+    def _execute_query(self):
+        """Execute C-FIND query against PACS."""
+        if DicomQueryHandler is None:
+            messagebox.showerror(APP_TITLE, "Query module not available")
+            return
+
+        # Validate inputs
+        server = self.query_server.get().strip()
+        port_str = self.query_port.get().strip()
+        calling_ae = self.query_calling_ae.get().strip()
+        called_ae = self.query_called_ae.get().strip()
+        query_level = self.query_level.get()
+
+        if not server or not port_str:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            messagebox.showerror(APP_TITLE, "Port must be a number")
+            return
+
+        # Build search criteria
+        search_criteria = {}
+
+        if self.query_patient_name.get().strip():
+            search_criteria['PatientName'] = self.query_patient_name.get().strip()
+        if self.query_patient_id.get().strip():
+            search_criteria['PatientID'] = self.query_patient_id.get().strip()
+        if self.query_study_desc.get().strip():
+            search_criteria['StudyDescription'] = self.query_study_desc.get().strip()
+        if self.query_accession.get().strip():
+            search_criteria['AccessionNumber'] = self.query_accession.get().strip()
+        if self.query_modality.get().strip():
+            search_criteria['Modality'] = self.query_modality.get().strip()
+
+        # Handle date range
+        date_from = self.query_study_date_from.get().strip()
+        date_to = self.query_study_date_to.get().strip()
+        if date_from or date_to:
+            if date_from and date_to:
+                search_criteria['StudyDate'] = f"{date_from}-{date_to}"
+            elif date_from:
+                search_criteria['StudyDate'] = f"{date_from}-"
+            elif date_to:
+                search_criteria['StudyDate'] = f"-{date_to}"
+
+        # Update status
+        self.query_status_label.config(text=f"Querying {server}:{port}...")
+        self.update_idletasks()
+
+        # Execute query in background thread
+        def query_worker():
+            try:
+                handler_cls = DicomQueryHandler._load_class()
+                if handler_cls is None:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, "Failed to load query handler"))
+                    return
+
+                handler = handler_cls(logger=self.logger)
+
+                success, results, message = handler.query_pacs(
+                    server=server,
+                    port=port,
+                    calling_ae=calling_ae,
+                    called_ae=called_ae,
+                    query_level=query_level,
+                    search_criteria=search_criteria,
+                    query_model="StudyRoot"
+                )
+
+                # Update UI in main thread
+                self.after(0, lambda: self._display_query_results(success, results, message))
+
+            except Exception as e:
+                self.logger.exception("Query execution failed")
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Query failed: {e}"))
+                self.after(0, lambda: self.query_status_label.config(text="Query failed"))
+
+        thread = threading.Thread(target=query_worker, daemon=True)
+        thread.start()
+
+    def _display_query_results(self, success: bool, results: list, message: str):
+        """Display query results in the tree view."""
+        # Clear existing results
+        for item in self.query_results_tree.get_children():
+            self.query_results_tree.delete(item)
+
+        # Store results for later use (C-GET/C-MOVE)
+        self.query_results = results
+
+        if not success:
+            self.query_status_label.config(text=f"Query failed: {message}")
+            messagebox.showerror(APP_TITLE, f"Query failed: {message}")
+            return
+
+        if not results:
+            self.query_status_label.config(text="Query completed - No results found")
+            messagebox.showinfo(APP_TITLE, "No results found matching search criteria")
+            return
+
+        # Display results
+        for i, result in enumerate(results):
+            values = (
+                result.patient_id,
+                result.patient_name,
+                result.study_date,
+                result.study_description,
+                result.modality,
+                result.accession_number
+            )
+
+            # Insert with level as tree text, store index for retrieval
+            self.query_results_tree.insert(
+                "", "end", 
+                text=result.level,
+                values=values,
+                tags=(f"result_{i}",)
+            )
+
+        self.query_status_label.config(text=f"Found {len(results)} results")
+        self.logger.info(f"Query completed: {len(results)} results")
+
+    def _clear_query_results(self):
+        """Clear query results tree."""
+        for item in self.query_results_tree.get_children():
+            self.query_results_tree.delete(item)
+        self.query_status_label.config(text="Results cleared")
+
+    def _clear_query_form(self):
+        """Clear all search criteria fields."""
+        self.query_patient_name.set("")
+        self.query_patient_id.set("")
+        self.query_study_date_from.set("")
+        self.query_study_date_to.set("")
+        self.query_study_desc.set("")
+        self.query_accession.set("")
+        self.query_modality.set("")
+        self.query_level.set("STUDY")
+
+    def _check_pacs_capabilities(self):
+        """Check PACS support for C-GET and C-MOVE."""
+        if DicomQueryHandler is None:
+            messagebox.showerror(APP_TITLE, "Query module not available")
+            return
+
+        # Get server settings
+        server = self.query_server.get().strip()
+        port_str = self.query_port.get().strip()
+        calling_ae = self.query_calling_ae.get().strip()
+        called_ae = self.query_called_ae.get().strip()
+
+        if not server or not port_str:
+            messagebox.showerror(APP_TITLE, "Server and port are required")
+            return
+
+        try:
+            port = int(port_str)
+        except ValueError:
+            messagebox.showerror(APP_TITLE, "Port must be a number")
+            return
+
+        # Show progress
+        self.query_status_label.config(text="Checking PACS capabilities...")
+        self.update_idletasks()
+
+        def check_worker():
+            """Perform capability check in background thread."""
+            try:
+                handler_cls = DicomQueryHandler._load_class()
+                if handler_cls is None:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, "Failed to load query handler"))
+                    return
+
+                handler = handler_cls(logger=self.logger)
+
+                c_get_support, c_move_support, message = handler.check_retrieve_support(
+                    server=server,
+                    port=port,
+                    calling_ae=calling_ae,
+                    called_ae=called_ae
+                )
+
+                # Update UI in main thread
+                def show_result():
+                    self.query_status_label.config(text="Capability check complete")
+
+                    # Build detailed message
+                    result_msg = f"PACS Capabilities Check\n"
+                    result_msg += f"=" * 39 + "\n\n"
+                    result_msg += f"Server: {server}:{port}\n"
+                    result_msg += f"Called AE: {called_ae}\n\n"
+                    result_msg += f"{'✅' if c_get_support else '❌'} C-GET Support: {'Yes' if c_get_support else 'No'}\n"
+                    result_msg += f"{'✅' if c_move_support else '❌'} C-MOVE Support: {'Yes' if c_move_support else 'No'}\n\n"
+
+                    if c_get_support:
+                        result_msg += "You can download studies using C-GET.\n"
+                        result_msg += "Click 'Download Study (C-GET)' to download.\n\n"
+
+                    if c_move_support:
+                        result_msg += "You can move studies using C-MOVE.\n"
+                        result_msg += "Use Python API: handler.c_move_study(...)\n\n"
+
+                    if not c_get_support and not c_move_support:
+                        result_msg += "⚠️ This PACS does not support retrieval.\n\n"
+                        result_msg += "Options:\n"
+                        result_msg += "• Use PACS web viewer to download\n"
+                        result_msg += "• Contact PACS administrator\n"
+                        result_msg += "• Check PACS documentation\n"
+
+                    messagebox.showinfo(APP_TITLE, result_msg)
+
+                self.after(0, show_result)
+
+            except Exception as e:
+                self.logger.exception("Capability check failed")
+                self.after(0, lambda: self.query_status_label.config(text="Capability check failed"))
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Check failed: {e}"))
+
+        # Start check in background thread
+        t = threading.Thread(target=check_worker, daemon=True)
+        t.start()
+
+    def _on_query_result_double_click(self, event):
+        """Handle double-click on query result - download study."""
+        self._download_selected_study()
+
+    def _download_selected_study(self):
+        """Download the selected study using C-GET."""
+        selection = self.query_results_tree.selection()
+        if not selection:
+            messagebox.showwarning(APP_TITLE, "Please select a study to download")
+            return
+
+        # Get the result index from tags
+        item = self.query_results_tree.item(selection[0])
+        tags = item['tags']
+
+        # Extract index from result_N tag
+        result_index = None
+        for tag in tags:
+            if tag.startswith('result_'):
+                result_index = int(tag.split('_')[1])
+                break
+
+        if result_index is None or result_index >= len(self.query_results):
+            messagebox.showerror(APP_TITLE, "Could not find study details")
+            return
+
+        result = self.query_results[result_index]
+
+        # Check if we have Study UID
+        if not result.study_uid:
+            messagebox.showerror(
+                APP_TITLE,
+                "Study UID not available in query results.\n\n"
+                "The study must have a valid Study Instance UID to download."
+            )
+            return
+
+        # Ask for output directory
+        output_dir = filedialog.askdirectory(title="Select download directory")
+        if not output_dir:
+            return
+
+        # Show progress dialog
+        progress_window = tk.Toplevel(self)
+        progress_window.title("Downloading Study")
+        progress_window.geometry("450x200")
+        progress_window.transient(self)
+        progress_window.grab_set()
+
+        title_label = ttk.Label(progress_window, text="Downloading DICOM Study", font=("Arial", 12, "bold"))
+        title_label.pack(pady=10)
+
+        info_frame = ttk.Frame(progress_window)
+        info_frame.pack(fill=tk.X, padx=20, pady=5)
+        ttk.Label(info_frame, text=f"Patient: {result.patient_name} ({result.patient_id})", anchor="w").pack(fill=tk.X)
+        ttk.Label(info_frame, text=f"Study: {result.study_description}", anchor="w").pack(fill=tk.X)
+        ttk.Label(info_frame, text=f"Date: {result.study_date}", anchor="w").pack(fill=tk.X)
+
+        progress_var = tk.StringVar(value="Initializing C-GET...")
+        progress_label = ttk.Label(progress_window, textvariable=progress_var)
+        progress_label.pack(pady=5)
+
+        progress_bar = ttk.Progressbar(progress_window, mode='indeterminate')
+        progress_bar.pack(fill=tk.X, padx=20, pady=5)
+        progress_bar.start(10)
+
+        status_label = ttk.Label(progress_window, text="", foreground="blue")
+        status_label.pack(pady=5)
+
+        def progress_callback(received, total, status):
+            """Update progress display."""
+            try:
+                progress_var.set(f"Received: {received} files")
+                status_label.config(text=status)
+                progress_window.update()
+            except:
+                pass
+
+        def download_worker():
+            """Perform C-GET in background thread."""
+            try:
+                handler_cls = DicomQueryHandler._load_class()
+                if handler_cls is None:
+                    self.after(0, lambda: messagebox.showerror(APP_TITLE, "Failed to load query handler"))
+                    return
+
+                handler = handler_cls(logger=self.logger)
+
+                server = self.query_server.get().strip()
+                port = int(self.query_port.get().strip())
+                calling_ae = self.query_calling_ae.get().strip()
+                called_ae = self.query_called_ae.get().strip()
+
+                success, count, message = handler.c_get_study(
+                    server=server,
+                    port=port,
+                    calling_ae=calling_ae,
+                    called_ae=called_ae,
+                    study_uid=result.study_uid,
+                    output_dir=output_dir,
+                    on_progress=progress_callback
+                )
+
+                # Update UI in main thread
+                def show_result():
+                    progress_window.destroy()
+                    if success:
+                        msg = f"Download Complete!\n\n"
+                        msg += f"Downloaded: {count} files\n"
+                        msg += f"Location: {output_dir}\n\n"
+                        msg += f"Study: {result.study_description}\n"
+                        msg += f"Patient: {result.patient_name}"
+                        messagebox.showinfo(APP_TITLE, msg)
+
+                        # Ask if user wants to load the downloaded files
+                        if messagebox.askyesno(APP_TITLE, "Would you like to load the downloaded files?"):
+                            try:
+                                from .dcm import load_dicom_grouped
+                            except:
+                                from dcm import load_dicom_grouped
+
+                            grouped = load_dicom_grouped(output_dir)
+                            self._populate_dicom_tree(grouped)
+                    else:
+                        messagebox.showerror(APP_TITLE, f"Download failed:\n\n{message}")
+
+                self.after(0, show_result)
+
+            except Exception as e:
+                self.logger.exception("C-GET download failed")
+                self.after(0, lambda: progress_window.destroy())
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Download error: {e}"))
+
+        # Start download in background thread
+        t = threading.Thread(target=download_worker, daemon=True)
+        t.start()
+
+    def _build_hl7_tab(self):
+        """Build HL7 / FHIR integration tab."""
+        if HL7Tab is None:
+            ttk.Label(self.hl7_frame, text="HL7 module not available").pack(padx=10, pady=10)
+            return
+        self._hl7_tab = HL7Tab(self.hl7_frame, self, self.logger)
 
     def _build_test_tab(self):
         """Build Test/Generator tab for creating and testing bulk DICOM transmission."""
@@ -798,6 +1385,24 @@ class DicomCreatorApp(tk.Tk):
         except Exception:
             pass
 
+    def _switch_to_query_tab(self):
+        """Switch to the Query PACS tab."""
+        try:
+            for i, tab_id in enumerate(self.container.tabs()):
+                if self.container.tab(tab_id, "text") == "Query PACS":
+                    self.container.select(i)
+                    return
+            # If tab not visible, show it first
+            self.tab_visibility["Query PACS"].set(True)
+            self._update_tab_visibility()
+            # Now switch to it
+            for i, tab_id in enumerate(self.container.tabs()):
+                if self.container.tab(tab_id, "text") == "Query PACS":
+                    self.container.select(i)
+                    return
+        except Exception as e:
+            self.logger.exception("Failed to switch to Query PACS tab")
+
     def new_file(self):
         """Clear all metadata, loaded images, and loaded DICOM."""
         if not messagebox.askyesno(APP_TITLE, "This will clear all metadata, loaded images, and loaded DICOM. Continue?"):
@@ -844,7 +1449,14 @@ class DicomCreatorApp(tk.Tk):
         messagebox.showinfo(
             APP_TITLE,
             f"{APP_TITLE}(c) 2025-2026 by Piotr Rozentreter\n\n"
-            "A tool to create, edit, test and sendingDICOM metadata and images."
+            "A tool to create, edit, test and send DICOM metadata and images.\n\n"
+            "Features:\n"
+            "- DICOM creation and editing\n"
+            "- C-STORE transmission to PACS\n"
+            "- C-FIND query/retrieve (NEW)\n"
+            "- Stress testing and benchmarking\n"
+            "- VR validation\n"
+            "- TLS/SSL support"
         )
 
     def show_tls_settings(self):
@@ -1763,6 +2375,11 @@ class DicomCreatorApp(tk.Tk):
         except Exception:
             pass
 
+        _comp_label = self.remote_vars["compression"].get()
+        _comp_key = next(
+            (k for k, (lbl, _) in DicomCompressor.OPTIONS.items() if lbl == _comp_label),
+            "none"
+        )
         config = {
             "server": server,
             "port": port,
@@ -1771,6 +2388,7 @@ class DicomCreatorApp(tk.Tk):
             "skip_c_echo": bool(self.remote_vars["skip_c_echo"].get()),
             "use_tls": bool(self.remote_vars["use_tls"].get()),
             "tls_config": self.tls_config if self.remote_vars["use_tls"].get() else None,
+            "compression": _comp_key,
         }
 
         def post_message(msg: str):
@@ -2100,6 +2718,10 @@ class DicomCreatorApp(tk.Tk):
                     # Load TLS config if present
                     if 'tls_config' in preset and preset['tls_config']:
                         self.tls_config = preset['tls_config']
+                    # Load compression setting
+                    _comp_key = preset.get('compression', 'none')
+                    _comp_label = DicomCompressor.OPTIONS.get(_comp_key, DicomCompressor.OPTIONS["none"])[0]
+                    self.remote_vars["compression"].set(_comp_label)
         except Exception as e:
             self.logger.exception("Failed to load preset")
 
@@ -2146,7 +2768,11 @@ class DicomCreatorApp(tk.Tk):
             # Load TLS config if present
             if 'tls_config' in preset and preset['tls_config']:
                 self.tls_config = preset['tls_config']
-            
+            # Load compression setting
+            _comp_key = preset.get('compression', 'none')
+            _comp_label = DicomCompressor.OPTIONS.get(_comp_key, DicomCompressor.OPTIONS["none"])[0]
+            self.remote_vars["compression"].set(_comp_label)
+
             self._append_remote_message(f"Loaded preset: {name}")
             messagebox.showinfo(APP_TITLE, f"Preset '{name}' loaded successfully")
         except Exception as e:
@@ -2169,6 +2795,11 @@ class DicomCreatorApp(tk.Tk):
             port = self.remote_vars["port"].get().strip()
             calling_ae = self.remote_vars["calling_ae"].get().strip()
             called_ae = self.remote_vars["called_ae"].get().strip()
+            _comp_label = self.remote_vars["compression"].get()
+            _comp_key = next(
+                (k for k, (lbl, _) in DicomCompressor.OPTIONS.items() if lbl == _comp_label),
+                "none"
+            )
             
             # Validate required fields
             if not server:
@@ -2242,7 +2873,8 @@ class DicomCreatorApp(tk.Tk):
                     calling_ae=calling_ae,
                     called_ae=called_ae,
                     use_tls=self.remote_vars["use_tls"].get(),
-                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None,
+                    compression=_comp_key,
                 )
                 
                 if success:
@@ -2261,7 +2893,8 @@ class DicomCreatorApp(tk.Tk):
                     calling_ae=calling_ae,
                     called_ae=called_ae,
                     use_tls=self.remote_vars["use_tls"].get(),
-                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None
+                    tls_config=self.tls_config if self.remote_vars["use_tls"].get() else None,
+                    compression=_comp_key,
                 )
                 
                 if success:
@@ -2990,8 +3623,8 @@ See: doc/WHERE_TO_RUN_TESTS.md
 
             # Re-add visible tabs in order
             tab_order = [
-                "Patient", "Study", "Series/Modality", "Image", 
-                "Load DICOM", "Save", "Remote", "Test/Generate",
+                "Patient", "Study", "Series/Modality", "Image",
+                "Load DICOM", "Save", "Remote", "Query PACS", "HL7", "Test/Generate",
                 "Connection Test", "Stress Test", "Transmission History",
                 "Benchmarking", "Parallel Send"
             ]

@@ -22,9 +22,9 @@ def test_validator():
     validator = VRValidator()
     
     if validator.vr_data:
-        print(f"? Loaded {len(validator.vr_data)} VR entries from VR.xml")
+        print(f"• Loaded {len(validator.vr_data)} VR entries from VR.xml")
     else:
-        print("? VR data not loaded - validation will be limited")
+        print("• VR data not loaded - validation will be limited")
     print()
     
     # Test cases
@@ -49,7 +49,7 @@ def test_validator():
     for field_name, value in test_fields.items():
         result = validator.validate_field(field_name, value)
         
-        status = "?" if result['valid'] else "?"
+        status = "✓" if result['valid'] else "✗"
         print(f"{status} {field_name} = '{value}'")
         print(f"   VR: {result['vr']}, Tag: {result['tag']}")
         

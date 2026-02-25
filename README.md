@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.7.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,7 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
-- [What's New in v0.7.0](#whats-new-in-v070)
+- [What's New in v0.9.0](#whats-new-in-v090)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -56,7 +56,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and send in one workflow
 
-## What's New in v0.7.0
+## What's New in v0.9.0
 
 **Release Date**: March 2026
 
@@ -69,7 +69,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 ### 📖 Documentation Improvements
 - Streamlined documentation structure
 - Removed obsolete quick start guide (consolidated into feature-specific guides)
-- Updated all version references to 0.7.0
+- Updated all version references to 0.9.0
 - Improved certificate management guidance
 
 ### ✅ Enhancements
@@ -79,13 +79,10 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - Better user guidance for secure connections
 
 ### 📋 Previous Releases
-- **v0.6.1** - LazyImport fixes, improved module loading
-- **v0.6.0** - VR validation system, validation dialogs, DICOMDIR support
-- **v0.5.0** - Enhanced LazyImport, better class detection
-- **v0.4.0** - Connection testing, stress testing, performance benchmarking
-- **v0.3.0** - Server presets, tag viewer, random DICOM generator
+- **v0.8.0** - Enhancements and bug fixes
+- **v0.7.0** - Major update with SSL/TLS support, refactored codebase
 
-**Full Details:** See [CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)
+**Full Details:** See [CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)
 
 ## Quick Start
 
@@ -292,7 +289,9 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 - **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution guide
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes (Current)
+- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes (Current)
+- **[doc/CHANGELOG_v0.8.0.md](doc/CHANGELOG_v0.8.0.md)** - v0.8.0 release notes
+- **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes
 - **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - v0.6.1 release notes
 - **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - v0.6.0 release notes
 - **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - v0.5.0 release notes
@@ -354,7 +353,19 @@ dcmcreator/
 
 ## Version History
 
-### v0.7.0 (March 2026) - Current
+### v0.9.0 (March 2026) - Current
+- SSL/TLS certificate support for secure DICOM transmission
+- Enhanced security with certificate file protection in `.gitignore`
+- Improved TLS settings dialog with certificate configuration
+- Documentation cleanup and streamlining
+- Better error handling for SSL/TLS operations
+
+### v0.8.0 (February 2026)
+- Code refactoring and clean up
+- Performance improvements
+- Bug fixes and stability enhancements
+
+### v0.7.0 (March 2026)
 - SSL/TLS certificate support for secure DICOM transmission
 - Enhanced security with certificate file protection in `.gitignore`
 - Improved TLS settings dialog with certificate configuration

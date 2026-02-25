@@ -38,7 +38,7 @@ def example_1_view_recent_transmissions():
     
     print(f"\nLast {len(recent)} transmissions:\n")
     for i, trans in enumerate(recent, 1):
-        status_icon = "?" if trans.get('success') else "?"
+        status_icon = "✓" if trans.get('success') else "✗"
         print(f"{i}. [{status_icon}] {trans.get('filename')}")
         print(f"   Patient: {trans.get('patient_name')} (ID: {trans.get('patient_id')})")
         print(f"   Server: {trans.get('server_ip')}:{trans.get('server_port')}")

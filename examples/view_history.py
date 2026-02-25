@@ -43,7 +43,7 @@ def main():
         
         if recent:
             for i, trans in enumerate(recent, 1):
-                status = "? OK" if trans.get('success') else "? FAIL"
+                status = "• OK" if trans.get('success') else "• FAIL"
                 print(f"{i}. {trans.get('filename', 'N/A')}")
                 print(f"   Server: {trans.get('server_ip', 'N/A')}:{trans.get('server_port', 'N/A')}")
                 print(f"   Status: {status}")
@@ -60,21 +60,21 @@ def main():
         
         export_file = "transmission_history.json"
         if history.export_to_json(export_file):
-            print(f"? History exported to: {export_file}")
+            print(f"• History exported to: {export_file}")
             
             # Show file size
             import os
             filesize = os.path.getsize(export_file) / 1024
-            print(f"? File size: {filesize:.2f} KB")
+            print(f"• File size: {filesize:.2f} KB")
         else:
-            print("? Failed to export history")
+            print("• Failed to export history")
         
         print("\n" + "="*60 + "\n")
         
         return 0
         
     except Exception as e:
-        print(f"? Error: {e}")
+        print(f"• Error: {e}")
         logger.exception("Failed to retrieve history")
         return 1
 
