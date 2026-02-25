@@ -43,6 +43,25 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **VR Validation** - Real-time validation against DICOM Value Representation specifications
 - **Tag Viewer** - View all DICOM tags including private tags with search and export
 
+### Query/Retrieve PACS Features (NEW)
+- **C-FIND Query** - Search for patients, studies, and series on remote PACS
+- **Multiple Query Levels** - Patient, Study, Series, and Image level searches
+- **Query Models** - Support for Patient Root and Study Root Query/Retrieve models
+- **Search Filters** - Filter by patient name, ID, date range, modality, and more
+- **C-MOVE Retrieval** - Download selected studies/series from PACS to local storage
+- **C-GET Retrieval** - Direct DICOM retrieval with automatic storage
+- **Query Results Display** - Hierarchical view of query results (Patient → Study → Series → Images)
+- **Batch Operations** - Download multiple studies in parallel
+
+### Hospital Integration Features (NEW)
+- **HL7 ADT Parser** - Parse admission/discharge/transfer messages for patient data
+- **HL7 ORM Parser** - Extract order information for DICOM studies
+- **HL7 ORU Builder** - Create result messages from DICOM studies
+- **MLLP Protocol** - Secure hospital standard messaging protocol
+- **FHIR R4 Client** - Query and update patient resources from FHIR servers
+- **Automatic Mapping** - Convert between HL7, FHIR, and DICOM formats
+- **EHR Integration** - Bidirectional communication with hospital systems
+
 ### Testing & Performance Features
 - **Server Presets** - Save and manage server connection profiles
 - **Connection Testing** - TCP validation, latency analysis, and connection quality assessment
@@ -58,29 +77,45 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ## What's New in v0.9.0
 
-**Release Date**: March 2026
+**Release Date**: January 2025
 
-### 🔒 SSL/TLS Certificate Support
-- Full certificate-based secure DICOM transmission
-- Support for PEM, CRT, KEY, PKCS#12, and CER formats
-- Enhanced TLS settings dialog with certificate configuration
-- Certificate file patterns added to `.gitignore` for security
+### 🔍 Query/Retrieve PACS (NEW)
+- Full C-FIND implementation for querying remote PACS
+- C-MOVE and C-GET support for retrieving studies
+- Multi-level queries (Patient, Study, Series, Image)
+- Support for both Patient Root and Study Root models
+- Advanced filtering and hierarchical result display
+- Parallel retrieval for improved performance
+
+### 🏥 HL7/FHIR Hospital Integration (NEW)
+- Complete HL7 v2.x message parsing (ADT, ORM, ORU)
+- FHIR R4 REST client for patient management
+- MLLP protocol for secure hospital communication
+- Automatic demographic mapping to DICOM metadata
+- Bidirectional EHR ↔ DICOM synchronization
+- Support for multiple healthcare integration patterns
+
+### 🔒 Enhanced Security
+- SSL/TLS support for Query/Retrieve operations
+- Certificate-based secure transmission
+- MLLP protocol encryption support
+- Enhanced TLS settings for PACS connections
 
 ### 📖 Documentation Improvements
-- Streamlined documentation structure
-- Removed obsolete quick start guide (consolidated into feature-specific guides)
+- Comprehensive Query/Retrieve usage guide
+- HL7 integration examples and tutorials
 - Updated all version references to 0.9.0
-- Improved certificate management guidance
+- Improved security and privacy documentation
 
-### ✅ Enhancements
-- Better error handling and logging for SSL/TLS operations
-- Improved certificate validation before transmission
+### ✅ Additional Enhancements
+- Better error handling and logging for network operations
+- Improved connection quality assessment
 - Enhanced TLS configuration management
-- Better user guidance for secure connections
+- Better user guidance for enterprise features
 
 ### 📋 Previous Releases
 - **v0.8.0** - Enhancements and bug fixes
-- **v0.7.0** - Major update with SSL/TLS support, refactored codebase
+- **v0.7.0** - Major update with SSL/TLS support
 
 **Full Details:** See [CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)
 
@@ -192,6 +227,25 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 4. Metadata auto-populates in the forms
 5. Validation is performed automatically
 
+### Querying PACS (NEW)
+
+1. Go to **Query/Retrieve** tab
+2. Enter PACS server IP, port, and AE Titles
+3. Select query level: **Patient**, **Study**, **Series**, or **Image**
+4. Enter search criteria:
+   - **Patient Name** (wildcard: `*`)
+   - **Patient ID** (exact or prefix)
+   - **Study Date** (range or specific date)
+   - **Modality** (CT, MR, XC, etc.)
+5. Click **Query PACS**
+6. Review results in hierarchical tree view
+7. Select studies/series and click **Retrieve (C-GET)** or **Retrieve (C-MOVE)**
+
+#### Example Queries
+- Find all CT studies from January 2025: Set Study Date range, Modality=CT
+- Find patient by ID: Set Patient ID, click Query at Patient level
+- Find all studies for a patient: Set Patient Name, click Query at Study level
+
 ### Sending to Remote Server
 
 1. Fill in Server IP/hostname and Port
@@ -205,6 +259,29 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 2. Select a preset from dropdown to auto-load settings
 3. Or enter server details and click **Save Current** to save as preset
 4. Click **Send All Loaded DICOM**
+
+### Hospital Integration with HL7 (NEW)
+
+#### Receiving Patient Data from EHR
+1. Go to **HL7** tab
+2. Configure MLLP server settings (listening port)
+3. Start listening for incoming HL7 messages
+4. Received ADT messages auto-populate patient demographics
+5. Data automatically maps to DICOM Patient form
+
+#### Sending DICOM Results as HL7
+1. Create or load DICOM study
+2. Go to **HL7** tab → **Build ORU**
+3. Review extracted patient and study information
+4. Click **Send ORU Message** to transmit results to EHR
+5. Monitor delivery status in history
+
+#### FHIR Server Integration
+1. Go to **HL7** tab → **FHIR Settings**
+2. Enter FHIR server URL
+3. Use **Get Patient** to retrieve patient demographics from FHIR server
+4. Use **Post Patient** to create/update patient records
+5. Automatic conversion between FHIR and DICOM formats
 
 ### Data Validation & VR Compliance
 
@@ -254,12 +331,33 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 - Windows 7 or newer (64-bit)
 - 100 MB disk space
 - 300 MB RAM minimum
+- Optional: Network access for PACS, FHIR servers, and HL7 MLLP connections
 
 ### For Python
 - Python 3.9+
 - Cross-platform: Windows, macOS, Linux
 - 500 MB disk space
 - 500 MB RAM minimum
+
+### Network Requirements
+- For PACS Query/Retrieve: DICOM C-FIND, C-MOVE, C-GET support
+- For HL7 Integration: Port access for MLLP protocol (typically port 2575)
+- For FHIR Integration: HTTPS access to FHIR server
+- For remote transmission: Port 104 (default DICOM) or custom ports
+- Optional: SSL/TLS certificates for secure connections
+
+### Dependencies
+All dependencies are automatically installed with:
+```bash
+pip install -r requirements.txt
+```
+
+**Core Libraries:**
+- `pydicom>=2.4.0` - DICOM file handling and network operations
+- `pynetdicom>=2.0.0` - DICOM network communication (C-STORE, C-FIND, C-MOVE, C-GET)
+- `Pillow>=10.0.0` - Image processing (PNG, JPG, BMP)
+- `numpy>=1.24.0` - Numerical array operations
+- `requests>=2.28.0` - HTTP client for FHIR REST operations
 
 ## Documentation
 
@@ -274,6 +372,11 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 - **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
 - **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Server Presets documentation
 - **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - DICOM generator guide
+- **[doc/QUERY_RETRIEVE_GUIDE.md](doc/QUERY_RETRIEVE_GUIDE.md)** - Query/Retrieve PACS guide (NEW)
+- **[doc/CGET_CMOVE_GUIDE.md](doc/CGET_CMOVE_GUIDE.md)** - C-GET and C-MOVE implementation (NEW)
+- **[doc/CGET_CMOVE_IMPLEMENTATION.md](doc/CGET_CMOVE_IMPLEMENTATION.md)** - C-GET/C-MOVE technical details (NEW)
+- **[doc/HL7_INTEGRATION_GUIDE.md](doc/HL7_INTEGRATION_GUIDE.md)** - HL7 and hospital integration (NEW)
+- **[doc/TLS_SETUP.md](doc/TLS_SETUP.md)** - SSL/TLS certificate setup
 
 ### Testing Guides
 - **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup
@@ -289,7 +392,7 @@ Your standalone EXE will be created in `dist/DICOM Creator/` with all features i
 - **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution guide
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes (Current)
+- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes (Current) - Query/Retrieve PACS and HL7 Integration
 - **[doc/CHANGELOG_v0.8.0.md](doc/CHANGELOG_v0.8.0.md)** - v0.8.0 release notes
 - **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes
 - **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - v0.6.1 release notes
@@ -353,12 +456,16 @@ dcmcreator/
 
 ## Version History
 
-### v0.9.0 (March 2026) - Current
-- SSL/TLS certificate support for secure DICOM transmission
-- Enhanced security with certificate file protection in `.gitignore`
-- Improved TLS settings dialog with certificate configuration
-- Documentation cleanup and streamlining
-- Better error handling for SSL/TLS operations
+### v0.9.0 (January 2025) - Current
+- Query/Retrieve PACS integration with C-FIND, C-MOVE, C-GET support
+- HL7 v2.x message parsing (ADT, ORM, ORU)
+- FHIR R4 REST client for patient management
+- MLLP protocol support for hospital integration
+- Multi-level PACS queries (Patient, Study, Series, Image)
+- Advanced search filtering and hierarchical result display
+- Parallel retrieval for improved performance
+- Comprehensive documentation updates
+- All character encoding issues resolved
 
 ### v0.8.0 (February 2026)
 - Code refactoring and clean up
@@ -439,30 +546,24 @@ MIT License. See `LICENSE` for details.
 - Verify server IP and port are correct
 - Try saving and loading a Server Preset
 
-### SSL/TLS Certificate Issues (v0.7.0)
+### Query/Retrieve PACS Issues (NEW)
+- **Query returns no results**: Verify PACS AE Title matches server configuration
+- **C-FIND fails**: Check PACS accepts Query/Retrieve operations
+- **C-MOVE/C-GET fails**: Ensure storage SCP is configured and accessible
+- **Timeout during retrieval**: Increase timeout setting or reduce dataset size
+- **Connection refused**: Verify PACS firewall allows DICOM connections
+
+### HL7 Integration Issues (NEW)
+- **MLLP listener won't start**: Check port is not in use; try different port
+- **ADT messages not parsing**: Verify message format is HL7 v2.x
+- **No patient data populated**: Check PID segment exists in message
+- **FHIR server connection fails**: Verify FHIR server URL and network access
+- **ORU message delivery fails**: Check HL7 receiving system is accepting messages
+
+### SSL/TLS Certificate Issues
 - Ensure certificate files are in correct format (PEM, CRT, KEY, etc.)
-- Verify certificate paths in TLS Settings dialog
-- Check that certificates are valid and not expired
-- Review error messages for specific certificate validation issues
-
-### Validation Issues
-- Check that `src/VR.xml` exists in your installation
-- Review validation error messages for specific issues
-- Common issues: incorrect date format (YYYYMMDD), invalid VR values
-- Fields with warnings can still be saved if needed
-
-### Dependencies Missing
-- Ensure Python 3.9+ is installed
-- Run `pip install -r requirements.txt` to install dependencies
-- For building: `pip install -r build-requirements.txt`
-
-### Module Loading Issues
-- Check log files for detailed error messages
-- Verify all dependencies are installed
-- Try reinstalling: `pip install -r requirements.txt --force-reinstall`
-- Update to latest version for LazyImport fixes
-
----
-
-**Happy DICOM Creating! 🏥**
+- Certificate and key files must match
+- Verify certificate is not expired
+- Check certificate path is accessible
+- Try testing certificate with **TLS Settings** dialog
 
