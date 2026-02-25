@@ -64,7 +64,7 @@ def test_transmission_history():
     for i, trans in enumerate(recent, 1):
         print(f"{i}. {trans.get('filename')}")
         print(f"   Server: {trans.get('server_ip')}:{trans.get('server_port')}")
-        print(f"   Status: {'? SUCCESS' if trans.get('success') else '? FAILED'}")
+        print(f"   Status: {'• SUCCESS' if trans.get('success') else '• FAILED'}")
         print(f"   Bytes: {trans.get('bytes_sent')}")
         print(f"   Duration: {trans.get('duration_seconds')}s")
         print(f"   Timestamp: {trans.get('timestamp')}")
@@ -78,10 +78,10 @@ def test_transmission_history():
     
     # Check if transmissions were actually recorded
     if len(recent) >= 2:
-        print("\n? SUCCESS: Transmissions were recorded in history!")
+        print("\n• SUCCESS: Transmissions were recorded in history!")
         return True
     else:
-        print(f"\n? FAILED: Expected 2 transmissions, but only found {len(recent)}")
+        print(f"\n• FAILED: Expected 2 transmissions, but only found {len(recent)}")
         return False
 
 if __name__ == "__main__":

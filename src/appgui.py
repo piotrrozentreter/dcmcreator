@@ -92,6 +92,15 @@ except ImportError:
     except ImportError:
         TagViewerDialog = None
 
+# Import HL7Tab for HL7/FHIR integration
+try:
+    from .hl7_tab import HL7Tab
+except ImportError:
+    try:
+        from hl7_tab import HL7Tab
+    except ImportError:
+        HL7Tab = None
+
 # Logic handler
 DicomLogicHandler = LazyImport(".app_logic", "app_logic")
 
@@ -173,6 +182,7 @@ class DicomCreatorApp(tk.Tk):
             "Save": tk.BooleanVar(value=True),
             "Remote": tk.BooleanVar(value=True),
             "Query PACS": tk.BooleanVar(value=True),
+            "HL7": tk.BooleanVar(value=True),
             "Test/Generate": tk.BooleanVar(value=False),
             "Connection Test": tk.BooleanVar(value=False),
             "Stress Test": tk.BooleanVar(value=False),
@@ -221,6 +231,7 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_checkbutton(label="Save", variable=self.tab_visibility["Save"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Remote", variable=self.tab_visibility["Remote"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Query PACS", variable=self.tab_visibility["Query PACS"], command=self._update_tab_visibility)
+        view_menu.add_checkbutton(label="HL7", variable=self.tab_visibility["HL7"], command=self._update_tab_visibility)
         view_menu.add_separator()
         view_menu.add_command(label="Test Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Test/Generate", variable=self.tab_visibility["Test/Generate"], command=self._update_tab_visibility)
@@ -275,6 +286,7 @@ class DicomCreatorApp(tk.Tk):
         self.save_frame = ttk.Frame(container)
         self.remote_frame = ttk.Frame(container)
         self.query_frame = ttk.Frame(container)
+        self.hl7_frame = ttk.Frame(container)
         self.test_frame = ttk.Frame(container)
 
         # Test tabs
@@ -293,6 +305,7 @@ class DicomCreatorApp(tk.Tk):
         self.tab_frames["Save"] = (self.save_frame, "Save")
         self.tab_frames["Remote"] = (self.remote_frame, "Remote")
         self.tab_frames["Query PACS"] = (self.query_frame, "Query PACS")
+        self.tab_frames["HL7"] = (self.hl7_frame, "HL7")
         self.tab_frames["Test/Generate"] = (self.test_frame, "Test/Generate")
         self.tab_frames["Connection Test"] = (self.connection_test_frame, "Connection Test")
         self.tab_frames["Stress Test"] = (self.stress_test_frame, "Stress Test")
@@ -308,6 +321,7 @@ class DicomCreatorApp(tk.Tk):
         container.add(self.save_frame, text="Save")
         container.add(self.remote_frame, text="Remote")
         container.add(self.query_frame, text="Query PACS")
+        container.add(self.hl7_frame, text="HL7")
         container.add(self.test_frame, text="Test/Generate")
         container.add(self.connection_test_frame, text="Connection Test")
         container.add(self.stress_test_frame, text="Stress Test")
@@ -338,6 +352,9 @@ class DicomCreatorApp(tk.Tk):
 
         # Query PACS tab
         self._build_query_pacs_tab()
+
+        # HL7 / FHIR tab
+        self._build_hl7_tab()
 
         # Test/Generate tab
         self._build_test_tab()
@@ -1100,6 +1117,13 @@ class DicomCreatorApp(tk.Tk):
         # Start download in background thread
         t = threading.Thread(target=download_worker, daemon=True)
         t.start()
+
+    def _build_hl7_tab(self):
+        """Build HL7 / FHIR integration tab."""
+        if HL7Tab is None:
+            ttk.Label(self.hl7_frame, text="HL7 module not available").pack(padx=10, pady=10)
+            return
+        self._hl7_tab = HL7Tab(self.hl7_frame, self, self.logger)
 
     def _build_test_tab(self):
         """Build Test/Generator tab for creating and testing bulk DICOM transmission."""
@@ -3599,8 +3623,8 @@ See: doc/WHERE_TO_RUN_TESTS.md
 
             # Re-add visible tabs in order
             tab_order = [
-                "Patient", "Study", "Series/Modality", "Image", 
-                "Load DICOM", "Save", "Remote", "Query PACS", "Test/Generate",
+                "Patient", "Study", "Series/Modality", "Image",
+                "Load DICOM", "Save", "Remote", "Query PACS", "HL7", "Test/Generate",
                 "Connection Test", "Stress Test", "Transmission History",
                 "Benchmarking", "Parallel Send"
             ]

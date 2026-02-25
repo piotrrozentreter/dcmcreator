@@ -1,12 +1,12 @@
-﻿# DICOM Creator v0.6.0
+﻿# DICOM Creator v0.9.0
 
-A professional DICOM file creation, editing, and transmission tool with comprehensive validation, testing, and transmission capabilities.
+A professional DICOM file creation, editing, and transmission tool with comprehensive validation, testing, transmission, and hospital integration capabilities.
 
 ## Quick Links
 
 - **[Main README](../README.md)** - Complete project documentation
 - **[INDEX.md](INDEX.md)** - Full documentation index
-- **[Changelog v0.6.0](CHANGELOG_v0.6.0.md)** - Release notes and new features
+- **[Changelog v0.9.0](CHANGELOG_v0.9.0.md)** - Release notes and new features
 - **[Build Instructions](BUILD_INSTRUCTIONS.md)** - How to build the EXE
 
 ## Features
@@ -18,7 +18,22 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
 - **Server Presets** - Save and manage server connection profiles
 
-### Data Validation & Compliance (v0.6.0)
+### Hospital Integration (NEW in v0.9.0)
+
+#### **HL7 Message Support**
+- Parse HL7 ADT messages for patient demographics
+- Extract order information from ORM messages
+- Build ORU messages from DICOM study results
+- MLLP protocol for hospital system communication
+- Automatic demographic mapping to DICOM metadata
+
+#### **FHIR R4 Integration**
+- Retrieve patient resources from FHIR servers
+- Create/update patient demographics
+- Seamless conversion between HL7 and FHIR formats
+- Support for telecom, address, and contact information
+
+### Data Validation & Compliance
 
 #### **Real-Time VR Validation**
 - Comprehensive validation of all DICOM data elements
@@ -103,7 +118,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ---
 
-## What's New in v0.6.0
+## What's New in v0.9.0
 
 ### Validation System (Major Feature)
 
@@ -227,9 +242,10 @@ python src/app.py
 ```
 doc/
 ├── INDEX.md                              ← START HERE
-├── CHANGELOG_v0.6.0.md                   ✨ CURRENT - New validation system
-├── CHANGELOG_v0.5.0.md                   - LazyImport enhancements
-├── CHANGELOG_v0.4.0.md                   - Testing features
+├── CHANGELOG_v0.9.0.md                   ✨ CURRENT - New validation system
+├── CHANGELOG_v0.8.0.md                   - HL7 and FHIR features
+├── CHANGELOG_v0.7.0.md                   - LazyImport enhancements
+├── CHANGELOG_v0.6.0.md                   - Testing features
 ├── CHANGELOG_v0.3.0.md                   - Server presets
 │
 ├── User Guides:
@@ -330,12 +346,12 @@ doc/
 
 | Version | Date | Status | Key Features |
 |---------|------|--------|--------------|
-| **0.6.0** | Jan 2025 | **Current** | ✨ VR Validation, DICOMDIR, dialogs |
-| 0.5.0 | Jan 2025 | Stable | LazyImport improvements |
-| 0.4.0 | Dec 2024 | Stable | Connection/Stress testing |
-| 0.3.0 | Nov 2024 | Stable | Server presets, Tag viewer |
-| 0.2.0 | Oct 2024 | Legacy | Remote transmission |
-| 0.1.0 | Sep 2024 | Legacy | Basic DICOM creation |
+| **0.9.0** | Feb 2025 | **Current** | ✨ HL7/FHIR support, VR Validation, DICOMDIR |
+| 0.8.0 | Jan 2025 | Stable | LazyImport improvements |
+| 0.7.0 | Dec 2024 | Stable | Connection/Stress testing |
+| 0.6.0 | Nov 2024 | Stable | Server presets, Tag viewer |
+| 0.5.0 | Oct 2024 | Legacy | Remote transmission |
+| 0.4.0 | Sep 2024 | Legacy | Basic DICOM creation |
 
 ---
 
@@ -344,7 +360,7 @@ doc/
 - **Documentation**: See [INDEX.md](INDEX.md)
 - **GitHub Issues**: Report bugs
 - **GitHub Discussions**: Ask questions
-- **Changelog**: [CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)
+- **Changelog**: [CHANGELOG_v0.9.0.md](CHANGELOG_v0.9.0.md)
 
 ---
 

@@ -91,24 +91,24 @@ def main():
         print("\n" + "="*60)
         print("TRANSMISSION COMPLETE")
         print("="*60)
-        print(f"? Session: {report['session_name']}")
-        print(f"? Files sent: {report['files_sent']}")
-        print(f"? Success rate: {report['success_rate']:.1f}%")
-        print(f"? Duration: {report['duration_seconds']:.2f} seconds")
-        print(f"? Throughput: {report['throughput_mbps']:.2f} MB/s")
-        print(f"? Workers used: {report['workers_used']}")
+        print(f"• Session: {report['session_name']}")
+        print(f"• Files sent: {report['files_sent']}")
+        print(f"• Success rate: {report['success_rate']:.1f}%")
+        print(f"• Duration: {report['duration_seconds']:.2f} seconds")
+        print(f"• Throughput: {report['throughput_mbps']:.2f} MB/s")
+        print(f"• Workers used: {report['workers_used']}")
         
         # Calculate speedup
         sequential_time = report['duration_seconds'] * workers
         speedup = sequential_time / report['duration_seconds']
-        print(f"? Speedup: {speedup:.1f}x (vs sequential)")
+        print(f"• Speedup: {speedup:.1f}x (vs sequential)")
         
         print("="*60 + "\n")
         
         return 0
         
     except Exception as e:
-        print(f"? Error: {e}")
+        print(f"• Error: {e}")
         logger.exception("Parallel transmission failed")
         return 1
 

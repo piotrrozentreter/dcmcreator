@@ -15,19 +15,29 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Installation instructions
   - Usage overview
 
-### Latest Release (v0.7.0)
-- **[VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md)** - LATEST - v0.7.0
+### Latest Release (v0.9.0)
+- **[VERSION_0.9.0_SUMMARY.md](VERSION_0.9.0_SUMMARY.md)** - LATEST - v0.9.0
   - Quick summary of changes
+  - HL7 handler integration
+  - Hospital system connectivity
   - Upgrade instructions
-  - Certificate management features
+  - Release highlights
+
+- **[CHANGELOG_v0.9.0.md](CHANGELOG_v0.9.0.md)**
+  - Complete v0.9.0 release notes
+  - HL7 v2.x message support
+  - FHIR R4 integration
+  - Technical details and compatibility
+
+### Previous Releases
+- **[VERSION_0.7.0_SUMMARY.md](VERSION_0.7.0_SUMMARY.md)** - v0.7.0
+  - SSL/TLS certificate support
   - Release highlights
 
 - **[CHANGELOG_v0.7.0.md](CHANGELOG_v0.7.0.md)**
   - Complete v0.7.0 release notes
-  - SSL/TLS certificate support
-  - Technical details and compatibility
+  - Certificate management features
 
-### Previous Releases
 - **[CHANGELOG_v0.6.1.md](CHANGELOG_v0.6.1.md)**
   - LazyImport improvements
   - Bug fixes overview
