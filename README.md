@@ -456,7 +456,7 @@ dcmcreator/
 
 ## Version History
 
-### v0.9.0 (January 2025) - Current
+### v0.9.0 (February 2026) - Current
 - Query/Retrieve PACS integration with C-FIND, C-MOVE, C-GET support
 - HL7 v2.x message parsing (ADT, ORM, ORU)
 - FHIR R4 REST client for patient management
@@ -472,7 +472,7 @@ dcmcreator/
 - Performance improvements
 - Bug fixes and stability enhancements
 
-### v0.7.0 (March 2026)
+### v0.7.0 (February 2026)
 - SSL/TLS certificate support for secure DICOM transmission
 - Enhanced security with certificate file protection in `.gitignore`
 - Improved TLS settings dialog with certificate configuration
