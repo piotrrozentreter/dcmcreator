@@ -328,7 +328,7 @@ class TagViewerDialog(tk.Toplevel):
                 vr_summary += f"\n  ... and {len(stats['vr_counts']) - 10} more"
             
             msg = "Tag Statistics\n"
-            msg += "=" * 50 + "\n\n"
+            msg += "=" * 39 + "\n\n"
             msg += f"Total Tags: {stats['total']}\n"
             msg += f"Public Tags: {stats['public']}\n"
             msg += f"Private Tags: {stats['private']}\n\n"
