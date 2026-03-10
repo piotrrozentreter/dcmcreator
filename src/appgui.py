@@ -181,9 +181,9 @@ class DicomCreatorApp(tk.Tk):
             "Load DICOM": tk.BooleanVar(value=True),
             "Save": tk.BooleanVar(value=True),
             "Remote": tk.BooleanVar(value=True),
-            "Query PACS": tk.BooleanVar(value=True),
-            "HL7": tk.BooleanVar(value=True),
-            "Test/Generate": tk.BooleanVar(value=False),
+            "Query PACS": tk.BooleanVar(value=False),
+            "HL7": tk.BooleanVar(value=False),
+            "Test/Generate": tk.BooleanVar(value=True),
             "Connection Test": tk.BooleanVar(value=False),
             "Stress Test": tk.BooleanVar(value=False),
             "Transmission History": tk.BooleanVar(value=False),
@@ -230,9 +230,9 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_checkbutton(label="Load DICOM", variable=self.tab_visibility["Load DICOM"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Save", variable=self.tab_visibility["Save"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Remote", variable=self.tab_visibility["Remote"], command=self._update_tab_visibility)
+        view_menu.add_separator()
         view_menu.add_checkbutton(label="Query PACS", variable=self.tab_visibility["Query PACS"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="HL7", variable=self.tab_visibility["HL7"], command=self._update_tab_visibility)
-        view_menu.add_separator()
         view_menu.add_command(label="Test Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Test/Generate", variable=self.tab_visibility["Test/Generate"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="Connection Test", variable=self.tab_visibility["Connection Test"], command=self._update_tab_visibility)
@@ -1371,7 +1371,7 @@ class DicomCreatorApp(tk.Tk):
             messagebox.showinfo(APP_TITLE, "TestRunner not available yet")
             return
 
-        results = "Test Results\n" + "=" * 50 + "\n\nNo tests run yet"
+        results = "Test Results\n" + "=" * 12 + "\n\nNo tests run yet"
         messagebox.showinfo(APP_TITLE, results)
 
     def _append_test_status(self, text):
@@ -1576,7 +1576,7 @@ class DicomCreatorApp(tk.Tk):
                 field_count = validation_result.get('field_count', len(all_fields))
                 messagebox.showinfo(
                     APP_TITLE,
-                    "? Validation Passed\n\n"
+                    "Validation Passed\n\n"
                     f"All {field_count} fields are valid.\n"
                     "No errors or warnings found."
                 )

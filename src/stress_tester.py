@@ -263,13 +263,13 @@ class StressTestRunner:
         plan = test['plan']
         
         report = []
-        report.append("=" * 70)
+        report.append("=" * 40)
         report.append(f"STRESS TEST REPORT: {plan['name']}")
-        report.append("=" * 70)
+        report.append("=" * 40)
         report.append("")
         
         report.append("TEST CONFIGURATION")
-        report.append("-" * 70)
+        report.append("-" * 40)
         report.append(f"Files/Second Target:   {plan['files_per_second']}")
         report.append(f"Duration:              {plan['duration_seconds']} seconds")
         report.append(f"File Size:             {plan['file_size_mb']} MB")
@@ -278,14 +278,14 @@ class StressTestRunner:
         report.append("")
         
         report.append("TEST RESULTS")
-        report.append("-" * 70)
+        report.append("-" * 40)
         report.append(f"Status:                {test['status']}")
         report.append(f"Start Time:            {test['start_time'].strftime('%Y-%m-%d %H:%M:%S')}")
         report.append(f"Duration:              {test['duration_seconds']:.2f} seconds")
         report.append("")
         
         report.append("TRANSMISSION STATISTICS")
-        report.append("-" * 70)
+        report.append("-" * 40)
         report.append(f"Files Sent:            {test['files_sent']}")
         report.append(f"Files Failed:          {test['files_failed']}")
         report.append(f"Total Files:           {test['total_files']}")
@@ -294,7 +294,7 @@ class StressTestRunner:
         report.append("")
         
         report.append("THROUGHPUT ANALYSIS")
-        report.append("-" * 70)
+        report.append("-" * 40)
         report.append(f"Total Data Sent:       {test['total_bytes'] / 1024 / 1024:.2f} MB")
         if test['avg_throughput_mbps']:
             report.append(f"Average Throughput:    {test['avg_throughput_mbps']:.2f} MB/s")
@@ -304,14 +304,14 @@ class StressTestRunner:
         
         if test['errors']:
             report.append("ERRORS")
-            report.append("-" * 70)
+            report.append("-" * 40)
             for error in test['errors'][:10]:
                 report.append(f"* {error['error']}")
             if len(test['errors']) > 10:
                 report.append(f"... and {len(test['errors']) - 10} more errors")
             report.append("")
         
-        report.append("=" * 70)
+        report.append("=" * 40)
         
         return "\n".join(report)
     
@@ -325,9 +325,9 @@ class StressTestRunner:
             return "No stress tests run yet"
         
         report = []
-        report.append("=" * 70)
+        report.append("=" * 40)
         report.append("ALL STRESS TESTS SUMMARY")
-        report.append("=" * 70)
+        report.append("=" * 40)
         report.append("")
         
         for i, test in enumerate(self.results, 1):
@@ -340,9 +340,9 @@ class StressTestRunner:
             )
         
         report.append("")
-        report.append("-" * 70)
+        report.append("-" * 40)
         report.append("TOTAL STATISTICS")
-        report.append("-" * 70)
+        report.append("-" * 40)
         
         total_tests = len(self.results)
         total_files = sum(t['total_files'] for t in self.results)
@@ -361,7 +361,7 @@ class StressTestRunner:
             overall_throughput = total_bytes / total_time / 1024 / 1024
             report.append(f"Overall Throughput:    {overall_throughput:.2f} MB/s")
         
-        report.append("=" * 70)
+        report.append("=" * 40)
         
         return "\n".join(report)
     
