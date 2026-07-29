@@ -77,7 +77,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 ## What's New in v0.9.0
 
-**Release Date**: January 2025
+**Release Date**: January 2026
 
 ### 🔍 Query/Retrieve PACS (NEW)
 - Full C-FIND implementation for querying remote PACS
