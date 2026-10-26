@@ -15,9 +15,17 @@ Welcome to DICOM Creator documentation! Find what you need below.
   - Installation instructions
   - Usage overview
 
-### Latest Release (v0.9.0)
-- **[VERSION_0.9.0_SUMMARY.md](VERSION_0.9.0_SUMMARY.md)** - LATEST - v0.9.0
-  - Quick summary of changes
+### Latest Release (v0.9.2)
+- **[VERSION_0.9.2_SUMMARY.md](VERSION_0.9.2_SUMMARY.md)** - LATEST - v0.9.2
+  - Storage Commitment N-ACTION overview and usage
+  - Transaction acceptance versus final commitment outcome
+
+- **[CHANGELOG_v0.9.2.md](CHANGELOG_v0.9.2.md)**
+  - v0.9.2 release notes
+  - Storage Commitment requests from the Remote tab
+
+### Previous Release (v0.9.0)
+- **[VERSION_0.9.0_SUMMARY.md](VERSION_0.9.0_SUMMARY.md)**
   - HL7 handler integration
   - Hospital system connectivity
   - Upgrade instructions

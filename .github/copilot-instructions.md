@@ -1,7 +1,7 @@
 # GitHub Copilot Instructions - DICOM Creator Project
 
 ## Project Overview
-**DICOM Creator v0.9.0** - Professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
+**DICOM Creator v0.9.2** - Professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
 **Tech Stack:** Python 3.9+, Tkinter GUI, pydicom, pynetdicom, Pillow, numpy, requests  
 **Architecture:** Modular, LazyImport-based, event-driven GUI  
@@ -546,4 +546,4 @@ resp = requests.get(url, timeout=10)
 
 **Last Updated:** 2025-02-25  
 **Document Version:** 2.0  
-**Project Version:** 0.9.0
+**Project Version:** 0.9.2

@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.9.0\n"
+APP_TITLE = "DICOM Creator v0.9.2\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -67,6 +67,7 @@ StressTestRunner = LazyImport(".stress_tester", "stress_tester")
 TransmissionHistory = LazyImport(".transmission_history", "transmission_history")
 PerformanceBenchmark = LazyImport(".performance_benchmarking", "performance_benchmarking")
 ParallelTransmissionManager = LazyImport(".parallel_transmission", "parallel_transmission")
+StorageCommitmentAction = LazyImport(".storage_commitment_action", "storage_commitment_action")
 
 # Query/Retrieve module (optional)
 DicomQueryHandler = LazyImport(".query_retrieve", "query_retrieve")
@@ -574,12 +575,12 @@ class DicomCreatorApp(tk.Tk):
             state="readonly",
             width=25,
         ).pack(side=tk.LEFT, fill=tk.X, expand=True)
-
         # Send button
         btn_row = ttk.Frame(self.remote_frame)
         btn_row.grid(row=2, column=0, sticky="ew", padx=10, pady=10)
         self.remote_send_button = ttk.Button(btn_row, text="Send All Loaded DICOM", command=self.send_remote)
         self.remote_send_button.pack(side=tk.LEFT)
+        self.storage_commitment_action = StorageCommitmentAction(self, config_frame, btn_row)
 
         # Message area
         msg_row = ttk.Frame(self.remote_frame)
@@ -1453,6 +1454,7 @@ class DicomCreatorApp(tk.Tk):
             "Features:\n"
             "- DICOM creation and editing\n"
             "- C-STORE transmission to PACS\n"
+            "- Storage Commitment requests (N-ACTION)\n"
             "- C-FIND query/retrieve (NEW)\n"
             "- Stress testing and benchmarking\n"
             "- VR validation\n"

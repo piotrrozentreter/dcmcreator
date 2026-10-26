@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.9.2-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,7 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
-- [What's New in v0.9.0](#whats-new-in-v090)
+- [What's New in v0.9.2](#whats-new-in-v092)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -42,6 +42,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Remote Transmission** - Send DICOM files to remote servers using C-STORE with SSL/TLS support
 - **VR Validation** - Real-time validation against DICOM Value Representation specifications
 - **Tag Viewer** - View all DICOM tags including private tags with search and export
+- **Storage Commitment** - Request commitment for already-stored instances using DICOM N-ACTION
 
 ### Query/Retrieve PACS Features (NEW)
 - **C-FIND Query** - Search for patients, studies, and series on remote PACS
@@ -75,7 +76,19 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and send in one workflow
 
-## What's New in v0.9.0
+## What's New in v0.9.2
+
+**Release Date**: October 2026
+
+### Storage Commitment (NEW)
+- Request Storage Commitment for loaded DICOM instances already stored by the remote peer
+- Reuse the Remote tab server, AE title, port, and TLS configuration
+- Validate the transaction UID and referenced SOP instance UIDs before sending
+- Clearly distinguish request acceptance from the final commitment outcome; N-EVENT-REPORT reception is not supported
+
+**Full Details:** See [CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)
+
+## Previous Release Highlights: v0.9.0
 
 **Release Date**: January 2025
 
@@ -117,7 +130,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **v0.8.0** - Enhancements and bug fixes
 - **v0.7.0** - Major update with SSL/TLS support
 
-**Full Details:** See [CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)
+**Previous Release Details:** See [CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)
 
 ## Quick Start
 
@@ -343,7 +356,8 @@ pip install -r requirements.txt
 - **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution guide
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes (Current) - Query/Retrieve PACS and HL7 Integration
+- **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - v0.9.2 release notes (Current) - Storage Commitment N-ACTION
+- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes - Query/Retrieve PACS and HL7 Integration
 - **[doc/CHANGELOG_v0.8.0.md](doc/CHANGELOG_v0.8.0.md)** - v0.8.0 release notes
 - **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes
 - **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - v0.6.1 release notes
@@ -407,7 +421,13 @@ dcmcreator/
 
 ## Version History
 
-### v0.9.0 (February 2026) - Current
+### v0.9.2 (October 2026) - Current
+- Storage Commitment requests using DICOM N-ACTION for previously stored instances
+- Transaction UID validation and status reporting
+- Remote-tab TLS configuration support
+- Explicit distinction between accepted requests and final commitment results
+
+### v0.9.0 (February 2026)
 - Query/Retrieve PACS integration with C-FIND, C-MOVE, C-GET support
 - HL7 v2.x message parsing (ADT, ORM, ORU)
 - FHIR R4 REST client for patient management

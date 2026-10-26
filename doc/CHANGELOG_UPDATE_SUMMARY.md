@@ -142,7 +142,7 @@ pip install -r requirements.txt
 
 ### 6. Version History Section - Updated
 
-#### v0.9.0 (January 2025) - Current
+#### v0.9.0 (January 2025) - Current at the time
 ```markdown
 - Query/Retrieve PACS integration with C-FIND, C-MOVE, C-GET support
 - HL7 v2.x message parsing (ADT, ORM, ORU)

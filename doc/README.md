@@ -1,4 +1,4 @@
-﻿# DICOM Creator v0.9.0
+﻿# DICOM Creator v0.9.2
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive validation, testing, transmission, and hospital integration capabilities.
 
@@ -6,7 +6,8 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - **[Main README](../README.md)** - Complete project documentation
 - **[INDEX.md](INDEX.md)** - Full documentation index
-- **[Changelog v0.9.0](CHANGELOG_v0.9.0.md)** - Release notes and new features
+- **[Changelog v0.9.2](CHANGELOG_v0.9.2.md)** - Current release: Storage Commitment N-ACTION
+- **[Changelog v0.9.0](CHANGELOG_v0.9.0.md)** - Previous release notes
 - **[Build Instructions](BUILD_INSTRUCTIONS.md)** - How to build the EXE
 
 ## Features
@@ -17,6 +18,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **DICOM File Operations** - Load, save, and organize DICOM files and folders
 - **Remote Transmission** - Send DICOM files to remote DICOM SCP servers using C-STORE
 - **Server Presets** - Save and manage server connection profiles
+- **Storage Commitment** - Request commitment for instances already stored by a remote peer using N-ACTION
 
 ### Hospital Integration (NEW in v0.9.0)
 
@@ -242,7 +244,8 @@ python src/app.py
 ```
 doc/
 ├── INDEX.md                              ← START HERE
-├── CHANGELOG_v0.9.0.md                   ✨ CURRENT - New validation system
+├── CHANGELOG_v0.9.2.md                   - CURRENT - Storage Commitment N-ACTION
+├── CHANGELOG_v0.9.0.md                   - HL7/FHIR and validation release
 ├── CHANGELOG_v0.8.0.md                   - HL7 and FHIR features
 ├── CHANGELOG_v0.7.0.md                   - LazyImport enhancements
 ├── CHANGELOG_v0.6.0.md                   - Testing features
@@ -346,7 +349,8 @@ doc/
 
 | Version | Date | Status | Key Features |
 |---------|------|--------|--------------|
-| **0.9.0** | Feb 2025 | **Current** | ✨ HL7/FHIR support, VR Validation, DICOMDIR |
+| **0.9.2** | Oct 2026 | **Current** | Storage Commitment N-ACTION |
+| 0.9.0 | Feb 2025 | Stable | HL7/FHIR support, VR Validation, DICOMDIR |
 | 0.8.0 | Jan 2025 | Stable | LazyImport improvements |
 | 0.7.0 | Dec 2024 | Stable | Connection/Stress testing |
 | 0.6.0 | Nov 2024 | Stable | Server presets, Tag viewer |
@@ -360,7 +364,7 @@ doc/
 - **Documentation**: See [INDEX.md](INDEX.md)
 - **GitHub Issues**: Report bugs
 - **GitHub Discussions**: Ask questions
-- **Changelog**: [CHANGELOG_v0.9.0.md](CHANGELOG_v0.9.0.md)
+- **Changelog**: [CHANGELOG_v0.9.2.md](CHANGELOG_v0.9.2.md)
 
 ---
 
