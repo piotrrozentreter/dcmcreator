@@ -66,18 +66,16 @@ echo ================================
 echo.
 
 REM Create ZIP using PowerShell (available on all modern Windows)
-powershell -Command "Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', 'DICOM Creator.zip')"
+powershell -NoProfile -Command "$ErrorActionPreference = 'Stop'; Add-Type -AssemblyName 'System.IO.Compression.FileSystem'; $temporary = Join-Path (Get-Location) ([System.IO.Path]::GetRandomFileName() + '.zip'); try { [System.IO.Compression.ZipFile]::CreateFromDirectory('dist\DICOM Creator', $temporary); Move-Item -LiteralPath $temporary -Destination 'DICOM Creator.zip' -Force; Write-Host ('  ZIP file size: {0} MB' -f [math]::Round((Get-Item -LiteralPath 'DICOM Creator.zip').Length / 1MB, 1)) } finally { if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force } }"
 
 if errorlevel 1 (
-    echo WARNING: ZIP creation failed, but executable was built successfully
+    echo ERROR: ZIP creation failed, but executable was built successfully
     echo You can manually create the ZIP:
-    echo   Right-click dist\DICOM Creator ^-^> Send to ^-^> Compressed (zipped) folder
+    echo   Right-click dist\DICOM Creator ^-^> Send to ^-^> Compressed ^(zipped^) folder
+    pause
+    exit /b 1
 ) else (
     echo ? ZIP distribution created: DICOM Creator.zip
-    
-    REM Get file sizes
-    for /F "usebackq" %%A in ('powershell -Command "[math]::Round((Get-Item 'DICOM Creator.zip').Length / 1MB, 1)"') do set ZIP_SIZE=%%A
-    echo   ZIP file size: !ZIP_SIZE! MB
 )
 
 echo.

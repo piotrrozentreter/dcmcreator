@@ -68,7 +68,38 @@ v0.7.0 introduces **SSL/TLS certificate support**:
 
 ## What Gets Built
 
+### Dynamically Loaded Modules
+
+The PyInstaller spec automatically adds every top-level Python module in `src/`
+to `hiddenimports` and adds that directory to the analysis search path. This
+includes `storage_commitment_action` and `storage_commitment`, which must be
+importable even though the GUI loads the action through `LazyImport`.
+Copying Python files through `datas` alone does not ensure they are analyzed
+and bundled as importable modules with their dependencies.
+
+If an older executable fails with
+`No module named 'storage_commitment_action'`, rebuild from the updated spec:
+
+```cmd
+python -m PyInstaller --clean --noconfirm dcmcreator.spec
+```
+
+Replace the entire distribution folder with the new build. An existing ZIP
+is not updated by this command; run `python build.py` to regenerate the ZIP too.
+
+The packaging regression tests can run without PyInstaller installed:
+
+```cmd
+python -m unittest discover -s test -p test_build_spec.py
+```
+
 ### Automatic ZIP Creation
+Both build scripts replace an existing `DICOM Creator.zip` when packaging succeeds.
+The Windows batch script creates a temporary ZIP first, preserving the previous
+archive if compression fails. If packaging fails, it returns a nonzero exit code
+instead of reporting the entire build as successful; the executable remains
+available in the distribution folder.
+
 The build script now automatically creates `DICOM Creator.zip` containing:
 - `DICOM Creator.exe` - Main executable (~25 MB)
 - `_internal/` - All Python libraries (required!) - PyDICOM, PyNetDICOM, NumPy, Pillow, etc.
@@ -304,7 +335,7 @@ pip install -r build-requirements.txt
 
 If modifying the build process:
 
-1. **Adding new optional modules**: Update `dcmcreator.spec` hiddenimports list
+1. **Adding new optional modules**: Top-level `src/*.py` modules are discovered automatically; update `dcmcreator.spec` for other dynamic imports
 2. **Adding new dependencies**: Update `build-requirements.txt` AND `requirements.txt`
 3. **Testing module availability**: Run `python check_modules.py`
 4. **Rebuilding**: Always clean before rebuilding: `python build.py`
