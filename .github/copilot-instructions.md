@@ -172,7 +172,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 feat: add HL7 v2.x parsing and FHIR R4 support
 fix: resolve LazyImport class detection issue
-docs: update ORGANIZATION.md for v0.9.0
+docs: update documentation index
 refactor: split appgui.py into separate tab modules
 test: add unit tests for HL7Handler
 chore: update requirements.txt with requests

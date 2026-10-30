@@ -51,7 +51,7 @@ files = generator.generate_hierarchical(
     patient_id="TEST001"         # Optional: custom patient ID
 )
 
-# Total files = 2 × 3 × 5 = 30 files
+# Total files = 2 ï¿½ 3 ï¿½ 5 = 30 files
 print(f"Generated {len(files)} files")
 ```
 
@@ -64,7 +64,7 @@ print(f"Generated {len(files)} files")
    - **Series/Study**: Number of series per study (default: 1)
    - **Instances/Series**: Number of instances per series (default: 1)
    - **Size/File (MB)**: File size in megabytes (default: 1.0)
-   - **Total Files**: Auto-calculated (Studies × Series × Instances)
+   - **Total Files**: Auto-calculated (Studies ï¿½ Series ï¿½ Instances)
 4. Click **Browse** to select output directory
 5. Click **Generate DICOMs**
 
@@ -187,17 +187,17 @@ The `generate_hierarchical()` method ensures:
 
 The `size_mb` parameter determines image dimensions:
 ```
-target_pixels = size_mb × 1024 × 1024 / 2
+target_pixels = size_mb ï¿½ 1024 ï¿½ 1024 / 2
 dimension = sqrt(target_pixels)
 dimension = round_to_nearest_16(dimension)
 dimension = clamp(256, 4096)
 ```
 
 Examples:
-- 0.5 MB ? ~512×512 pixels
-- 1.0 MB ? ~724×724 ? 720×720 pixels
-- 2.0 MB ? ~1024×1024 pixels
-- 5.0 MB ? ~1616×1616 ? 1616×1616 pixels
+- 0.5 MB ? ~512ï¿½512 pixels
+- 1.0 MB ? ~724ï¿½724 ? 720ï¿½720 pixels
+- 2.0 MB ? ~1024ï¿½1024 pixels
+- 5.0 MB ? ~1616ï¿½1616 ? 1616ï¿½1616 pixels
 
 ### Metadata Variation
 
@@ -307,4 +307,3 @@ For large datasets, use `output_dir` to save directly to disk.
 - `src/random_dicom.py` - Generator implementation
 - `src/dcm.py` - DICOM loading and grouping
 - `doc/RANDOM_DICOM_GENERATOR.md` - Complete generator documentation
-- `doc/COMPLETE_TEST_EXECUTION_REFERENCE.md` - Testing guide

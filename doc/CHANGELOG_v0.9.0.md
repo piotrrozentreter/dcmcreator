@@ -86,7 +86,6 @@ REST client for FHIR Patient resource management:
 - ✓ Proper formatting in example scripts output
 - ✓ Consistent status indicators (✓/✗ for validation)
 - ✓ Enhanced examples/README.md with 7 ready-to-run scripts
-- ✓ New VERSION_0.9.0_SUMMARY.md document
 
 ### 🔍 Code Quality Improvements
 
@@ -103,12 +102,10 @@ REST client for FHIR Patient resource management:
 - `src/hl7_handler.py` - HL7 v2.x parser and FHIR R4 client
 
 ### New Documentation
-- `doc/VERSION_0.9.0_SUMMARY.md` - Quick release summary
 - `doc/CHANGELOG_v0.9.0.md` - This file
 
 ### Updated Files (Version Numbers)
 - `README.md` - v0.7.0 → v0.9.0
-- `doc/README.md` - v0.6.0 → v0.9.0
 - `doc/INDEX.md` - References updated to v0.9.0
 
 ### Updated Files (Character Fixes)

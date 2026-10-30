@@ -133,4 +133,3 @@ if __name__ == "__main__":
 ## See Also
 
 - `test/README.md` - Full test documentation
-- `doc/COMPLETE_TEST_EXECUTION_REFERENCE.md` - Complete testing guide

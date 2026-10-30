@@ -37,7 +37,6 @@ DICOM Creator v0.7.0 introduces enhanced certificate management for SSL/TLS secu
 ## Documentation Updates
 
 ### New Documentation
-- **VERSION_0.7.0_SUMMARY.md** - Quick release summary
 - **Updated CHANGELOG_v0.7.0.md** - Complete v0.7.0 release notes
 
 ### Enhanced Documentation

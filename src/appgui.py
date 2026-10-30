@@ -3434,8 +3434,7 @@ To run benchmarks, use Python API:
 4. Get Reports:
    print(bench.get_benchmark_report(0))
    print(bench.get_all_benchmarks_summary())
-
-See: doc/COMPLETE_TEST_EXECUTION_REFERENCE.md for examples
+See: test/README.md and examples/ for usage examples
 """)
         notes_text.configure(state=tk.DISABLED)
     
@@ -3593,7 +3592,7 @@ RECOMMENDED SETTINGS:
 - Medium load: 5 workers
 - Heavy load: 8-10 workers
 
-See: doc/WHERE_TO_RUN_TESTS.md
+See: test/README.md and examples/ for usage examples
 """
         messagebox.showinfo(APP_TITLE, docs)
 

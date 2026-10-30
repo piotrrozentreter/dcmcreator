@@ -1,4 +1,4 @@
-# Building DICOM Creator v0.7.0 as an Executable
+# Building DICOM Creator as an Executable
 
 This guide explains how to build a standalone executable (.exe) file that can run on Windows, macOS, and Linux without Python installed.
 
@@ -11,26 +11,9 @@ This guide explains how to build a standalone executable (.exe) file that can ru
 - ? **Certificates**: Include certificate support (see below)
 - ? **DON'T distribute**: Just the executable alone (needs libraries)
 
-## Version 0.7.0 Changes
+## Build Requirements
 
-v0.7.0 introduces **SSL/TLS certificate support**:
-
-| Feature | Status |
-|---------|--------|
-| **TLS/SSL Configuration** | NEW |
-| **Certificate Support** | PEM, CRT, PKCS#12, CER |
-| **Secure Transmission** | Full support |
-| **Certificate Files** | Excluded from Git (see .gitignore) |
-
-### Build Includes
-- All validation modules (v0.6.0+)
-- Connection testing (v0.3.1+)
-- Stress testing and benchmarking
-- Performance analysis tools
-- Parallel transmission support
-- **NEW**: Certificate management utilities
-
----
+Install the packages listed in `build-requirements.txt` before building. Use the build scripts in the repository root to generate the executable and ZIP archive.
 
 ## Quick Start
 
@@ -124,7 +107,7 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 - Remote DICOM transmission (C-STORE)
 - Server preset management
 
-### New in v0.7.0 (Now Bundled)
+### Additional Features Included
 - **VR Validation**: DICOM value representation validation against PS3.6 standard
 - **Validation Dialog**: Interactive validation reports with detailed warnings/errors
 - **Tag Viewer**: View all DICOM tags from files (including private tags)
@@ -239,17 +222,17 @@ dcmcreator/
 |       |   |-- [other DLLs]
 |       |-- src/                    (Application source)
 |-- build/                          (Temporary - can delete)
-|-- dcmcreator.spec                 (Build configuration - UPDATED for v0.7.0)
+|-- dcmcreator.spec                 (PyInstaller build configuration)
 |-- build.bat                       (Windows batch build script)
 |-- build.py                        (Python build script)
 |-- create_icon.py                  (Icon generator)
 |-- app.ico                         (Generated icon)
 |-- requirements.txt                (Runtime dependencies - for source installs)
-|-- build-requirements.txt          (Build dependencies - UPDATED for v0.7.0)
+|-- build-requirements.txt          (Build dependencies)
 |-- ...
 ```
 
-## Build Configuration (v0.7.0)
+## Build Configuration
 
 ### Updated Files
 

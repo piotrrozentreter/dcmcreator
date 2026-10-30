@@ -541,7 +541,7 @@ from src.import_helper import LazyImport
 
 ### New Documentation
 
-- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** (this file)
+- **[CHANGELOG_v0.6.0.md](CHANGELOG_v0.6.0.md)** (this file)
 - Updated [README.md](../README.md) with v0.6.0 features
 - Enhanced troubleshooting section with validation tips
 

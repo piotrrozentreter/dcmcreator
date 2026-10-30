@@ -325,45 +325,37 @@ pip install -r requirements.txt
 
 ## Documentation
 
-### Quick Start Guides
-- **[doc/INDEX.md](doc/INDEX.md)** - Complete documentation index
-- **[doc/GETTING_STARTED.md](doc/GETTING_STARTED.md)** - Getting started guide
+### Documentation Index
+- **[doc/INDEX.md](doc/INDEX.md)** - Current user guides and release history
 - **[doc/QUICK_START_TAG_VIEWER.md](doc/QUICK_START_TAG_VIEWER.md)** - Tag Viewer quick start
 - **[doc/QUICK_START_PRESETS.md](doc/QUICK_START_PRESETS.md)** - Server Presets quick start
 - **[doc/QUICK_START_RANDOM_DICOM.md](doc/QUICK_START_RANDOM_DICOM.md)** - DICOM generator quick start
 
-### Feature Documentation
-- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - Complete Tag Viewer documentation
-- **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Server Presets documentation
-- **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - DICOM generator guide
-- **[doc/QUERY_RETRIEVE_GUIDE.md](doc/QUERY_RETRIEVE_GUIDE.md)** - Query/Retrieve PACS guide (NEW)
-- **[doc/CGET_CMOVE_GUIDE.md](doc/CGET_CMOVE_GUIDE.md)** - C-GET and C-MOVE implementation (NEW)
-- **[doc/CGET_CMOVE_IMPLEMENTATION.md](doc/CGET_CMOVE_IMPLEMENTATION.md)** - C-GET/C-MOVE technical details (NEW)
-- **[doc/HL7_INTEGRATION_GUIDE.md](doc/HL7_INTEGRATION_GUIDE.md)** - HL7 and hospital integration (NEW)
-- **[doc/TLS_SETUP.md](doc/TLS_SETUP.md)** - SSL/TLS certificate setup
+### Feature Guides
+- **[doc/TAG_VIEWER_FEATURE.md](doc/TAG_VIEWER_FEATURE.md)** - DICOM tag inspection
+- **[doc/SERVER_PRESETS.md](doc/SERVER_PRESETS.md)** - Server Presets
+- **[doc/RANDOM_DICOM_GENERATOR.md](doc/RANDOM_DICOM_GENERATOR.md)** - Test DICOM generation
+- **[doc/HIERARCHICAL_GENERATION.md](doc/HIERARCHICAL_GENERATION.md)** - Hierarchical test datasets
+- **[doc/QUERY_RETRIEVE_GUIDE.md](doc/QUERY_RETRIEVE_GUIDE.md)** - PACS queries
+- **[doc/CGET_CMOVE_GUIDE.md](doc/CGET_CMOVE_GUIDE.md)** - C-GET and C-MOVE retrieval
+- **[doc/CFIND_QUICK_REFERENCE.md](doc/CFIND_QUICK_REFERENCE.md)** - C-FIND quick reference
+- **[doc/CFIND_TROUBLESHOOTING.md](doc/CFIND_TROUBLESHOOTING.md)** - C-FIND troubleshooting
+- **[doc/VR_VALIDATOR.md](doc/VR_VALIDATOR.md)** - DICOM value validation
+- **[doc/TLS_SETUP.md](doc/TLS_SETUP.md)** - TLS configuration
+- **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission
 
-### Testing Guides
-- **[doc/PARALLEL_TRANSMISSION_GUIDE.md](doc/PARALLEL_TRANSMISSION_GUIDE.md)** - Parallel transmission setup
-- **[doc/QUICK_TEST_EXECUTION_GUIDE.md](doc/QUICK_TEST_EXECUTION_GUIDE.md)** - Testing workflow
-- **[doc/COMPLETE_TEST_EXECUTION_REFERENCE.md](doc/COMPLETE_TEST_EXECUTION_REFERENCE.md)** - Complete testing reference
-- **[doc/HIERARCHICAL_GENERATION.md](doc/HIERARCHICAL_GENERATION.md)** - Hierarchical DICOM generation
-- **[test/README.md](test/README.md)** - Test scripts documentation
-
-### Developer Documentation
-- **[doc/DEVELOPER_GUIDE_PRESETS.md](doc/DEVELOPER_GUIDE_PRESETS.md)** - Developer guide for Server Presets
-- **[doc/EXTERNAL_SCRIPT_USAGE.md](doc/EXTERNAL_SCRIPT_USAGE.md)** - Using DICOM Creator as a library
-- **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Building the EXE
-- **[doc/DISTRIBUTION_GUIDE.md](doc/DISTRIBUTION_GUIDE.md)** - Distribution guide
+### Build
+- **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Building a standalone application
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - v0.9.2 release notes (Current) - Storage Commitment N-ACTION
-- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - v0.9.0 release notes - Query/Retrieve PACS and HL7 Integration
-- **[doc/CHANGELOG_v0.8.0.md](doc/CHANGELOG_v0.8.0.md)** - v0.8.0 release notes
-- **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - v0.7.0 release notes
-- **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - v0.6.1 release notes
-- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - v0.6.0 release notes
-- **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - v0.5.0 release notes
-- **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - v0.4.0 release notes
+- **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - Current release: Storage Commitment
+- **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - Query/Retrieve and HL7/FHIR integration
+- **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - TLS certificate support
+- **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - Maintenance release
+- **[doc/CHANGELOG_v0.6.0.md](doc/CHANGELOG_v0.6.0.md)** - Validation and DICOMDIR
+- **[doc/CHANGELOG_v0.5.0.md](doc/CHANGELOG_v0.5.0.md)** - Parallel transmission
+- **[doc/CHANGELOG_v0.4.0.md](doc/CHANGELOG_v0.4.0.md)** - Testing and performance
+- **[doc/CHANGELOG_v0.3.0.md](doc/CHANGELOG_v0.3.0.md)** - Server Presets
 
 ### Running Tests
 ```bash
@@ -382,7 +374,7 @@ python test/verify_build.py
 dcmcreator/
 ├── src/
 │   ├── app.py                      # Entry point
-│   ├── appgui.py                   # Main GUI (v0.7.0)
+│   ├── appgui.py                   # Main GUI
 │   ├── app_logic.py                # Core application logic
 │   ├── import_helper.py            # LazyImport system
 │   ├── dcm.py                      # DICOM creation/loading

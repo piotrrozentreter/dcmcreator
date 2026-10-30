@@ -81,7 +81,7 @@ files = gen.generate_hierarchical(
     size_mb=1.0,
     output_dir="./output"
 )
-# Result: 30 files (2×3×5)
+# Result: 30 files (2ï¿½3ï¿½5)
 ```
 
 ### Custom Patient
@@ -144,10 +144,10 @@ Study: 1.2.840.113619.2...
 
 ### File Size Formula
 ```
-0.5 MB ? ~512×512 pixels
-1.0 MB ? ~720×720 pixels
-2.0 MB ? ~1024×1024 pixels
-5.0 MB ? ~1616×1616 pixels
+0.5 MB ? ~512ï¿½512 pixels
+1.0 MB ? ~720ï¿½720 pixels
+2.0 MB ? ~1024ï¿½1024 pixels
+5.0 MB ? ~1616ï¿½1616 pixels
 ```
 
 ## Use Cases
@@ -155,25 +155,25 @@ Study: 1.2.840.113619.2...
 ### Testing Viewer Organization
 ```
 Studies: 1 | Series: 5 | Instances: 20
-• Tests series grouping in viewer
+ï¿½ Tests series grouping in viewer
 ```
 
 ### Testing PACS Archive
 ```
 Studies: 10 | Series: 3 | Instances: 10
-• Tests multi-study storage
+ï¿½ Tests multi-study storage
 ```
 
 ### Testing Transmission
 ```
 Studies: 2 | Series: 4 | Instances: 25
-• Tests hierarchical C-STORE
+ï¿½ Tests hierarchical C-STORE
 ```
 
 ### Load Testing
 ```
 Studies: 20 | Series: 5 | Instances: 10
-• Generates 1000 files for stress test
+ï¿½ Generates 1000 files for stress test
 ```
 
 ## Troubleshooting
@@ -205,5 +205,4 @@ In GUI:
 ## Related Documentation
 
 - **doc/HIERARCHICAL_GENERATION.md** - Complete user guide
-- **doc/HIERARCHICAL_IMPLEMENTATION.md** - Technical details
 - **doc/RANDOM_DICOM_GENERATOR.md** - Generator documentation

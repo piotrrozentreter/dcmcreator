@@ -199,8 +199,5 @@ Planned tests:
 
 ## See Also
 
-- `doc/COMPLETE_TEST_EXECUTION_REFERENCE.md` - Complete testing guide
-- `doc/QUICK_TEST_EXECUTION_GUIDE.md` - Quick testing reference
-- `doc/WHERE_TO_RUN_TESTS.md` - Test execution environments
 - `examples/` - Example scripts (not tests)
 
