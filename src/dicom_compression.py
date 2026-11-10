@@ -75,8 +75,12 @@ class DicomCompressor:
 
         if compression == "rle":
             try:
+                from pydicom.filewriter import correct_ambiguous_vr
                 from pydicom.uid import RLELossless
                 ds_copy.compress(RLELossless)
+                ds_copy.decode()
+                correct_ambiguous_vr(ds_copy, is_little_endian=True)
+                ds_copy.set_original_encoding(False, True)
             except Exception as e:
                 raise RuntimeError(f"RLE compression failed: {e}") from e
         else:

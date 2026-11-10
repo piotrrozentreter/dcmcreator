@@ -252,10 +252,10 @@ def send_grouped_dicom(
 
     # Build requested presentation contexts from actual datasets
     try:
-        from pynetdicom.uid import ExplicitVRLittleEndian as TS_ExplicitLE
-        from pynetdicom.uid import ImplicitVRLittleEndian as TS_ImplicitLE
+        from pydicom.uid import ExplicitVRLittleEndian as TS_ExplicitLE
+        from pydicom.uid import ImplicitVRLittleEndian as TS_ImplicitLE
         try:
-            from pynetdicom.uid import DeflatedExplicitVRLittleEndian as TS_DeflatedExplicitLE
+            from pydicom.uid import DeflatedExplicitVRLittleEndian as TS_DeflatedExplicitLE
             common_ts = [TS_ExplicitLE, TS_ImplicitLE, TS_DeflatedExplicitLE]
         except Exception:
             common_ts = [TS_ExplicitLE, TS_ImplicitLE]
@@ -306,24 +306,15 @@ def send_grouped_dicom(
         if on_message:
             on_message(f"  - {sop_name}")
 
-        # If we found specific transfer syntaxes, use them; otherwise use common ones
-        if ts_set:
-            # Add the dataset's actual transfer syntaxes
-            transfer_syntaxes = list(ts_set)
-            # Prepend the target compressed TS so the SCP prefers it
-            if rle_ts_uid and rle_ts_uid not in transfer_syntaxes:
-                transfer_syntaxes.insert(0, rle_ts_uid)
-            # Also add common uncompressed transfer syntaxes as fallback
-            if common_ts:
-                transfer_syntaxes.extend(common_ts)
+        if rle_ts_uid:
+            ae.add_requested_context(sop_uid, transfer_syntax=[rle_ts_uid])
+        transfer_syntaxes = list(dict.fromkeys(
+            [syntax for syntax in sorted(ts_set) if syntax != rle_ts_uid]
+            + list(common_ts)
+        ))
+        if transfer_syntaxes:
             ae.add_requested_context(sop_uid, transfer_syntax=transfer_syntaxes)
-            if on_message and len(ts_set) > 0:
-                on_message(f"    Transfer syntaxes: {len(ts_set)} from dataset + {len(common_ts)} fallback")
-        elif rle_ts_uid or common_ts:
-            ts_list = ([rle_ts_uid] if rle_ts_uid else []) + list(common_ts)
-            ae.add_requested_context(sop_uid, transfer_syntax=ts_list)
-        else:
-            # No transfer syntaxes available at all
+        elif not rle_ts_uid:
             ae.add_requested_context(sop_uid)
 
     # Optionally add Verification SOP for echo
@@ -421,7 +412,8 @@ def send_grouped_dicom(
                 try:
                     sop_uid = str(ctx.abstract_syntax)
                     sop_name = get_sop_name(sop_uid)
-                    on_message(f"  + {sop_name}")
+                    syntax = ctx.transfer_syntax[0]
+                    on_message(f"  + {sop_name}: {syntax.name} ({syntax})")
                 except Exception:
                     pass
         except Exception:
