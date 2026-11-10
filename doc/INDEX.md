@@ -1,9 +1,10 @@
 # DICOM Creator Documentation
 
-Start with the [main README](../README.md) for installation, application usage, and an overview of current features. This index links to user guides and release history for version 0.9.2.
+Start with the [main README](../README.md) for installation, application usage, and an overview of current features. This index links to user guides and release history for version 0.9.3.
 
 ## Current Release
 
+- [Version 0.9.3 release notes](CHANGELOG_v0.9.3.md) - Bug-fix release
 - [Version 0.9.2 summary](VERSION_0.9.2_SUMMARY.md) - Storage Commitment request workflow and limitations
 - [Version 0.9.2 release notes](CHANGELOG_v0.9.2.md) - Detailed behavior and compatibility
 

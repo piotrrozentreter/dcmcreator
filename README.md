@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.9.2-blue.svg)
+![Version](https://img.shields.io/badge/version-0.9.3-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,7 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
-- [What's New in v0.9.2](#whats-new-in-v092)
+- [What's New in v0.9.3](#whats-new-in-v093)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -76,17 +76,11 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and send in one workflow
 
-## What's New in v0.9.2
+## What's New in v0.9.3
 
-**Release Date**: October 2026
+Version 0.9.3 is a bug-fix release.
 
-### Storage Commitment (NEW)
-- Request Storage Commitment for loaded DICOM instances already stored by the remote peer
-- Reuse the Remote tab server, AE title, port, and TLS configuration
-- Validate the transaction UID and referenced SOP instance UIDs before sending
-- Clearly distinguish request acceptance from the final commitment outcome; N-EVENT-REPORT reception is not supported
-
-**Full Details:** See [CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)
+**Full Details:** See [CHANGELOG_v0.9.3.md](doc/CHANGELOG_v0.9.3.md)
 
 ## Previous Release Highlights: v0.9.0
 
@@ -348,7 +342,8 @@ pip install -r requirements.txt
 - **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Building a standalone application
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - Current release: Storage Commitment
+- **[doc/CHANGELOG_v0.9.3.md](doc/CHANGELOG_v0.9.3.md)** - Current release: bug fixes
+- **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - Storage Commitment
 - **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - Query/Retrieve and HL7/FHIR integration
 - **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - TLS certificate support
 - **[doc/CHANGELOG_v0.6.1.md](doc/CHANGELOG_v0.6.1.md)** - Maintenance release
@@ -413,7 +408,10 @@ dcmcreator/
 
 ## Version History
 
-### v0.9.2 (October 2026) - Current
+### v0.9.3 - Current
+- Bug fixes
+
+### v0.9.2 (October 2026)
 - Storage Commitment requests using DICOM N-ACTION for previously stored instances
 - Transaction UID validation and status reporting
 - Remote-tab TLS configuration support
