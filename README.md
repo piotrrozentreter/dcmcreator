@@ -2,7 +2,7 @@
 
 A professional DICOM file creation, editing, and transmission tool with comprehensive testing, validation, and performance analysis capabilities.
 
-![Version](https://img.shields.io/badge/version-0.9.3-blue.svg)
+![Version](https://img.shields.io/badge/version-0.9.4-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.9+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)
@@ -11,7 +11,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 
 - [Screenshots](#screenshots)
 - [Features](#features)
-- [What's New in v0.9.3](#whats-new-in-v093)
+- [What's New in v0.9.4](#whats-new-in-v094)
 - [Quick Start](#quick-start)
 - [Building Your Own EXE](#building-your-own-exe)
 - [Usage](#usage)
@@ -40,6 +40,7 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Image Support** - Load and preview images (PNG, JPG, BMP) as DICOM pixel data
 - **DICOM File Operations** - Load, save, and organize DICOM files and folders with DICOMDIR support
 - **Remote Transmission** - Send DICOM files to remote servers using C-STORE with SSL/TLS support
+- **DICOM Receiver** - [Receive outbound VNA transfers](doc/DICOM_RECEIVER.md) with an internal Storage SCP, optional TLS, and live results
 - **VR Validation** - Real-time validation against DICOM Value Representation specifications
 - **Tag Viewer** - View all DICOM tags including private tags with search and export
 - **Storage Commitment** - Request commitment for already-stored instances using DICOM N-ACTION
@@ -76,11 +77,12 @@ A professional DICOM file creation, editing, and transmission tool with comprehe
 - **Bulk Generation** - Generate multiple files with configurable sizes
 - **Integrated Testing** - Generate and send in one workflow
 
-## What's New in v0.9.3
+## What's New in v0.9.4
 
-Version 0.9.3 is a bug-fix release.
+Version 0.9.4 adds an internal DICOM Receiver for outbound VNA testing, optional
+RLE negotiation preference, connection diagnostics, and corrected instance previews.
 
-**Full Details:** See [CHANGELOG_v0.9.3.md](doc/CHANGELOG_v0.9.3.md)
+**Full Details:** See [CHANGELOG_v0.9.4.md](doc/CHANGELOG_v0.9.4.md)
 
 ## Previous Release Highlights: v0.9.0
 
@@ -342,7 +344,8 @@ pip install -r requirements.txt
 - **[doc/BUILD_INSTRUCTIONS.md](doc/BUILD_INSTRUCTIONS.md)** - Building a standalone application
 
 ### Release Notes
-- **[doc/CHANGELOG_v0.9.3.md](doc/CHANGELOG_v0.9.3.md)** - Current release: bug fixes
+- **[doc/CHANGELOG_v0.9.4.md](doc/CHANGELOG_v0.9.4.md)** - Current release: DICOM Receiver and preview fixes
+- **[doc/CHANGELOG_v0.9.3.md](doc/CHANGELOG_v0.9.3.md)** - Bug fixes
 - **[doc/CHANGELOG_v0.9.2.md](doc/CHANGELOG_v0.9.2.md)** - Storage Commitment
 - **[doc/CHANGELOG_v0.9.0.md](doc/CHANGELOG_v0.9.0.md)** - Query/Retrieve and HL7/FHIR integration
 - **[doc/CHANGELOG_v0.7.0.md](doc/CHANGELOG_v0.7.0.md)** - TLS certificate support
@@ -408,7 +411,12 @@ dcmcreator/
 
 ## Version History
 
-### v0.9.3 - Current
+### v0.9.4 - Current
+- Internal Storage SCP with optional TLS, sender restrictions, and live results
+- RLE negotiation preference and per-context diagnostics
+- Corrected individual-instance image selection
+
+### v0.9.3
 - Bug fixes
 
 ### v0.9.2 (October 2026)

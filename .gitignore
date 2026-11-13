@@ -8,6 +8,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+/DICOM Creator.zip
+received_dicoms/
 build/
 develop-eggs/
 dist/
