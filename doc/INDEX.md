@@ -1,10 +1,10 @@
 # DICOM Creator Documentation
 
-Start with the [main README](../README.md) for installation, application usage, and an overview of current features. This index links to user guides and release history for version 0.9.3.
+Start with the [main README](../README.md) for installation, application usage, and an overview of current features. This index links to user guides and release history for version 0.9.4.
 
 ## Current Release
 
-- [Version 0.9.3 release notes](CHANGELOG_v0.9.3.md) - Bug-fix release
+- [Version 0.9.4 release notes](CHANGELOG_v0.9.4.md) - DICOM Receiver and preview fixes
 - [Version 0.9.2 summary](VERSION_0.9.2_SUMMARY.md) - Storage Commitment request workflow and limitations
 - [Version 0.9.2 release notes](CHANGELOG_v0.9.2.md) - Detailed behavior and compatibility
 
@@ -27,6 +27,7 @@ Start with the [main README](../README.md) for installation, application usage, 
 - [VR validation guide](VR_VALIDATOR.md)
 
 ### Connections and Performance
+- [DICOM Receiver](DICOM_RECEIVER.md) - Test outbound VNA transfers with the internal Storage SCP
 - [TLS configuration](TLS_SETUP.md)
 - [Parallel transmission guide](PARALLEL_TRANSMISSION_GUIDE.md)
 
@@ -36,6 +37,7 @@ Start with the [main README](../README.md) for installation, application usage, 
 
 ## Release History
 
+- [v0.9.3](CHANGELOG_v0.9.3.md) - Bug-fix release
 - [v0.9.0](CHANGELOG_v0.9.0.md) - Query/Retrieve and HL7/FHIR integration
 - [v0.7.0](CHANGELOG_v0.7.0.md) - TLS certificate support
 - [v0.6.1](CHANGELOG_v0.6.1.md) - Maintenance and import fixes

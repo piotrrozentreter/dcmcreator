@@ -25,7 +25,7 @@ except ImportError:
         def get_sop_name_only(sop_uid):
             return "Unknown SOP"
 
-APP_TITLE = "DICOM Creator v0.9.3\n"
+APP_TITLE = "DICOM Creator v0.9.4\n"
 
 try:
     from .dcmlogger import setup_logging, LOGGER_NAME
@@ -71,6 +71,7 @@ StorageCommitmentAction = LazyImport(".storage_commitment_action", "storage_comm
 
 # Query/Retrieve module (optional)
 DicomQueryHandler = LazyImport(".query_retrieve", "query_retrieve")
+DicomReceiverTab = LazyImport(".dicom_receiver_tab", "dicom_receiver_tab")
 
 # Validator
 VRValidator = LazyImport(".vr_validator", "vr_validator")
@@ -183,6 +184,7 @@ class DicomCreatorApp(tk.Tk):
             "Save": tk.BooleanVar(value=True),
             "Remote": tk.BooleanVar(value=True),
             "Query PACS": tk.BooleanVar(value=False),
+            "DICOM Receiver": tk.BooleanVar(value=False),
             "HL7": tk.BooleanVar(value=False),
             "Test/Generate": tk.BooleanVar(value=True),
             "Connection Test": tk.BooleanVar(value=False),
@@ -233,6 +235,7 @@ class DicomCreatorApp(tk.Tk):
         view_menu.add_checkbutton(label="Remote", variable=self.tab_visibility["Remote"], command=self._update_tab_visibility)
         view_menu.add_separator()
         view_menu.add_checkbutton(label="Query PACS", variable=self.tab_visibility["Query PACS"], command=self._update_tab_visibility)
+        view_menu.add_checkbutton(label="DICOM Receiver", variable=self.tab_visibility["DICOM Receiver"], command=self._update_tab_visibility)
         view_menu.add_checkbutton(label="HL7", variable=self.tab_visibility["HL7"], command=self._update_tab_visibility)
         view_menu.add_command(label="Test Tabs", state=tk.DISABLED)
         view_menu.add_checkbutton(label="Test/Generate", variable=self.tab_visibility["Test/Generate"], command=self._update_tab_visibility)
@@ -287,6 +290,7 @@ class DicomCreatorApp(tk.Tk):
         self.save_frame = ttk.Frame(container)
         self.remote_frame = ttk.Frame(container)
         self.query_frame = ttk.Frame(container)
+        self.receiver_frame = ttk.Frame(container)
         self.hl7_frame = ttk.Frame(container)
         self.test_frame = ttk.Frame(container)
 
@@ -306,6 +310,7 @@ class DicomCreatorApp(tk.Tk):
         self.tab_frames["Save"] = (self.save_frame, "Save")
         self.tab_frames["Remote"] = (self.remote_frame, "Remote")
         self.tab_frames["Query PACS"] = (self.query_frame, "Query PACS")
+        self.tab_frames["DICOM Receiver"] = (self.receiver_frame, "DICOM Receiver")
         self.tab_frames["HL7"] = (self.hl7_frame, "HL7")
         self.tab_frames["Test/Generate"] = (self.test_frame, "Test/Generate")
         self.tab_frames["Connection Test"] = (self.connection_test_frame, "Connection Test")
@@ -322,6 +327,7 @@ class DicomCreatorApp(tk.Tk):
         container.add(self.save_frame, text="Save")
         container.add(self.remote_frame, text="Remote")
         container.add(self.query_frame, text="Query PACS")
+        container.add(self.receiver_frame, text="DICOM Receiver")
         container.add(self.hl7_frame, text="HL7")
         container.add(self.test_frame, text="Test/Generate")
         container.add(self.connection_test_frame, text="Connection Test")
@@ -353,6 +359,11 @@ class DicomCreatorApp(tk.Tk):
 
         # Query PACS tab
         self._build_query_pacs_tab()
+        receiver_cls = DicomReceiverTab._load_class()
+        if receiver_cls is None:
+            ttk.Label(self.receiver_frame, text="DICOM Receiver module not available").pack(padx=10, pady=10)
+        else:
+            self._receiver_tab = receiver_cls(self.receiver_frame, self, self.logger)
 
         # HL7 / FHIR tab
         self._build_hl7_tab()
@@ -2038,7 +2049,7 @@ class DicomCreatorApp(tk.Tk):
         except Exception as e:
             self.logger.exception("Failed to show instance context menu")
 
-    def _show_instance_image(self):
+    def _show_instance_image(self, switch_tab=True):
         """Show the image for the selected instance in the Image tab."""
         try:
             if not hasattr(self, 'selected_instance_id') or not self.selected_instance_id:
@@ -2065,6 +2076,11 @@ class DicomCreatorApp(tk.Tk):
         
             self.pixel_array = arr
             self.image_source = "dicom"
+            self.selected_study_uid = study_uid
+            self.selected_series_uid = series_uid
+            self._populate_patient_fields(ds)
+            self._populate_study_fields(ds)
+            self._populate_series_fields(ds)
         
             rows = getattr(ds, 'Rows', None)
             cols = getattr(ds, 'Columns', None)
@@ -2078,10 +2094,11 @@ class DicomCreatorApp(tk.Tk):
             self._update_image_preview(arr)
         
             # Switch to Image tab
-            for i, tab_id in enumerate(self.container.tabs()):
-                if self.container.tab(tab_id, "text") == "Image":
-                    self.container.select(i)
-                    break
+            if switch_tab:
+                for i, tab_id in enumerate(self.container.tabs()):
+                    if self.container.tab(tab_id, "text") == "Image":
+                        self.container.select(i)
+                        break
         
             self.logger.info(f"Displayed image for instance: {sop_uid}")
         
@@ -2129,6 +2146,11 @@ class DicomCreatorApp(tk.Tk):
             return
             
         node_id = sel[0]
+
+        if node_id.startswith("instance:"):
+            self.selected_instance_id = node_id
+            self._show_instance_image(switch_tab=False)
+            return
         
         # Handle STUDY node selection
         if node_id.startswith("study:"):
@@ -3625,7 +3647,7 @@ See: test/README.md and examples/ for usage examples
             # Re-add visible tabs in order
             tab_order = [
                 "Patient", "Study", "Series/Modality", "Image",
-                "Load DICOM", "Save", "Remote", "Query PACS", "HL7", "Test/Generate",
+                "Load DICOM", "Save", "Remote", "Query PACS", "DICOM Receiver", "HL7", "Test/Generate",
                 "Connection Test", "Stress Test", "Transmission History",
                 "Benchmarking", "Parallel Send"
             ]
