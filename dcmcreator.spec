@@ -12,6 +12,9 @@ src_dir = Path(SPECPATH) / 'src'
 datas = [
     ('src', 'src'),                # Include all source files (includes VR.xml)
     ('src/VR.xml', 'src'),        # CRITICAL: DICOM data dictionary (7MB) - explicitly ensure it's included
+    ('README.md', '.'),
+    ('LICENSE', '.'),
+    ('doc', 'doc'),
 ]
 
 # Comprehensive hidden imports
@@ -50,30 +53,20 @@ hiddenimports = [
     'pydicom.config',
     'pydicom.misc',
     'pydicom.errors',
-    'pydicom.compat',
     'pydicom.pixel_data_handlers',
     'pydicom.pixel_data_handlers.numpy_handler',
-    'pydicom.uid_dict',
     'pydicom._dicom_dict',
-    'pydicom.charset.encodings',
-    'pydicom.charset.encodings_compat',
-    'pydicom.json_handler',
-    'pydicom.jsonwriter',
-    'pydicom.jsonreader',
     'pydicom.dataset',
     'pydicom.multival',
     'pydicom.valuerep',
     
     # PyNetDICOM - core and all submodules (for networking features)
     'pynetdicom',
-    'pynetdicom.compat',
     'pynetdicom.pdu',
     'pynetdicom.pdu_primitives',
     'pynetdicom.service_class',
-    'pynetdicom._uid_dict',
     'pynetdicom.events',
     'pynetdicom.sop_class',
-    'pynetdicom.dataset',
     'pynetdicom.association',
     'pynetdicom.dimse',
     'pynetdicom.dimse_primitives',
@@ -109,9 +102,6 @@ hiddenimports = [
     'PIL.BmpImagePlugin',
     'PIL.GifImagePlugin',
     'PIL.TiffImagePlugin',
-    # Resampling filters
-    'PIL.ImageResampling',
-    
     # TKinter
     'tkinter',
     'tkinter.filedialog',

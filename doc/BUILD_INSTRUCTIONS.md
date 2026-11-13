@@ -55,10 +55,15 @@ Install the packages listed in `build-requirements.txt` before building. Use the
 
 The PyInstaller spec automatically adds every top-level Python module in `src/`
 to `hiddenimports` and adds that directory to the analysis search path. This
-includes `storage_commitment_action` and `storage_commitment`, which must be
-importable even though the GUI loads the action through `LazyImport`.
+includes `storage_commitment_action`, `storage_commitment`, `dicom_receiver`, and
+`dicom_receiver_tab`, which must be importable even when loaded through `LazyImport`.
 Copying Python files through `datas` alone does not ensure they are analyzed
 and bundled as importable modules with their dependencies.
+
+The spec also bundles `README.md`, `LICENSE`, and the entire `doc/` directory,
+including the receiver guide and release notes. PyInstaller 6 normally places
+these resources under `_internal/`; older layouts may place them beside the
+executable. Received DICOM files and TLS certificates/private keys are not bundled.
 
 If an older executable fails with
 `No module named 'storage_commitment_action'`, rebuild from the updated spec:
@@ -118,6 +123,7 @@ The build script now automatically creates `DICOM Creator.zip` containing:
 - **Performance Benchmarking**: Measure throughput and latency
 - **Parallel Transmission**: Multi-threaded file sending (1-10 workers)
 - **Certificate Support**: Manage SSL/TLS certificates for secure transmission
+- **DICOM Receiver**: Internal Storage SCP with optional TLS and RLE preference
 
 Access features via:
 - **DICOM** menu: VR Viewer, Tag Viewer
