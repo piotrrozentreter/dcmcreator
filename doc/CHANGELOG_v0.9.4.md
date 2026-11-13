@@ -27,5 +27,4 @@
 
 This is a test receiver, not a production archive or full IOD validator. C-STORE
 success is not Storage Commitment or proof of a complete study. Interoperability
-and TLS must be verified for the target environment. External ACUO source changes
-are not included in this release.
+and TLS must be verified for the target environment.
